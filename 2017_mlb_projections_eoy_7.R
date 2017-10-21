@@ -41,6 +41,9 @@ starting_outfielders <- 4
 starting_middle_infielders <- 1
 starting_corner_infielders <- 1
 starting_designated_hitters <- 1
+#pitchers
+starting_pitchers <- 7
+relief_pitchers <- 3
 
 #user selected stats
 #i.e. avg, runs, hr, rbi, ops, sb_net
@@ -55,6 +58,9 @@ n_outfielders <- n_teams * starting_outfielders
 n_middle_infielders <- n_teams * starting_middle_infielders
 n_corner_infielders <- n_teams * starting_corner_infielders
 n_designated_hitters <- n_teams * starting_designated_hitters
+#pitchers
+n_starting_pitchers <- n_teams * starting_pitchers
+n_relief_pitchers <- n_teams * relief_pitchers
 
 #FUNCTIONS
 #z_score calculation for each selected stat
@@ -85,6 +91,23 @@ z_score_position <- function(df, n_df) {
     arrange(desc(z_score)) %>%
     head(n_df)
 }
+
+# z_score_pitchers <- function(df, n_df) {
+#   df <- df %>%
+#     filter(games > 1) %>%
+#     select(name, team, gs, games, ip, wins)
+# }
+
+pitchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 8)  #read in pitchers
+#name col's
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+
+pitchers1 <- pitchers %>%
+  filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
+  select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
+  arrange(name)
+#for now, treat starters and relievers as two completely separate categories
 
 #read in data frames (from fangraphs steamer projections via excel)
 #all_hitters <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls")
@@ -270,4 +293,3 @@ ggplot(hitters_zpos1, aes(hr)) + geom_histogram(binwidth = 1)
 ggplot(hitters_zpos1, aes(rbi)) + geom_histogram(binwidth = 2)
 ggplot(hitters_zpos1, aes(ops)) + geom_histogram(binwidth = .01)
 ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
-

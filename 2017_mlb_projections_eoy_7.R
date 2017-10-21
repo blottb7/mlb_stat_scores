@@ -11,7 +11,11 @@
   #probably need to remove all the duplicated names from hitters_new, then full_join it with the duplicate names √
 #get rid of pos = "10" (DH); matchup players selected as designated hitters by their actual positions √
 
-#pitchers: next!
+#pitchers: next! √
+  #read in pitchers √
+  #read in projected blown saves (not a priority)
+  #weight era and whip by ip
+  #a lot of work to do between relievers and starters
 
 #create criteria to assign a multi-position player to his most valuable position
 #user selected stats
@@ -92,14 +96,8 @@ z_score_position <- function(df, n_df) {
     head(n_df)
 }
 
-# z_score_pitchers <- function(df, n_df) {
-#   df <- df %>%
-#     filter(games > 1) %>%
-#     select(name, team, gs, games, ip, wins)
-# }
-
 pitchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 8)  #read in pitchers
-#name col's
+
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
@@ -108,10 +106,49 @@ pitchers1 <- pitchers %>%
   select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
   arrange(name)
 #for now, treat starters and relievers as two completely separate positions
-starters <- pitchers %>%
+starters <- pitchers1 %>%
   filter(gs >= 10)
-relievers <- pitchers %>%
+relievers <- pitchers1 %>%
   filter(gs < 10)
+#z-scores
+starters$wins_z <- as.numeric(z_score(starters$wins))
+starters$so_z <- as.numeric(z_score(starters$so))
+starters$era_z <- as.numeric(z_score(starters$era) * -1)
+starters$whip_z <- as.numeric(z_score(starters$whip) * -1)
+starters$hra_z <- as.numeric(z_score(starters$hra) * -1)
+starters$z_score <- starters$wins_z + starters$so_z + starters$era_z + starters$whip_z + starters$hra_z
+
+starters1 <- starters %>%
+  arrange(desc(z_score))
+starters1 <- starters1[1:n_starting_pitchers,]
+
+starters1$wins_z <- as.numeric(z_score(starters1$wins))
+starters1$so_z <- as.numeric(z_score(starters1$so))
+starters1$era_z <- as.numeric(z_score(starters1$era) * -1)
+starters1$whip_z <- as.numeric(z_score(starters1$whip) * -1)
+starters1$hra_z <- as.numeric(z_score(starters1$hra) * -1)
+starters1$z_score <- starters1$wins_z + starters1$so_z + starters1$era_z + starters1$whip_z + starters1$hra_z
+starters1 <- arrange(starters1, desc(z_score))
+
+#relievers
+relievers$saves_z <- as.numeric(z_score(relievers$saves))
+relievers$so_z <- as.numeric(z_score(relievers$so))
+relievers$era_z <- as.numeric(z_score(relievers$era) * -1)
+relievers$whip_z <- as.numeric(z_score(relievers$whip) * -1)
+relievers$hra_z <- as.numeric(z_score(relievers$hra) * -1)
+relievers$z_score <- relievers$saves_z + relievers$so_z + relievers$era_z + relievers$whip_z + relievers$hra_z
+
+relievers1 <- relievers %>%
+  arrange(desc(z_score))
+relievers1 <- relievers1[1:n_relief_pitchers,]
+
+relievers1$saves_z <- as.numeric(z_score(relievers1$saves))
+relievers1$so_z <- as.numeric(z_score(relievers1$so))
+relievers1$era_z <- as.numeric(z_score(relievers1$era) * -1)
+relievers1$whip_z <- as.numeric(z_score(relievers1$whip) * -1)
+relievers1$hra_z <- as.numeric(z_score(relievers1$hra) * -1)
+relievers1$z_score <- relievers1$saves_z + relievers1$so_z + relievers1$era_z + relievers1$whip_z + relievers1$hra_z
+relievers1 <- arrange(relievers1, desc(z_score))
 
 #read in data frames (from fangraphs steamer projections via excel)
 #all_hitters <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls")

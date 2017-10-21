@@ -271,3 +271,9 @@ ggplot(hitters_zpos1, aes(rbi)) + geom_histogram(binwidth = 2)
 ggplot(hitters_zpos1, aes(ops)) + geom_histogram(binwidth = .01)
 ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 
+#start pitchers here
+pitchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 8)  #read in pitchers
+#name col's
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+

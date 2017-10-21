@@ -107,7 +107,11 @@ pitchers1 <- pitchers %>%
   filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
   select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
   arrange(name)
-#for now, treat starters and relievers as two completely separate categories
+#for now, treat starters and relievers as two completely separate positions
+starters <- pitchers %>%
+  filter(gs >= 10)
+relievers <- pitchers %>%
+  filter(gs < 10)
 
 #read in data frames (from fangraphs steamer projections via excel)
 #all_hitters <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls")

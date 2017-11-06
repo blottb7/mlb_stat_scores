@@ -130,9 +130,14 @@ pitchers1 <- pitchers %>%
 #outfielders <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 7)
 
 #rename the vars
+#name_vector for 2018 df
 name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-                 "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
+                 "waste3", "offense", "defense", "war", "playerid")
+#name_vector for 2017 df
+#name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+#                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+#                 "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
 
 #assign the name vector to each position df
 #names(all_hitters) <- name_vector
@@ -204,7 +209,7 @@ duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to ch
 hitters_new <- hitters_new %>%
         anti_join(duplicated_names_copy) %>%
         bind_rows(duplicated_names3) %>%
-        filter(pa > 1)
+        filter(pa > 1) %>%
 arrange(name)
 
 #duplicated_names4 <- duplicated_names3[duplicated(duplicated_names3),]
@@ -292,6 +297,9 @@ hitters_zpos1 <- hitters2 %>%
         mutate(z_pos = round(z_score - z_pos_mean, 4)) %>%
         arrange(desc(z_pos))
 
+hitters_zpos2 <- hitters_zpos1 %>%
+        arrange(desc(z_score))
+
 #hitters_zpos2 <- hitters_zpos1 %>%
 #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player
 
@@ -304,3 +312,6 @@ ggplot(hitters_zpos1, aes(hr)) + geom_histogram(binwidth = 1)
 ggplot(hitters_zpos1, aes(rbi)) + geom_histogram(binwidth = 2)
 ggplot(hitters_zpos1, aes(ops)) + geom_histogram(binwidth = .01)
 ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
+
+#write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
+#write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")

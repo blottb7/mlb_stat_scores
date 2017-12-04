@@ -1,16 +1,6 @@
 #Code for generalized yearlong category data
 
 #TO DO
-
-#do any stat mutations before z_score_position √
-#check for duplicate names √
-#create a dataframe of duplicates √
-#need to select out duplicate players at the beginning √
-#for now, due this by position: 5 > 3 > 7 > > 4 > 6 > 2 √
-#merge duplicated_names3 (unique names) with hitters_new (in progress) √
-#probably need to remove all the duplicated names from hitters_new, then full_join it with the duplicate names √
-#get rid of pos = "10" (DH); matchup players selected as designated hitters by their actual positions √
-
 #pitchers: next!
 
 #create criteria to assign a multi-position player to his most valuable position
@@ -24,7 +14,6 @@
 #setwd("~/Desktop/R_projects/baseball/eiflb")  #set wd
 #setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
 setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
-
 
 #libraries
 library(readxl)
@@ -95,9 +84,11 @@ z_score_position <- function(df, n_df) {
     head(n_df)
 }
 
+#z_score function for starting pitchers
 z_score_sp <- function(df, n_df) {
   df <- df %>%
-    filter(gs > 0) %>%
+    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+           gs > 0) %>%  #filter for pitchers who project to start at least one game
     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
   
   df$wins_z <- as.numeric(z_score(df$wins))
@@ -112,9 +103,11 @@ z_score_sp <- function(df, n_df) {
     head(n_df)
 }
 
+#z_score function for relief pitchers
 z_score_rp <- function(df, n_df) {
   df <- df %>%
-    filter(gs == 0) %>%
+    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+           gs == 0) %>%  #filter for pitchers who project to start at least one game
     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
   
   df$saves_z <- as.numeric(z_score(df$saves))
@@ -129,12 +122,7 @@ z_score_rp <- function(df, n_df) {
     head(n_df)
 }
 
-# z_score_pitchers <- function(df, n_df) {
-#   df <- df %>%
-#     filter(games > 1) %>%
-#     select(name, team, gs, games, ip, wins)
-# }
-
+#read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
 second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
@@ -143,39 +131,17 @@ shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
 outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
 pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
 
-#pitchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 8)  #read in pitchers
-#name col's
-
 #pitcher names need to be re-edited because there is a different length than in the 2017 df
+  #these are the names for 2018 df
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
-# pitchers1 <- pitchers %>%
-#   filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
-#   select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
-#   arrange(name)
 #for now, treat starters and relievers as two completely separate categories
-
 starters <- z_score_sp(pitchers, n_starting_pitchers)
 starters1 <- z_score_sp(starters, n_starting_pitchers)
 
 relievers <- z_score_rp(pitchers, n_relief_pitchers)
 relievers1 <- z_score_rp(relievers, n_relief_pitchers)
-
-
-# starters <- pitchers1 %>%
-#   filter(gs > 0)
-# relievers <- pitchers1 %>%
-#   filter(gs == 0)
-
-#read in data frames (from fangraphs steamer projections via excel)
-#all_hitters <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls")
-#catchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 2)
-#first_basemen <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 3)
-#second_basemen<- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 4)
-#third_basemen <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 5)
-#shortstops <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 6)
-#outfielders <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 7)
 
 #rename the vars
 #name_vector for 2018 df

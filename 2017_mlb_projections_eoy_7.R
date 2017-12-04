@@ -1,357 +1,365 @@
+#Code for generalized yearlong category data
 
-#setwd("~/Desktop/R_projects")
+#TO DO
+
+#do any stat mutations before z_score_position √
+#check for duplicate names √
+#create a dataframe of duplicates √
+#need to select out duplicate players at the beginning √
+#for now, due this by position: 5 > 3 > 7 > > 4 > 6 > 2 √
+#merge duplicated_names3 (unique names) with hitters_new (in progress) √
+#probably need to remove all the duplicated names from hitters_new, then full_join it with the duplicate names √
+#get rid of pos = "10" (DH); matchup players selected as designated hitters by their actual positions √
+
+#pitchers: next!
+
+#create criteria to assign a multi-position player to his most valuable position
+#user selected stats
+#convert
+#add bench players? how to weight them?
+#explore other scale_ fn's
+#all stat distributions look like some type of poisson distribution:
+#find the R function for self selection of poisson distribution parameters
+
+#setwd("~/Desktop/R_projects/baseball/eiflb")  #set wd
+#setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
 setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
+
 
 #libraries
 library(readxl)
 library(tidyr)
 library(dplyr)
-library(stringr)
 library(ggplot2)
 
-#read in data
-#df_sal <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 2)  #salaries entered manually in this df
-#dfh <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 3)  #read in hitter 600 proj
-#dfp <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 4)  #read in pitcher 200/65 proj
+#user settings
+#number of teams, and number of starters at each position
+n_teams <- 16
+starting_catchers <- 1
+starting_first_basemen <- 1
+starting_second_basemen <- 1
+starting_third_basemen <- 1
+starting_shortstops <- 1
+starting_outfielders <- 4
+starting_middle_infielders <- 1
+starting_corner_infielders <- 1
+starting_designated_hitters <- 1
+#pitchers
+starting_pitchers <- 7
+relief_pitchers <- 3
 
-#df_grid <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx")  #rosters from cbs in grid format
+#user selected stats
+#i.e. avg, runs, hr, rbi, ops, sb_net
 
-df_sal <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 2)
-dfh <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 3)
-dfp <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 4)
+#staring players per position
+n_catchers <- n_teams * starting_catchers
+n_first_basemen <- n_teams * starting_first_basemen
+n_second_basemen <- n_teams * starting_second_basemen
+n_third_basemen <- n_teams * starting_third_basemen
+n_shortstops <- n_teams * starting_shortstops
+n_outfielders <- n_teams * starting_outfielders
+n_middle_infielders <- n_teams * starting_middle_infielders
+n_corner_infielders <- n_teams * starting_corner_infielders
+n_designated_hitters <- n_teams * starting_designated_hitters
+#pitchers
+n_starting_pitchers <- n_teams * starting_pitchers
+n_relief_pitchers <- n_teams * relief_pitchers
 
-##### ##### ##### ##### #####
-
-df_grid <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx")
-
-#global vars and fns
-gms_played <- 115  #approximate number of games played for each mlb team
-gms_tot <- 162  #total number of single team games in a seson
-
-z_score <- function(stat){  #function to calculate z_score
+#FUNCTIONS
+#z_score calculation for each selected stat
+z_score <- function(stat){
   scale(stat)
 }
 
-#pois <- function(sb_net){
-#  ppois(sb_net, 4.5)
-#}
+#sb_net calculation
+sb_net_fn <- function(sb, cs) {
+  sb_net = sb - cs
+}
 
-pc <- .95 * 200 / 65  #reliever to starter multiplier (keeps 95% of "positive" stats)
-pc2 <- 1.05  #starter to reliever weight (gives 5% more credit to reliever)
+#create general form of function for creating z-score position
+z_score_position <- function(df, n_df) {
+  df <- df %>% 
+    filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
+    #mutate(sb_net = sb - cs) %>%
+    select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)
+  
+  df$avg_z <- as.numeric(z_score(df$avg))
+  df$runs_z <- as.numeric(z_score(df$runs))
+  df$hr_z <- as.numeric(z_score(df$hr))
+  df$rbi_z <- as.numeric(z_score(df$rbi))
+  df$ops_z <- as.numeric(z_score(df$ops))
+  
+  df <- df %>%
+    mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
+}
 
-#gather by player, join with salaries
-df_new <- df_grid %>%
-  gather(squad, player, assistant_to_the_traveling_secretary:tarrington_johsenators)  #gather the data by player from squad columns
-df <- df_new %>%
-  left_join(df_sal, by = "player") %>%  #join new df to player salaries
-  select(player, squad, position, salary) %>%  #select col's
-  arrange(player)  #alphabatize by player
+z_score_sp <- function(df, n_df) {
+  df <- df %>%
+    filter(gs > 0) %>%
+    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+  
+  df$wins_z <- as.numeric(z_score(df$wins))
+  df$era_z <- as.numeric(z_score(df$era) * -1)
+  df$hra_z <- as.numeric(z_score(df$hra) * -1)
+  df$so_z <- as.numeric(z_score(df$so))
+  df$whip_z <- as.numeric(z_score(df$whip) * -1)
+  
+  df <- df %>%
+    mutate(z_score = wins_z + era_z + hra_z + so_z + whip_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
+}
 
-#clean player names: df
-df$player <- gsub("\\.", "", df$player)  #remove periods from player names
-df$player <- gsub("\\-", " ", df$player)  #remove hyphens from player names
-df$player <- gsub("\\'", "", df$player)  #remove apostrophes from player names
-df$player <- tolower(df$player)  #convert to lowercase
+z_score_rp <- function(df, n_df) {
+  df <- df %>%
+    filter(gs == 0) %>%
+    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+  
+  df$saves_z <- as.numeric(z_score(df$saves))
+  df$era_z <- as.numeric(z_score(df$era) * -1)
+  df$hra_z <- as.numeric(z_score(df$hra) * -1)
+  df$so_z <- as.numeric(z_score(df$so))
+  df$whip_z <- as.numeric(z_score(df$whip) * -1)
+  
+  df <- df %>%
+    mutate(z_score = saves_z + era_z + hra_z + so_z + whip_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
+}
 
-#hitter column names
-colnames(dfh) <- c("player", "team", "g", "pa", "ab", "hits", "doubles", "triples", "hr", "runs", "rbis", "bb", "so", "hbp", "sb", "cs",
-                   "void1", "avg", "obp", "slg", "ops", "woba", "void2", "wrc_plus", "bsr", "fld", "void3", "off", "def", "war", "id")
+# z_score_pitchers <- function(df, n_df) {
+#   df <- df %>%
+#     filter(games > 1) %>%
+#     select(name, team, gs, games, ip, wins)
+# }
 
-#clean hitter names: dfh
-dfh$player <- gsub("\\.", "", dfh$player)  #remove periods from player names
-dfh$player <- gsub("\\-", " ", dfh$player)  #remove hyphens from player names
-dfh$player <- gsub("\\'", "", dfh$player)  #remove apostrophes from player names
-dfh$player <- tolower(dfh$player)  #convert to lowercase
-dfh$player <- sub(pattern = " jr$", "", dfh$player)  #remove "jr's" from names
+catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
+first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
+second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
+third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
+shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
+outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
+pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
 
-#select hitter columns
-dfh1 <- dfh %>%
-  select(player, team, avg, runs, hr, rbis, sb, cs, ops) %>%
-  filter(!is.na(team)) %>%  #remove players not on a team (assumption)
-  mutate(sb_net = sb - cs) %>%  #create stolen base net
-  select(-sb, -cs) %>%  #remove individual stolen bases and caught stealing
-  arrange(player)  #alphabatize
+#pitchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 8)  #read in pitchers
+#name col's
 
-#pitcher column names
-colnames(dfp) <- c("player", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hr", "so", "bb", "whip",
-                   "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+#pitcher names need to be re-edited because there is a different length than in the 2017 df
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
-#clean pitcher names
-dfp$player <- gsub("\\.", "", dfp$player)  #remove periods from player names
-dfp$player <- gsub("\\-", " ", dfp$player)  #remove hyphens from player names
-dfp$player <- gsub("\\'", "", dfp$player)  #remove apostrophes from player names
-dfp$player <- tolower(dfp$player)  #convert to lowercase
-dfp$player <- sub(pattern = " jr$", "", dfp$player)  #remove "jr's" from names
+# pitchers1 <- pitchers %>%
+#   filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
+#   select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
+#   arrange(name)
+#for now, treat starters and relievers as two completely separate categories
 
-#select pitcher columns
-dfp1 <- dfp %>%
-  select(player, team, ip, wins, so, era, saves, hr, whip) %>%
-  filter(!is.na(team)) %>%  #remove players not currently on a team
-  mutate(hra = 9 * hr / ip) %>%  #create home runs against rate
-  select(-hr) %>%  #remove individual home runs
-  arrange(player)  #alphabatize
-#change to correct spellings
+starters <- z_score_sp(pitchers, n_starting_pitchers)
+starters1 <- z_score_sp(starters, n_starting_pitchers)
 
-#merge rosters with hitter and pitcher data
-hitters <- df %>%
-  left_join(dfh1, by = "player") %>%
-  filter(position != "pitcher")
-pitchers <- df %>%
-  left_join(dfp1, by = "player") %>%
-  filter(position == "pitcher")
+relievers <- z_score_rp(pitchers, n_relief_pitchers)
+relievers1 <- z_score_rp(relievers, n_relief_pitchers)
 
-#generate z-scores for hitters; none yet for sb_net because not normally distributed
-hitters$hr_z <- as.numeric(z_score(hitters$hr))
-hitters$runs_z <- as.numeric(z_score(hitters$runs))
-hitters$rbis_z <- as.numeric(z_score(hitters$rbis))
-hitters$avg_z <- as.numeric(z_score(hitters$avg))
-hitters$ops_z <- as.numeric(z_score(hitters$ops))
-#sum individual z scores into total z score and arrange df
-hitters$z_tot <- hitters$hr_z + hitters$runs_z + hitters$rbis_z + hitters$avg_z + hitters$ops_z
-hitters <- as.tbl(hitters) %>%
-  arrange(desc(z_tot))
 
-#generate z-scores for pitchers;
-starters <- pitchers %>%
-  filter(saves == 0)
-relievers <- pitchers %>%
-  filter(saves > 0)
+# starters <- pitchers1 %>%
+#   filter(gs > 0)
+# relievers <- pitchers1 %>%
+#   filter(gs == 0)
 
-starters$wins_z <- as.numeric(z_score(starters$wins))
-starters$so_z <- as.numeric(z_score(starters$so))
-starters$era_z <- as.numeric(z_score(starters$era) * -1)
-starters$whip_z <- as.numeric(z_score(starters$whip) * -1)
-starters$hra_z <- as.numeric(z_score(starters$hra) * -1)
+#read in data frames (from fangraphs steamer projections via excel)
+#all_hitters <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls")
+#catchers <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 2)
+#first_basemen <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 3)
+#second_basemen<- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 4)
+#third_basemen <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 5)
+#shortstops <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 6)
+#outfielders <- read_excel("~/Desktop/R_projects/baseball/eiflb/2017_mlb_projections_eoy.xls", sheet = 7)
 
-starters$z_tot <- starters$wins_z + starters$so_z + starters$era_z + starters$whip_z + starters$hra_z  #totals: so, hra
-starters <- as.tbl(starters) %>%
-  arrange(desc(z_tot))
+#rename the vars
+#name_vector for 2018 df
+name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+                 "waste3", "offense", "defense", "war", "playerid")
+#name_vector for 2017 df
+#name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+#                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+#                 "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
 
-relievers$saves_z <- as.numeric(z_score(relievers$saves))
-relievers$so_z <- as.numeric(z_score(relievers$so)) * (65 / 200)
-relievers$era_z <- as.numeric(z_score(relievers$era) * -1) * (65 / 200)
+#assign the name vector to each position df
+#names(all_hitters) <- name_vector
+names(catchers) <- name_vector
+names(first_basemen) <- name_vector
+names(second_basemen) <- name_vector
+names(shortstops) <- name_vector
+names(third_basemen) <- name_vector
+names(outfielders) <- name_vector
 
-relievers$whip_z <- as.numeric(z_score(relievers$whip) * -1) * (65 / 200)
-relievers$hra_z <- as.numeric(z_score(relievers$hra) * -1) * (65 / 200)
+#the playerid reads in different classes depending on the position, so coerse the class to the same
+#all_hitters$playerid <- as.character(all_hitters$playerid)
+catchers$playerid <- as.character(catchers$playerid)
+first_basemen$playerid <- as.character(first_basemen$playerid)
+second_basemen$playerid <- as.character(second_basemen$playerid)
+third_basemen$playerid <- as.character(third_basemen$playerid)
+shortstops$playerid <- as.character(shortstops$playerid)
+outfielders$playerid <- as.character(outfielders$playerid)
 
-relievers$z_tot <- relievers$saves_z + relievers$so_z + relievers$era_z + relievers$whip_z + relievers$hra_z
-relievers <- as.tbl(relievers) %>%
-  arrange(desc(z_tot))
+#create a position var and assign it to each df
+catchers$pos <- "2"
+first_basemen$pos <- "3"
+second_basemen$pos <- "4"
+third_basemen$pos <- "5"
+shortstops$pos <- "6"
+outfielders$pos <- "7"
 
-hitters1 <- hitters %>%
-  select(player, squad, position, salary, team, hr_z, runs_z, avg_z, rbis_z, ops_z, sb_net, z_tot)
-starters1 <- starters %>%
-  select(player, squad, position, salary, team, wins_z, so_z, era_z, whip_z, hra_z, z_tot)
-relievers1 <- relievers %>%
-  select(player, squad, position, salary, team, saves_z, so_z, era_z, whip_z, hra_z, z_tot)
+#combine all positions into a df
+hitters_new <- catchers %>%
+  full_join(first_basemen) %>%
+  full_join(second_basemen) %>%
+  full_join(third_basemen) %>%
+  full_join(shortstops) %>%
+  full_join(outfielders)
 
-all_players <- hitters1 %>%
-  bind_rows(starters1, relievers1) %>%
-  arrange(desc(z_tot))
+#start searching for multi-position players
+hitters_names <- as.data.frame(hitters_new$name)  #creates a single col df of all starters' names
+names(hitters_names) <- "name"  #names the col in above df
+hitters_names <- hitters_names %>%  #arrange alphabetically so you can look for duplicates
+  arrange(name)
 
-new_df <- all_players
-new_df$position <- ifelse(new_df$position == "second_base", "middle_if", new_df$position)
-new_df$position <- ifelse(new_df$position == "short_stop", "middle_if", new_df$position)
-new_df$position <- ifelse(new_df$position == "second_base", "middle_if", new_df$position)
+duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])  #creates a df of duplicated names
+names(duplicated_names) <- "name"  #names the col in above df
 
-all_players2 <- new_df %>%
-  group_by(position) %>%
-  summarize(z_pos_mean = round(mean(z_tot), 2)) %>%
+duplicated_names1 <- hitters_new %>%
+  right_join(duplicated_names, by = "name")
+duplicated_names_copy <- duplicated_names1  #save this for anti_join with full hitters
+duplicated_names1$pos <- as.numeric(duplicated_names1$pos)
+
+duplicated_names1 <- unique(duplicated_names1)  #this removes rows where the name AND position are duplicated
+
+#create vector of position rankings, with the least productive position, catcher, having the most value
+duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
+                                     ifelse(duplicated_names1$pos == 6, 2, 
+                                            ifelse(duplicated_names1$pos == 4, 3,
+                                                   ifelse(duplicated_names1$pos == 7, 4,
+                                                          ifelse(duplicated_names1$pos == 3, 5, 6)))))
+
+duplicated_names2 <- duplicated_names1 %>%
+  select(name, pos_rank) %>%
+  group_by(name) %>%
+  summarize(pos_rank = min(pos_rank))
+
+duplicated_names3 <- duplicated_names1 %>%
+  right_join(duplicated_names2) %>%
+  select(-pos_rank)
+duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
+
+hitters_new <- hitters_new %>%
+  anti_join(duplicated_names_copy) %>%
+  bind_rows(duplicated_names3) %>%
+  filter(pa > 1) %>%
+  arrange(name)
+
+#duplicated_names4 <- duplicated_names3[duplicated(duplicated_names3),]
+#duplicated_names5 <- duplicated_names3 %>%
+#  anti_join(duplicated_names4) %>%
+#  full_join(duplicated_names4)
+###
+
+catchers1 <- hitters_new %>% filter(pos == "2")
+first_basemen1 <- hitters_new %>% filter(pos == "3")
+second_basemen1 <- hitters_new %>% filter(pos == "4")
+third_basemen1 <- hitters_new %>% filter(pos == "5")
+shortstops1 <- hitters_new %>% filter(pos == "6")
+outfielders1 <- hitters_new %>% filter(pos == "7")
+
+#run sb_net fn for each position
+catchers1$sb_net <- sb_net_fn(catchers1$sb, catchers1$cs)
+first_basemen1$sb_net <- sb_net_fn(first_basemen1$sb, first_basemen1$cs)
+second_basemen1$sb_net <- sb_net_fn(second_basemen1$sb, second_basemen1$cs)
+third_basemen1$sb_net <- sb_net_fn(third_basemen1$sb, third_basemen1$cs)
+shortstops1$sb_net <- sb_net_fn(shortstops1$sb, shortstops1$cs)
+outfielders1$sb_net <- sb_net_fn(outfielders1$sb, outfielders1$cs)
+hitters_new$sb_net <- sb_net_fn(hitters_new$sb, hitters_new$cs)
+
+#remove dual position players from "weaker" position category; i.e. remove Starlin Castro from "2B" and leave in "SS"
+#first_basemen <- first_basemen %>%
+#  filter(name != "Brandon Moss", name != "Steve Pearce")
+#second_basemen <- second_basemen %>%
+#  filter(name != "Brad Miller", name != "Jean Segura", name != "Starlin Castro", name != "Jonathan Villar", name != "Javier Baez")
+#third_basemen <- third_basemen %>%
+#  filter(name != "Jedd Gyorko", name != "Jose Ramirez", name != "Matt Carpenter", name != "Yangervis Solarte")
+#outfielders <- outfielders %>%
+#  filter(name != "Ben Zobrist", name != "Ian Desmond", name != "Howie Kendrick")
+
+
+
+
+#run z-score pos on each position df
+catchers2 <- z_score_position(catchers1, n_catchers)
+first_basemen2 <- z_score_position(first_basemen1, n_first_basemen)
+second_basemen2 <- z_score_position(second_basemen1, n_second_basemen)
+third_basemen2 <- z_score_position(third_basemen1, n_third_basemen)
+shortstops2 <- z_score_position(shortstops1, n_shortstops)
+outfielders2 <- z_score_position(outfielders1, n_outfielders)
+hitters_new1 <- z_score_position(hitters_new, nrow(hitters_new))
+
+#create middle infielders df and run z-score on middle infielders after removing already used players
+middle_infielders <- second_basemen1 %>%
+  bind_rows(shortstops1) %>%
+  anti_join(second_basemen2, by = "name") %>%
+  anti_join(shortstops2, by = "name")
+middle_infielders1 <- z_score_position(middle_infielders, n_middle_infielders)
+
+#create corner infielders df and run z-score on corner infielders after removing already used players
+corner_infielders <- first_basemen1 %>%
+  bind_rows(third_basemen1) %>%
+  anti_join(first_basemen2, by = "name") %>%
+  anti_join(third_basemen2, by = "name")
+corner_infielders1 <- z_score_position(corner_infielders, n_corner_infielders)
+#combine all selected players
+hitters <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
+                     middle_infielders1, corner_infielders1)
+
+remaining_hitters <- hitters_new1 %>%
+  anti_join(hitters, by = "name") %>%
+  arrange(desc(z_score))
+#create designated hitters
+
+#this needs to be fixed; "sb" not found √
+designated_hitters <- z_score_position(remaining_hitters, n_designated_hitters)
+##### #####
+hitters1 <- bind_rows(hitters, designated_hitters)
+hitters2 <- z_score_position(hitters1, nrow(hitters1))
+#hitters3 <- hitters2 %>%  #this makes it easy to visually look at duplicated names
+#  arrange(name)
+
+#position relative z_score
+hitters_zpos <- hitters2 %>%
+  group_by(pos) %>%
+  summarize(z_pos_mean = round(mean(z_score), 2)) %>%
   arrange(desc(z_pos_mean))
-all_players3 <- new_df %>%
-  left_join(all_players2, by = "position") %>%
-  mutate(z_pos = z_tot - z_pos_mean) %>%
-  arrange(desc(z_tot))
-all_players_ab <- all_players3 %>%  #cut down width of df for exploratory analysis
-  select(player, squad, position, salary, z_pos) %>%
+
+hitters_zpos1 <- hitters2 %>%
+  left_join(hitters_zpos, by = "pos") %>%
+  mutate(z_pos = round(z_score - z_pos_mean, 4)) %>%
   arrange(desc(z_pos))
 
-find_name <- function(name){
-  which(all_players$player == name)
-}
+hitters_zpos2 <- hitters_zpos1 %>%
+  arrange(desc(z_score))
 
-team_totals <- all_players %>%
-  group_by(squad) %>%
-  summarize(z_team = sum(z_tot)) %>%
-  arrange(desc(z_team))
+#hitters_zpos2 <- hitters_zpos1 %>%
+#  arrange(name)  #alphabetized to check for duplicate names or to look at particular player
 
-df_ben2 <- all_players3 %>%
-  filter(squad == "moline_belly_itchers") %>%
-  arrange(desc(z_tot))
+#model the stats in the population
+#all look like some type of poisson distribution
+#find the R function for self selection of poisson distribution parameters
+ggplot(hitters_zpos1, aes(avg)) + geom_histogram(binwidth = .003)
+ggplot(hitters_zpos1, aes(runs)) + geom_histogram(binwidth = 2)
+ggplot(hitters_zpos1, aes(hr)) + geom_histogram(binwidth = 1)
+ggplot(hitters_zpos1, aes(rbi)) + geom_histogram(binwidth = 2)
+ggplot(hitters_zpos1, aes(ops)) + geom_histogram(binwidth = .01)
+ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 
-team_totals1 <- all_players3 %>%
-  group_by(squad) %>%
-  summarize(z_team = sum(z_pos),
-            hr_z_team = sum(hr_z, na.rm = TRUE),
-            runs_z_team = sum(runs_z, na.rm = TRUE),
-            avg_z_team = sum(avg_z, na.rm = TRUE),
-            rbis_z_team = sum(rbis_z, na.rm = TRUE),
-            ops_z_team = sum(ops_z, na.rm = TRUE),
-            sb_net_team = sum(sb_net, na.rm = TRUE),  #added sb_net, no z-score
-            wins_z_team = sum(wins_z, na.rm = TRUE),
-            so_z_team = sum(so_z, na.rm = TRUE),
-            era_z_team = sum(era_z, na.rm = TRUE),
-            whip_z_team = sum(whip_z, na.rm = TRUE),
-            hra_z_team = sum(hra_z, na.rm = TRUE),
-            saves_z_team = sum(saves_z, na.rm = TRUE)) %>%
-  arrange(desc(z_team))
-#RANKS
-
-#general form: team_totals1$hr_rank <- rank(team_totals1$hr_z_team)
-
-stat_rank <- function(x){
-  rank(x)
-}
-team_totals1$hr_rank <- stat_rank(team_totals1$hr_z_team)
-team_totals1$runs_rank <- stat_rank(team_totals1$runs_z_team)
-team_totals1$avg_rank <- stat_rank(team_totals1$avg_z_team)
-team_totals1$rbis_rank <- stat_rank(team_totals1$rbis_z_team)
-team_totals1$ops_rank <- stat_rank(team_totals1$ops_z_team)
-team_totals1$sb_rank <- stat_rank(team_totals1$sb_net_team)
-team_totals1$wins_rank <- stat_rank(team_totals1$wins_z_team)
-team_totals1$so_rank <- stat_rank(team_totals1$so_z_team)
-team_totals1$era_rank <- stat_rank(team_totals1$era_z_team)
-team_totals1$whip_rank <- stat_rank(team_totals1$whip_z_team)
-team_totals1$hra_rank <- stat_rank(team_totals1$hra_z_team)
-team_totals1$saves_rank <- stat_rank(team_totals1$saves_z_team)
-
-#total score
-team_totals2 <- team_totals1 %>%
-  select(hr_rank:saves_rank)
-team_totals1$proj_pts <- rowSums(team_totals2)
-
-team_totals3 <- team_totals1 %>%
-  select(squad, hr_rank:proj_pts) %>%
-  arrange(squad)
-
-#current ranks
-team_totals3$pts_curr <- 0
-
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "assistant_to_the_traveling_secretary", 110, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "berteau_bombers", 148, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "chicago_blues", 93.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "chicos_bail_bonds", 60, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "detroit_whole_foods", 98.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "hiawatha_hitmen", 109.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "iowa_falls_fighting_frogs", 113.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "magnolia_maulers", 125, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "marion_revival", 128, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "moline_belly_itchers", 130, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "motown_tigers", 72, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "ravenswood", 71.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "river_north_chavez", 76.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "shellsburg_steamrollers", 118.5, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "st_petersburg_rusty_kuntz", 122, team_totals3$pts_curr)
-team_totals3$pts_curr <- ifelse(team_totals3$squad == "tarrington_johsenators", 54.5, team_totals3$pts_curr)
-
-team_totals3$pts_proj_fn <- round((team_totals3$proj_pts * (gms_tot - gms_played) + team_totals3$pts_curr * gms_played) / gms_tot, 
-                                  digits = 1)
-team_totals3 <- arrange(team_totals3, desc(pts_proj_fn))
-
-#########################
-
-roto_ranks <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 7, skip = 1)
-
-avg_ranks <- roto_ranks[1:16, 1:3]
-era_ranks <- roto_ranks[1:16, 5:7]
-hr_ranks <- roto_ranks[18:33, 1:3]
-hra_ranks <- roto_ranks[18:33, 5:7]
-ops_ranks <- roto_ranks[35:50, 1:3]
-so_ranks <- roto_ranks[35:50, 5:7]
-runs_ranks <- roto_ranks[52:67, 1:3]
-saves_ranks <- roto_ranks[52:67, 5:7]
-rbis_ranks <- roto_ranks[69:84, 1:3]
-wins_ranks <- roto_ranks[69:84, 5:7]
-sb_net_ranks <- roto_ranks[86:101, 1:3]
-whip_ranks <- roto_ranks[86:101, 5:7]
-
-colnames(avg_ranks) <- c("squad", "avg", "avg_rank_y")
-colnames(era_ranks) <- c("squad", "era", "era_rank_y")
-colnames(hr_ranks) <- c("squad", "hr", "hr_rank_y")
-colnames(hra_ranks) <- c("squad", "hra", "hra_rank_y")
-colnames(ops_ranks) <- c("squad", "ops", "ops_rank_y")
-colnames(so_ranks) <- c("squad", "so", "so_rank_y")
-colnames(runs_ranks) <- c("squad", "runs", "runs_rank_y")
-colnames(saves_ranks) <- c("squad", "saves", "saves_rank_y")
-colnames(rbis_ranks) <- c("squad", "rbis", "rbis_rank_y")
-colnames(wins_ranks) <- c("squad", "wins", "wins_rank_y")
-colnames(sb_net_ranks) <- c("squad", "sb_net", "sb_net_rank_y")
-colnames(whip_ranks) <- c("squad", "whip", "whip_rank_y")
-
-roto_ranks1 <- avg_ranks %>%
-  left_join(era_ranks) %>%
-  left_join(hr_ranks) %>%
-  left_join(hra_ranks) %>%
-  left_join(ops_ranks) %>%
-  left_join(so_ranks) %>%
-  left_join(runs_ranks) %>%
-  left_join(saves_ranks) %>%
-  left_join(rbis_ranks) %>%
-  left_join(wins_ranks) %>%
-  left_join(sb_net_ranks) %>%
-  left_join(whip_ranks) %>%
-  select(squad, hr_rank_y, runs_rank_y, avg_rank_y, rbis_rank_y, ops_rank_y, sb_net_rank_y, wins_rank_y, so_rank_y, 
-         era_rank_y, whip_rank_y, hra_rank_y, saves_rank_y)
-
-roto_ranks1$squad <- tolower(roto_ranks1$squad)  #change squad names to lowercase
-
-roto_ranks1$squad <- gsub(" ", "_", roto_ranks1$squad)
-
-#remove punctuation from squad names in roto_ranks1
-roto_ranks1$squad <- gsub("\\.", "", roto_ranks1$squad)  #remove periods from player names
-roto_ranks1$squad <- gsub("\\-", "", roto_ranks1$squad)  #remove hyphens from player names
-roto_ranks1$squad <- gsub("\\'", "", roto_ranks1$squad)  #remove apostrophes from player names
-
-roto_ranks1$hr_rank_y <- as.numeric(roto_ranks1$hr_rank_y)
-roto_ranks1$runs_rank_y <- as.numeric(roto_ranks1$runs_rank_y)
-roto_ranks1$avg_rank_y <- as.numeric(roto_ranks1$avg_rank_y)
-roto_ranks1$rbis_rank_y <- as.numeric(roto_ranks1$rbis_rank_y) 
-roto_ranks1$ops_rank_y <- as.numeric(roto_ranks1$ops_rank_y)
-roto_ranks1$sb_net_rank_y <- as.numeric(roto_ranks1$sb_net_rank_y)
-roto_ranks1$wins_rank_y <- as.numeric(roto_ranks1$wins_rank_y)
-roto_ranks1$so_rank_y <- as.numeric(roto_ranks1$so_rank_y)
-roto_ranks1$era_rank_y <- as.numeric(roto_ranks1$era_rank_y)
-roto_ranks1$whip_rank_y <- as.numeric(roto_ranks1$whip_rank_y)
-roto_ranks1$hra_rank_y <- as.numeric(roto_ranks1$hra_rank_y)
-roto_ranks1$saves_rank_y <- as.numeric(roto_ranks1$saves_rank_y)
-
-team_totals4 <- team_totals3 %>%
-  left_join(roto_ranks1, by = "squad") %>%
-  mutate(hr_n = ((gms_tot - gms_played) * hr_rank + gms_played * hr_rank_y) / gms_tot,
-         runs_n = ((gms_tot - gms_played) * runs_rank + gms_played * runs_rank_y) / gms_tot,
-         avg_n = ((gms_tot - gms_played) * avg_rank + gms_played * avg_rank_y) / gms_tot,
-         rbis_n = ((gms_tot - gms_played) * rbis_rank + gms_played * rbis_rank_y) / gms_tot,
-         ops_n = ((gms_tot - gms_played) * ops_rank + gms_played * ops_rank_y) / gms_tot,
-         sb_n = ((gms_tot - gms_played) * sb_rank + gms_played * sb_net_rank_y) / gms_tot,
-         wins_n = ((gms_tot - gms_played) * wins_rank + gms_played * wins_rank_y) / gms_tot,
-         so_n = ((gms_tot - gms_played) * so_rank + gms_played * so_rank_y) / gms_tot,
-         era_n = ((gms_tot - gms_played) * era_rank + gms_played * era_rank_y) / gms_tot,
-         whip_n = ((gms_tot - gms_played) * whip_rank + gms_played * whip_rank_y) / gms_tot,
-         hra_n = ((gms_tot - gms_played) * hra_rank + gms_played * hra_rank_y) / gms_tot,
-         saves_n = ((gms_tot - gms_played) * saves_rank + gms_played * saves_rank_y) / gms_tot) %>%
-  select(squad, hr_n, runs_n, avg_n, rbis_n, ops_n, sb_n, wins_n, so_n, era_n, whip_n, hra_n, saves_n)
-
-team_totals4$hr <- stat_rank(team_totals4$hr_n)
-team_totals4$runs <- stat_rank(team_totals4$runs_n)
-team_totals4$avg <- stat_rank(team_totals4$avg_n)
-team_totals4$rbis <- stat_rank(team_totals4$rbis_n)
-team_totals4$ops <- stat_rank(team_totals4$ops_n)
-team_totals4$sb <- stat_rank(team_totals4$sb_n)
-team_totals4$wins <- stat_rank(team_totals4$wins_n)
-team_totals4$so <- stat_rank(team_totals4$so_n)
-team_totals4$era <- stat_rank(team_totals4$era_n)
-team_totals4$whip <- stat_rank(team_totals4$whip_n)
-team_totals4$hra <- stat_rank(team_totals4$hra_n)
-team_totals4$saves <- stat_rank(team_totals4$saves_n)
-
-projections <- team_totals4 %>%
-  select(squad, hr:saves) %>%
-  mutate(proj_pts = hr + runs + avg + rbis + ops + sb + wins + so + era + whip + hra + saves) %>%
-  arrange(desc(proj_pts))
-
-#########################
-
-#library(readr)
-#write_csv(projections, path = "C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/fantasy_baseball_projections.csv")
-#write_csv(all_players3, path = "C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/fantasy_baseball_projections_1.csv")
-#write_csv(df_ben2, path = "C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/fantasy_baseball_projections_2.csv")
+#write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
+#write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")

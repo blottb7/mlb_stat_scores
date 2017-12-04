@@ -2,6 +2,7 @@
 
 #TO DO
 #pitchers: next! (done)
+#1.) fn for sb_net distribution
 
 #create criteria to assign a multi-position player to his most valuable position
 #user selected stats
@@ -378,3 +379,19 @@ ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 
 #write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
 #write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")
+
+pois <- function(stat){
+ ppois(stat, 4.5)
+}
+
+sb_pois <- ppois(hitters_zpos1$sb_net, 3.5)
+hist(sb_pois)
+
+dpois(hitters_zpos1$sb_net, 3.5)
+ppois(hitters_zpos1$sb_net, 3.5)
+qpois(hitters_zpos1$sb_net, 3.5)
+rpois(hitters_zpos1$sb_net, 3.5)
+
+hist(ppois(hitters_zpos1$sb_net, mean(hitters_zpos1$sb_net)))
+mean(hitters_zpos1$sb_net)
+sd(hitters_zpos1$sb_net)

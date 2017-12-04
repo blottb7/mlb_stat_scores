@@ -22,7 +22,9 @@
 #find the R function for self selection of poisson distribution parameters
 
 #setwd("~/Desktop/R_projects/baseball/eiflb")  #set wd
-setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
+#setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
+setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
+
 
 #libraries
 library(readxl)
@@ -66,31 +68,31 @@ n_relief_pitchers <- n_teams * relief_pitchers
 #FUNCTIONS
 #z_score calculation for each selected stat
 z_score <- function(stat){
-        scale(stat)
+  scale(stat)
 }
 
 #sb_net calculation
 sb_net_fn <- function(sb, cs) {
-        sb_net = sb - cs
+  sb_net = sb - cs
 }
 
 #create general form of function for creating z-score position
 z_score_position <- function(df, n_df) {
-        df <- df %>% 
-                filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
-                #mutate(sb_net = sb - cs) %>%
-                select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)
-        
-        df$avg_z <- as.numeric(z_score(df$avg))
-        df$runs_z <- as.numeric(z_score(df$runs))
-        df$hr_z <- as.numeric(z_score(df$hr))
-        df$rbi_z <- as.numeric(z_score(df$rbi))
-        df$ops_z <- as.numeric(z_score(df$ops))
-        
-        df <- df %>%
-                mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
-                arrange(desc(z_score)) %>%
-                head(n_df)
+  df <- df %>% 
+    filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
+    #mutate(sb_net = sb - cs) %>%
+    select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)
+  
+  df$avg_z <- as.numeric(z_score(df$avg))
+  df$runs_z <- as.numeric(z_score(df$runs))
+  df$hr_z <- as.numeric(z_score(df$hr))
+  df$rbi_z <- as.numeric(z_score(df$rbi))
+  df$ops_z <- as.numeric(z_score(df$ops))
+  
+  df <- df %>%
+    mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
 }
 
 # z_score_pitchers <- function(df, n_df) {
@@ -112,12 +114,12 @@ pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
 
 #pitcher names need to be re-edited because there is a different length than in the 2017 df
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
 pitchers1 <- pitchers %>%
-        filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
-        select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
-        arrange(name)
+  filter(!is.na(name), games > 1) %>%  #remove missing names, remove not expected to play > 1 game
+  select(name, team, gs, games, ip, wins, era, saves, hra, so, whip) %>%
+  arrange(name)
 #for now, treat starters and relievers as two completely separate categories
 
 #read in data frames (from fangraphs steamer projections via excel)
@@ -167,23 +169,23 @@ outfielders$pos <- "7"
 
 #combine all positions into a df
 hitters_new <- catchers %>%
-        full_join(first_basemen) %>%
-        full_join(second_basemen) %>%
-        full_join(third_basemen) %>%
-        full_join(shortstops) %>%
-        full_join(outfielders)
+  full_join(first_basemen) %>%
+  full_join(second_basemen) %>%
+  full_join(third_basemen) %>%
+  full_join(shortstops) %>%
+  full_join(outfielders)
 
 #start searching for multi-position players
 hitters_names <- as.data.frame(hitters_new$name)  #creates a single col df of all starters' names
 names(hitters_names) <- "name"  #names the col in above df
 hitters_names <- hitters_names %>%  #arrange alphabetically so you can look for duplicates
-        arrange(name)
+  arrange(name)
 
 duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])  #creates a df of duplicated names
 names(duplicated_names) <- "name"  #names the col in above df
 
 duplicated_names1 <- hitters_new %>%
-        right_join(duplicated_names, by = "name")
+  right_join(duplicated_names, by = "name")
 duplicated_names_copy <- duplicated_names1  #save this for anti_join with full hitters
 duplicated_names1$pos <- as.numeric(duplicated_names1$pos)
 
@@ -197,20 +199,20 @@ duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
                                                           ifelse(duplicated_names1$pos == 3, 5, 6)))))
 
 duplicated_names2 <- duplicated_names1 %>%
-        select(name, pos_rank) %>%
-        group_by(name) %>%
-        summarize(pos_rank = min(pos_rank))
+  select(name, pos_rank) %>%
+  group_by(name) %>%
+  summarize(pos_rank = min(pos_rank))
 
 duplicated_names3 <- duplicated_names1 %>%
-        right_join(duplicated_names2) %>%
-        select(-pos_rank)
+  right_join(duplicated_names2) %>%
+  select(-pos_rank)
 duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
 
 hitters_new <- hitters_new %>%
-        anti_join(duplicated_names_copy) %>%
-        bind_rows(duplicated_names3) %>%
-        filter(pa > 1) %>%
-arrange(name)
+  anti_join(duplicated_names_copy) %>%
+  bind_rows(duplicated_names3) %>%
+  filter(pa > 1) %>%
+  arrange(name)
 
 #duplicated_names4 <- duplicated_names3[duplicated(duplicated_names3),]
 #duplicated_names5 <- duplicated_names3 %>%
@@ -258,24 +260,24 @@ hitters_new1 <- z_score_position(hitters_new, nrow(hitters_new))
 
 #create middle infielders df and run z-score on middle infielders after removing already used players
 middle_infielders <- second_basemen1 %>%
-        bind_rows(shortstops1) %>%
-        anti_join(second_basemen2, by = "name") %>%
-        anti_join(shortstops2, by = "name")
+  bind_rows(shortstops1) %>%
+  anti_join(second_basemen2, by = "name") %>%
+  anti_join(shortstops2, by = "name")
 middle_infielders1 <- z_score_position(middle_infielders, n_middle_infielders)
 
 #create corner infielders df and run z-score on corner infielders after removing already used players
 corner_infielders <- first_basemen1 %>%
-        bind_rows(third_basemen1) %>%
-        anti_join(first_basemen2, by = "name") %>%
-        anti_join(third_basemen2, by = "name")
+  bind_rows(third_basemen1) %>%
+  anti_join(first_basemen2, by = "name") %>%
+  anti_join(third_basemen2, by = "name")
 corner_infielders1 <- z_score_position(corner_infielders, n_corner_infielders)
 #combine all selected players
 hitters <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
                      middle_infielders1, corner_infielders1)
 
 remaining_hitters <- hitters_new1 %>%
-        anti_join(hitters, by = "name") %>%
-        arrange(desc(z_score))
+  anti_join(hitters, by = "name") %>%
+  arrange(desc(z_score))
 #create designated hitters
 
 #this needs to be fixed; "sb" not found √
@@ -288,17 +290,17 @@ hitters2 <- z_score_position(hitters1, nrow(hitters1))
 
 #position relative z_score
 hitters_zpos <- hitters2 %>%
-        group_by(pos) %>%
-        summarize(z_pos_mean = round(mean(z_score), 2)) %>%
-        arrange(desc(z_pos_mean))
+  group_by(pos) %>%
+  summarize(z_pos_mean = round(mean(z_score), 2)) %>%
+  arrange(desc(z_pos_mean))
 
 hitters_zpos1 <- hitters2 %>%
-        left_join(hitters_zpos, by = "pos") %>%
-        mutate(z_pos = round(z_score - z_pos_mean, 4)) %>%
-        arrange(desc(z_pos))
+  left_join(hitters_zpos, by = "pos") %>%
+  mutate(z_pos = round(z_score - z_pos_mean, 4)) %>%
+  arrange(desc(z_pos))
 
 hitters_zpos2 <- hitters_zpos1 %>%
-        arrange(desc(z_score))
+  arrange(desc(z_score))
 
 #hitters_zpos2 <- hitters_zpos1 %>%
 #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player

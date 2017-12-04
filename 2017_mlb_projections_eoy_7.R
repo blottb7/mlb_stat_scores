@@ -353,7 +353,56 @@ hitters_zpos2 <- hitters_zpos1 %>%
 
 #model the stats in the population
 #all look like some type of poisson distribution
-#find the R function for self selection of poisson distribution parameters
+#find the R function for self selection o
+#setwd("~/Desktop/R_projects")
+setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
+
+#libraries
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+
+#read in data
+#df_sal <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 2)  #salaries entered manually in this df
+#dfh <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 3)  #read in hitter 600 proj
+#dfp <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 4)  #read in pitcher 200/65 proj
+
+#df_grid <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx")  #rosters from cbs in grid format
+
+df_sal <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 2)
+dfh <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 3)
+dfp <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 4)
+
+##### ##### ##### ##### #####
+
+df_grid <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx")
+
+#global vars and fns
+gms_played <- 115  #approximate number of games played for each mlb team
+gms_tot <- 162  #total number of single team games in a seson
+
+z_score <- function(stat){  #function to calculate z_score
+  scale(stat)
+}
+
+#pois <- function(sb_net){
+#  ppois(sb_net, 4.5)
+#}
+
+pc <- .95 * 200 / 65  #reliever to starter multiplier (keeps 95% of "positive" stats)
+pc2 <- 1.05  #starter to reliever weight (gives 5% more credit to reliever)
+
+#gather by player, join with salaries
+df_new <- df_grid %>%
+  gather(squad, player, assistant_to_the_traveling_secretary:tarrington_johsenators)  #gather the data by player from squad columns
+df <- df_new %>%
+  left_join(df_sal, by = "player") %>%  #join new df to player salaries
+  select(player, squad, position, salary) %>%  #select col's
+  arrange(player)  #alphabatize by player
+
+#clean player names: dff poisson distribution parameters
 ggplot(hitters_zpos1, aes(avg)) + geom_histogram(binwidth = .003)
 ggplot(hitters_zpos1, aes(runs)) + geom_histogram(binwidth = 2)
 ggplot(hitters_zpos1, aes(hr)) + geom_histogram(binwidth = 1)

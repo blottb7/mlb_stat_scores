@@ -119,6 +119,9 @@ names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "sa
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
 #for now, treat starters and relievers as two completely separate categories
+starters <- pitchers %>%
+  arrange(desc(wins), fip)
+starters <- starters[1:n_starting_pitchers,]
 starters <- z_score_sp(pitchers, n_starting_pitchers)
 starters1 <- z_score_sp(starters, n_starting_pitchers)
 
@@ -151,6 +154,9 @@ relievers1 <- z_score_rp(relievers, n_relief_pitchers)
 
 #NOTES
 #a one unit change in a reliever counting stat category should be the same as a one unit change in a starter counting stat cat.
+#likewise, there should be a regulator for rate stats base on ip or pa.
+  #So! maybe need to change everthing into weights or everything into counting stats
+    #What would W/IP look like? No, each win should be worth a certain amount of Z.
 
 #combine starters and relievers
 pitchers1 <- starters1 %>%
@@ -390,6 +396,9 @@ ggplot(hitters_zpos1, aes(rbi)) + geom_histogram(binwidth = 2)
 ggplot(hitters_zpos1, aes(ops)) + geom_histogram(binwidth = .01)
 ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 
+ggplot(starters1, aes(wins)) + geom_histogram(binwidth = 1)
+ggplot(relievers1, aes(wins)) + geom_histogram(binwidth = 1)
+ggplot(pitchers1, aes(wins)) + geom_histogram(binwidth = 1)
 #write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
 #write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")
 

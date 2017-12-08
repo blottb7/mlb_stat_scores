@@ -104,25 +104,6 @@ z_score_sp <- function(df, n_df) {
     head(n_df)
 }
 
-#z_score function for relief pitchers
-z_score_rp <- function(df, n_df) {
-  df <- df %>%
-    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-           gs == 0) %>%  #filter for pitchers who project to start at least one game
-    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-  
-  df$saves_z <- as.numeric(z_score(df$saves))
-  df$era_z <- as.numeric(z_score(df$era) * -1 * df$ip / mean(starters1$ip))
-  df$hra_z <- as.numeric(z_score(df$hra) * -1)
-  df$so_z <- as.numeric(z_score(df$so))
-  df$whip_z <- as.numeric(z_score(df$whip) * -1)
-  
-  df <- df %>%
-    mutate(z_score = saves_z + era_z + hra_z + so_z + whip_z) %>%
-    arrange(desc(z_score)) %>%
-    head(n_df)
-}
-
 #read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
@@ -141,9 +122,37 @@ names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "sa
 starters <- z_score_sp(pitchers, n_starting_pitchers)
 starters1 <- z_score_sp(starters, n_starting_pitchers)
 
-relievers <- z_score_rp(pitchers, n_relief_pitchers)
+#z_score function for relief pitchers
+z_score_rp <- function(df, n_df) {
+  df <- df %>%
+    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+           gs == 0) %>%  #filter for pitchers who project to start at least one game
+    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+  
+  df$wins_z <- as.numeric(z_score(df$wins) * df$wins / mean(starters$wins))
+  df$saves_z <- as.numeric(z_score(df$saves))
+  df$era_z <- as.numeric(z_score(df$era) * -1 * df$ip / mean(starters1$ip))
+  df$hra_z <- as.numeric(z_score(df$hra) * -1)
+  df$so_z <- as.numeric(z_score(df$so) * df$so / mean(starters1$so))
+  df$whip_z <- as.numeric(z_score(df$whip) * -1 * df$ip / mean(starters1$ip))
+  
+  df <- df %>%
+    mutate(z_score = saves_z + era_z + hra_z + so_z + whip_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
+}
+
+#relief pitchers dfs
+relievers <- pitchers %>%
+  arrange(desc(saves))
+relievers <- relievers[1:48,]
+#relievers <- z_score_rp(pitchers, n_relief_pitchers)
 relievers1 <- z_score_rp(relievers, n_relief_pitchers)
 
+#NOTES
+#a one unit change in a reliever counting stat category should be the same as a one unit change in a starter counting stat cat.
+
+#combine starters and relievers
 pitchers1 <- starters1 %>%
   full_join(relievers1) %>%
   arrange(desc(z_score))

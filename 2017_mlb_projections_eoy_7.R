@@ -13,9 +13,9 @@
 #find the R function for self selection of poisson distribution parameters
 
 #Set working directory
-#setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
+setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
 #setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
-setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
+#setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
 
 #libraries
 library(readxl)
@@ -112,7 +112,7 @@ z_score_rp <- function(df, n_df) {
     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
   
   df$saves_z <- as.numeric(z_score(df$saves))
-  df$era_z <- as.numeric(z_score(df$era) * -1)
+  df$era_z <- as.numeric(z_score(df$era) * -1 * df$ip / mean(starters1$ip))
   df$hra_z <- as.numeric(z_score(df$hra) * -1)
   df$so_z <- as.numeric(z_score(df$so))
   df$whip_z <- as.numeric(z_score(df$whip) * -1)
@@ -133,7 +133,7 @@ outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
 pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
 
 #pitcher names need to be re-edited because there is a different length than in the 2017 df
-  #these are the names for 2018 df
+#these are the names for 2018 df (does not include column: "adp")
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
@@ -144,12 +144,16 @@ starters1 <- z_score_sp(starters, n_starting_pitchers)
 relievers <- z_score_rp(pitchers, n_relief_pitchers)
 relievers1 <- z_score_rp(relievers, n_relief_pitchers)
 
-#rename the vars
-#name_vector for 2018 df
+pitchers1 <- starters1 %>%
+  full_join(relievers1) %>%
+  arrange(desc(z_score))
+
+#rename position player vars
+#name_vector for 2018 df; does not include column: "adp"
 name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
                  "waste3", "offense", "defense", "war", "playerid")
-#name_vector for 2017 df
+#name_vector for 2017 df; includes column: "adp"
 #name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
 #                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
 #                 "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
@@ -381,7 +385,7 @@ ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 #write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")
 
 pois <- function(stat){
- ppois(stat, 4.5)
+  ppois(stat, 4.5)
 }
 
 sb_pois <- ppois(hitters_zpos1$sb_net, 3.5)

@@ -104,6 +104,24 @@ z_score_sp <- function(df, n_df) {
     head(n_df)
 }
 
+z_score_all_p <- function(df, n_df) {
+  df <- df %>%
+    filter(games > 1) %>%  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+#           gs > 0) %>%  #filter for pitchers who project to start at least one game
+    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+  
+  df$wins_z <- as.numeric(z_score(df$wins))
+  df$saves_z <- as.numeric(z_score(df$saves))
+  df$era_z <- as.numeric(z_score(df$era) * -1)
+  df$hra_z <- as.numeric(z_score(df$hra) * -1)
+  df$so_z <- as.numeric(z_score(df$so))
+  df$whip_z <- as.numeric(z_score(df$whip) * -1)
+  
+  df <- df %>%
+    mutate(z_score = wins_z + saves_z + era_z + hra_z + so_z + whip_z) %>%
+    arrange(desc(z_score)) %>%
+    head(n_df)
+}
 #read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
@@ -124,6 +142,10 @@ starters <- pitchers %>%
 starters <- starters[1:n_starting_pitchers,]
 starters <- z_score_sp(pitchers, n_starting_pitchers)
 starters1 <- z_score_sp(starters, n_starting_pitchers)
+
+#all pitchers
+all_pitchers <- z_score_all_p(pitchers, n_starting_pitchers + n_relief_pitchers)
+all_pitchers1 <- z_score_all_p(all_pitchers, n_starting_pitchers + n_relief_pitchers)
 
 #z_score function for relief pitchers
 z_score_rp <- function(df, n_df) {
@@ -157,6 +179,9 @@ relievers1 <- z_score_rp(relievers, n_relief_pitchers)
 #likewise, there should be a regulator for rate stats base on ip or pa.
   #So! maybe need to change everthing into weights or everything into counting stats
     #What would W/IP look like? No, each win should be worth a certain amount of Z.
+
+#probably first need a straight scale. then have a second statistic that describes how it affects team outcome
+#this second stat will be weighted with innings
 
 #combine starters and relievers
 pitchers1 <- starters1 %>%
@@ -399,6 +424,9 @@ ggplot(hitters_zpos1, aes(sb_net)) + geom_histogram(binwidth = 1)
 ggplot(starters1, aes(wins)) + geom_histogram(binwidth = 1)
 ggplot(relievers1, aes(wins)) + geom_histogram(binwidth = 1)
 ggplot(pitchers1, aes(wins)) + geom_histogram(binwidth = 1)
+ggplot(all_pitchers1, aes(wins)) + geom_histogram(binwidth = 1)
+ggplot(all_pitchers1, aes(whip)) + geom_histogram(binwidth = .025)
+ggplot(pitchers, aes(whip)) + geom_histogram(binwidth = .025)
 #write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
 #write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")
 

@@ -278,17 +278,25 @@ duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to ch
 hitters_new <- hitters_new %>%
   anti_join(duplicated_names_copy) %>%
   bind_rows(duplicated_names3) %>%
+  #build stat projections for all missing stats, i.e. sb_net
   mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
          rbi_r = rbi + runs, #rbis plus runs
          xbh = double + triple + hr,  #extra base hits
-         sb_net = sb - cs) %>%
+         sb_net = sb - cs) %>%  #stolen bases - caught stealing
+  select(-waste1, -waste2, -waste3,  #remove spacer cols
+         -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
   arrange(name)
 
-#build stat projections for all missing stats, i.e. sb_net
-#avg, rbi, r, sb, hr, obp, slg, ops, h, so, 2b, 3b, tb, bb, rbi+r, xBH, sb-cs, woba
-  #tb, rbi+r, xbh, sb-cs (these are the ones that need mutating)
+hitters_reg <- hitters_new %>%
+  filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
+  arrange(name)
+#save the discarded hitters for later comparison, i.e. for guys you may want to stream or add later in the year
+hitters_res <- hitters_new %>%
+  filter(pa < 300) %>%
+  arrange(desc(woba))
 
-catchers1 <- hitters_new %>% filter(pos == "2")
+catchers1 <- hitters_reg %>% filter(pos == "2") %>%
+  arrange(desc(woba))
 first_basemen1 <- hitters_new %>% filter(pos == "3")
 second_basemen1 <- hitters_new %>% filter(pos == "4")
 third_basemen1 <- hitters_new %>% filter(pos == "5")

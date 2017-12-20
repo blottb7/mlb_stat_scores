@@ -65,65 +65,65 @@ z_score <- function(stat){
 }
 
 #sb_net calculation
-sb_net_fn <- function(sb, cs) {
-  sb_net = sb - cs
-}
+# sb_net_fn <- function(sb, cs) {
+#   sb_net = sb - cs
+# }
 
-#create general form of function for creating z-score for position players
-z_score_position <- function(df, n_df) {
-  df <- df %>% 
-    filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
-    select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
-  
-  df$avg_z <- as.numeric(z_score(df$avg))
-  df$runs_z <- as.numeric(z_score(df$runs))
-  df$hr_z <- as.numeric(z_score(df$hr))
-  df$rbi_z <- as.numeric(z_score(df$rbi))
-  df$ops_z <- as.numeric(z_score(df$ops))
-  
-  df <- df %>%
-    mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
-    arrange(desc(z_score)) %>%
-    head(n_df)
-}
-
-#z_score function for starting pitchers
-z_score_sp <- function(df, n_df) {
-  df <- df %>%
-    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-           gs > 0) %>%  #filter for pitchers who project to start at least one game
-    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-  
-  df$wins_z <- as.numeric(z_score(df$wins))
-  df$era_z <- as.numeric(z_score(df$era) * -1)
-  df$hra_z <- as.numeric(z_score(df$hra) * -1)
-  df$so_z <- as.numeric(z_score(df$so))
-  df$whip_z <- as.numeric(z_score(df$whip) * -1)
-  
-  df <- df %>%
-    mutate(z_score = wins_z + era_z + hra_z + so_z + whip_z) %>%
-    arrange(desc(z_score)) %>%
-    head(n_df)
-}
-
-z_score_all_p <- function(df, n_df) {
-  df <- df %>%
-    filter(games > 1) %>%  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-    #           gs > 0) %>%  #filter for pitchers who project to start at least one game
-    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-  
-  df$wins_z <- as.numeric(z_score(df$wins))
-  df$saves_z <- as.numeric(z_score(df$saves))
-  df$era_z <- as.numeric(z_score(df$era) * -1)
-  df$hra_z <- as.numeric(z_score(df$hra) * -1)
-  df$so_z <- as.numeric(z_score(df$so))
-  df$whip_z <- as.numeric(z_score(df$whip) * -1)
-  
-  df <- df %>%
-    mutate(z_score = wins_z + saves_z + era_z + hra_z + so_z + whip_z) %>%
-    arrange(desc(z_score)) %>%
-    head(n_df)
-}
+# #create general form of function for creating z-score for position players
+# z_score_position <- function(df, n_df) {
+#   df <- df %>% 
+#     filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
+#     select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
+#   
+#   df$avg_z <- as.numeric(z_score(df$avg))
+#   df$runs_z <- as.numeric(z_score(df$runs))
+#   df$hr_z <- as.numeric(z_score(df$hr))
+#   df$rbi_z <- as.numeric(z_score(df$rbi))
+#   df$ops_z <- as.numeric(z_score(df$ops))
+#   
+#   df <- df %>%
+#     mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
+#     arrange(desc(z_score)) %>%
+#     head(n_df)
+# }
+# 
+# #z_score function for starting pitchers
+# z_score_sp <- function(df, n_df) {
+#   df <- df %>%
+#     filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+#            gs > 0) %>%  #filter for pitchers who project to start at least one game
+#     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+#   
+#   df$wins_z <- as.numeric(z_score(df$wins))
+#   df$era_z <- as.numeric(z_score(df$era) * -1)
+#   df$hra_z <- as.numeric(z_score(df$hra) * -1)
+#   df$so_z <- as.numeric(z_score(df$so))
+#   df$whip_z <- as.numeric(z_score(df$whip) * -1)
+#   
+#   df <- df %>%
+#     mutate(z_score = wins_z + era_z + hra_z + so_z + whip_z) %>%
+#     arrange(desc(z_score)) %>%
+#     head(n_df)
+# }
+# 
+# z_score_all_p <- function(df, n_df) {
+#   df <- df %>%
+#     filter(games > 1) %>%  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+#     #           gs > 0) %>%  #filter for pitchers who project to start at least one game
+#     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+#   
+#   df$wins_z <- as.numeric(z_score(df$wins))
+#   df$saves_z <- as.numeric(z_score(df$saves))
+#   df$era_z <- as.numeric(z_score(df$era) * -1)
+#   df$hra_z <- as.numeric(z_score(df$hra) * -1)
+#   df$so_z <- as.numeric(z_score(df$so))
+#   df$whip_z <- as.numeric(z_score(df$whip) * -1)
+#   
+#   df <- df %>%
+#     mutate(z_score = wins_z + saves_z + era_z + hra_z + so_z + whip_z) %>%
+#     arrange(desc(z_score)) %>%
+#     head(n_df)
+# }
 #read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
@@ -131,64 +131,64 @@ second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
 third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
 shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
 outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
-pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
-
-#pitcher names need to be re-edited because there is a different length than in the 2017 df
-#these are the names for 2018 df (does not include column: "adp")
-names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
-
-#for now, treat starters and relievers as two completely separate categories
-starters <- pitchers %>%
-  arrange(desc(wins), fip)
-starters <- starters[1:n_starting_pitchers,]
-starters <- z_score_sp(pitchers, n_starting_pitchers)
-starters1 <- z_score_sp(starters, n_starting_pitchers)
-
-#all pitchers
-all_pitchers <- z_score_all_p(pitchers, n_starting_pitchers + n_relief_pitchers)
-all_pitchers1 <- z_score_all_p(all_pitchers, n_starting_pitchers + n_relief_pitchers)
-
-#z_score function for relief pitchers
-z_score_rp <- function(df, n_df) {
-  df <- df %>%
-    filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-           gs == 0) %>%  #filter for pitchers who project to start at least one game
-    select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-  
-  df$wins_z <- as.numeric(z_score(df$wins) * df$wins / mean(starters$wins))
-  df$saves_z <- as.numeric(z_score(df$saves))
-  df$era_z <- as.numeric(z_score(df$era) * -1 * df$ip / mean(starters1$ip))
-  df$hra_z <- as.numeric(z_score(df$hra) * -1)
-  df$so_z <- as.numeric(z_score(df$so) * df$so / mean(starters1$so))
-  df$whip_z <- as.numeric(z_score(df$whip) * -1 * df$ip / mean(starters1$ip))
-  
-  df <- df %>%
-    mutate(z_score = saves_z + era_z + hra_z + so_z + whip_z) %>%
-    arrange(desc(z_score)) %>%
-    head(n_df)
-}
-
-#relief pitchers dfs
-relievers <- pitchers %>%
-  arrange(desc(saves))
-relievers <- relievers[1:48,]
-#relievers <- z_score_rp(pitchers, n_relief_pitchers)
-relievers1 <- z_score_rp(relievers, n_relief_pitchers)
-
-#NOTES
-#a one unit change in a reliever counting stat category should be the same as a one unit change in a starter counting stat cat.
-#likewise, there should be a regulator for rate stats base on ip or pa.
-#So! maybe need to change everthing into weights or everything into counting stats
-#What would W/IP look like? No, each win should be worth a certain amount of Z.
-
-#probably first need a straight scale. then have a second statistic that describes how it affects team outcome
-#this second stat will be weighted with innings
-
-#combine starters and relievers
-pitchers1 <- starters1 %>%
-  full_join(relievers1) %>%
-  arrange(desc(z_score))
+# pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
+# 
+# #pitcher names need to be re-edited because there is a different length than in the 2017 df
+# #these are the names for 2018 df (does not include column: "adp")
+# names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+#                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+# 
+# #for now, treat starters and relievers as two completely separate categories
+# starters <- pitchers %>%
+#   arrange(desc(wins), fip)
+# starters <- starters[1:n_starting_pitchers,]
+# starters <- z_score_sp(pitchers, n_starting_pitchers)
+# starters1 <- z_score_sp(starters, n_starting_pitchers)
+# 
+# #all pitchers
+# all_pitchers <- z_score_all_p(pitchers, n_starting_pitchers + n_relief_pitchers)
+# all_pitchers1 <- z_score_all_p(all_pitchers, n_starting_pitchers + n_relief_pitchers)
+# 
+# #z_score function for relief pitchers
+# z_score_rp <- function(df, n_df) {
+#   df <- df %>%
+#     filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
+#            gs == 0) %>%  #filter for pitchers who project to start at least one game
+#     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
+#   
+#   df$wins_z <- as.numeric(z_score(df$wins) * df$wins / mean(starters$wins))
+#   df$saves_z <- as.numeric(z_score(df$saves))
+#   df$era_z <- as.numeric(z_score(df$era) * -1 * df$ip / mean(starters1$ip))
+#   df$hra_z <- as.numeric(z_score(df$hra) * -1)
+#   df$so_z <- as.numeric(z_score(df$so) * df$so / mean(starters1$so))
+#   df$whip_z <- as.numeric(z_score(df$whip) * -1 * df$ip / mean(starters1$ip))
+#   
+#   df <- df %>%
+#     mutate(z_score = saves_z + era_z + hra_z + so_z + whip_z) %>%
+#     arrange(desc(z_score)) %>%
+#     head(n_df)
+# }
+# 
+# #relief pitchers dfs
+# relievers <- pitchers %>%
+#   arrange(desc(saves))
+# relievers <- relievers[1:48,]
+# #relievers <- z_score_rp(pitchers, n_relief_pitchers)
+# relievers1 <- z_score_rp(relievers, n_relief_pitchers)
+# 
+# #NOTES
+# #a one unit change in a reliever counting stat category should be the same as a one unit change in a starter counting stat cat.
+# #likewise, there should be a regulator for rate stats base on ip or pa.
+# #So! maybe need to change everthing into weights or everything into counting stats
+# #What would W/IP look like? No, each win should be worth a certain amount of Z.
+# 
+# #probably first need a straight scale. then have a second statistic that describes how it affects team outcome
+# #this second stat will be weighted with innings
+# 
+# #combine starters and relievers
+# pitchers1 <- starters1 %>%
+#   full_join(relievers1) %>%
+#   arrange(desc(z_score))
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp"
@@ -227,7 +227,7 @@ shortstops$pos <- "6"
 outfielders$pos <- "7"
 
 #combine all positions into a df
-hitters_new <- catchers %>%
+hitters <- catchers %>%
   full_join(first_basemen) %>%
   full_join(second_basemen) %>%
   full_join(third_basemen) %>%
@@ -236,7 +236,7 @@ hitters_new <- catchers %>%
   filter(pa > 1)  #get this done out of the gate
 
 #start searching for multi-position players
-hitters_names <- as.data.frame(hitters_new$name)  #creates a single col df of all starters' names
+hitters_names <- as.data.frame(hitters$name)  #creates a single col df of all starters' names
 names(hitters_names) <- "name"  #names the col in above df
   #this next command is just here for visualization
 #hitters_names <- hitters_names %>%  #arrange alphabetically so you can look for duplicates
@@ -247,7 +247,7 @@ duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])
 names(duplicated_names) <- "name"  #names the col in above df
 
 #creates full duplicated names df
-duplicated_names1 <- hitters_new %>%
+duplicated_names1 <- hitters %>%
   right_join(duplicated_names, by = "name")
 #make a copy of this for anti_join with full hitters
 duplicated_names_copy <- duplicated_names1
@@ -275,7 +275,7 @@ duplicated_names3 <- duplicated_names1 %>%
 duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
 #combine dfs so there is only one line for each player
   #each player has the most valuable position
-hitters_new <- hitters_new %>%
+hitters <- hitters %>%
   anti_join(duplicated_names_copy) %>%
   bind_rows(duplicated_names3) %>%
   #build stat projections for all missing stats, i.e. sb_net
@@ -287,21 +287,53 @@ hitters_new <- hitters_new %>%
          -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
   arrange(name)
 
-hitters_reg <- hitters_new %>%
+hitters_reg <- hitters %>%
   filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
   arrange(name)
 #save the discarded hitters for later comparison, i.e. for guys you may want to stream or add later in the year
-hitters_res <- hitters_new %>%
+hitters_res <- hitters %>%
   filter(pa < 300) %>%
   arrange(desc(woba))
 
-catchers1 <- hitters_reg %>% filter(pos == "2") %>%
-  arrange(desc(woba))
-first_basemen1 <- hitters_new %>% filter(pos == "3")
-second_basemen1 <- hitters_new %>% filter(pos == "4")
-third_basemen1 <- hitters_new %>% filter(pos == "5")
-shortstops1 <- hitters_new %>% filter(pos == "6")
-outfielders1 <- hitters_new %>% filter(pos == "7")
+catchers1 <- hitters_reg %>% filter(pos == "2")
+first_basemen1 <- hitters_reg %>% filter(pos == "3")
+second_basemen1 <- hitters_reg %>% filter(pos == "4")
+third_basemen1 <- hitters_reg %>% filter(pos == "5")
+shortstops1 <- hitters_reg %>% filter(pos == "6")
+outfielders1 <- hitters_reg %>% filter(pos == "7")
+
+#create general form of function for creating z-score for position players
+#avg, rbi, r, sb, hr, obp, slg, ops, h, so, 2b, 3b, tb, bb, rbi+r, xBH, sb-cs, woba
+z_score_position <- function(df) {
+  # df <- df %>% 
+  #   filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
+  #   select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
+  
+  df$hit_z <- as.numeric(z_score(df$hit))
+  df$double_z <- as.numeric(z_score(df$double))
+  df$triple_z <- as.numeric(z_score(df$triple))
+  df$hr_z <- as.numeric(z_score(df$hr))
+  df$runs_z <- as.numeric(z_score(df$runs))
+  df$rbi_z <- as.numeric(z_score(df$rbi))
+  df$bb_z <- as.numeric(z_score(df$bb))
+  df$so_z <- as.numeric(z_score(df$so))
+  df$sb_z <- as.numeric(z_score(df$sb))
+  df$avg_z <- as.numeric(z_score(df$avg))
+  df$obp_z <- as.numeric(z_score(df$obp))
+  df$slg_z <- as.numeric(z_score(df$slg))
+  df$ops_z <- as.numeric(z_score(df$ops))
+  df$woba_z <- as.numeric(z_score(df$woba))
+  df$tb_z <- as.numeric(z_score(df$tb))
+  df$rbi_r_z <- as.numeric(z_score(df$rbi_r))
+  df$xbh_z <- as.numeric(z_score(df$xbh))
+  df$sb_net_z <- as.numeric(z_score(df$sb_net))
+  
+  df
+  # df <- df %>%
+  #   mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
+  #   arrange(desc(z_score)) %>%
+  #   head(n_df)
+}
 
 #run sb_net fn for each position
 # catchers1$sb_net <- sb_net_fn(catchers1$sb, catchers1$cs)
@@ -314,13 +346,20 @@ outfielders1 <- hitters_new %>% filter(pos == "7")
 
 
 #run z-score pos on each position df
-catchers2 <- z_score_position(catchers1, n_catchers)
-first_basemen2 <- z_score_position(first_basemen1, n_first_basemen)
-second_basemen2 <- z_score_position(second_basemen1, n_second_basemen)
-third_basemen2 <- z_score_position(third_basemen1, n_third_basemen)
-shortstops2 <- z_score_position(shortstops1, n_shortstops)
-outfielders2 <- z_score_position(outfielders1, n_outfielders)
-hitters_new1 <- z_score_position(hitters_new, nrow(hitters_new))
+catchers2 <- z_score_position(catchers1)
+first_basemen2 <- z_score_position(first_basemen1)
+second_basemen2 <- z_score_position(second_basemen1)
+third_basemen2 <- z_score_position(third_basemen1)
+shortstops2 <- z_score_position(shortstops1)
+outfielders2 <- z_score_position(outfielders1)
+#hitters_new1 <- z_score_position(hitters_new)
+
+hitters_reg_z <- catchers2 %>%
+  full_join(first_basemen2) %>%
+  full_join(second_basemen2) %>%
+  full_join(third_basemen2) %>%
+  full_join(shortstops2) %>%
+  full_join(outfielders2)
 
 #create middle infielders df and run z-score on middle infielders after removing already used players
 middle_infielders <- second_basemen1 %>%

@@ -346,20 +346,27 @@ z_score_position <- function(df) {
 
 
 #run z-score pos on each position df
-catchers2 <- z_score_position(catchers1)
-first_basemen2 <- z_score_position(first_basemen1)
-second_basemen2 <- z_score_position(second_basemen1)
-third_basemen2 <- z_score_position(third_basemen1)
-shortstops2 <- z_score_position(shortstops1)
-outfielders2 <- z_score_position(outfielders1)
+catchers1 <- z_score_position(catchers1)
+first_basemen1 <- z_score_position(first_basemen1)
+second_basemen1 <- z_score_position(second_basemen1)
+third_basemen1 <- z_score_position(third_basemen1)
+shortstops1 <- z_score_position(shortstops1)
+outfielders1 <- z_score_position(outfielders1)
 #hitters_new1 <- z_score_position(hitters_new)
 
-hitters_reg_z <- catchers2 %>%
-  full_join(first_basemen2) %>%
-  full_join(second_basemen2) %>%
-  full_join(third_basemen2) %>%
-  full_join(shortstops2) %>%
-  full_join(outfielders2)
+hitters_reg <- catchers1 %>%
+  full_join(first_basemen1) %>%
+  full_join(second_basemen1) %>%
+  full_join(third_basemen1) %>%
+  full_join(shortstops1) %>%
+  full_join(outfielders1) %>%
+  arrange(desc(woba_z))
+
+#####
+#Start work on pitchers here
+  #I'm going to need two sets of pitcher dfs... one for leagues that require sp and rp, and one that does not have designations, but has inning requirements
+
+#####
 
 #create middle infielders df and run z-score on middle infielders after removing already used players
 middle_infielders <- second_basemen1 %>%

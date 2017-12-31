@@ -60,33 +60,14 @@ n_relief_pitchers <- n_teams * relief_pitchers
 
 #FUNCTIONS
 #z_score calculation for each selected stat
-z_score <- function(stat){
-  scale(stat)
-}
-
-#sb_net calculation
-# sb_net_fn <- function(sb, cs) {
-#   sb_net = sb - cs
-# }
-
-# #create general form of function for creating z-score for position players
-# z_score_position <- function(df, n_df) {
-#   df <- df %>% 
-#     filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
-#     select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
-#   
-#   df$avg_z <- as.numeric(z_score(df$avg))
-#   df$runs_z <- as.numeric(z_score(df$runs))
-#   df$hr_z <- as.numeric(z_score(df$hr))
-#   df$rbi_z <- as.numeric(z_score(df$rbi))
-#   df$ops_z <- as.numeric(z_score(df$ops))
-#   
-#   df <- df %>%
-#     mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
-#     arrange(desc(z_score)) %>%
-#     head(n_df)
+# z_score <- function(stat){
+#   scale(stat)
 # }
 # 
+# z_total <- function(df, hit_stat1, hit_stat2, hit_stat3, hit_stat4, hit_stat5) {
+#   df$zcore = df$hit_stat1 + df$hit_stat2 + df$hit_stat3 + df$hit_stat4 + df$hit_stat5
+# }
+
 # #z_score function for starting pitchers
 # z_score_sp <- function(df, n_df) {
 #   df <- df %>%
@@ -105,25 +86,7 @@ z_score <- function(stat){
 #     arrange(desc(z_score)) %>%
 #     head(n_df)
 # }
-# 
-# z_score_all_p <- function(df, n_df) {
-#   df <- df %>%
-#     filter(games > 1) %>%  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-#     #           gs > 0) %>%  #filter for pitchers who project to start at least one game
-#     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-#   
-#   df$wins_z <- as.numeric(z_score(df$wins))
-#   df$saves_z <- as.numeric(z_score(df$saves))
-#   df$era_z <- as.numeric(z_score(df$era) * -1)
-#   df$hra_z <- as.numeric(z_score(df$hra) * -1)
-#   df$so_z <- as.numeric(z_score(df$so))
-#   df$whip_z <- as.numeric(z_score(df$whip) * -1)
-#   
-#   df <- df %>%
-#     mutate(z_score = wins_z + saves_z + era_z + hra_z + so_z + whip_z) %>%
-#     arrange(desc(z_score)) %>%
-#     head(n_df)
-# }
+
 #read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
@@ -235,12 +198,10 @@ hitters <- catchers %>%
   full_join(outfielders) %>%
   filter(pa > 1)  #get this done out of the gate
 
+#SEARCH FOR MULTI-POSITION PLAYERS AND DUPLICATE NAMES
 #start searching for multi-position players
 hitters_names <- as.data.frame(hitters$name)  #creates a single col df of all starters' names
 names(hitters_names) <- "name"  #names the col in above df
-  #this next command is just here for visualization
-#hitters_names <- hitters_names %>%  #arrange alphabetically so you can look for duplicates
-#  arrange(name)
 
 #creates an Nx1 df of duplicated names
 duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])
@@ -258,6 +219,7 @@ duplicated_names1 <- unique(duplicated_names1)  #this removes rows where the nam
 #create vector of position rankings, with the least productive position, catcher, having the most relative value
   #and assiging the most valuable position to each duplicate player
     #call that new var "pos_rank"
+#This ranks position, assigning the least productive position to each player to increase value
 duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
                                      ifelse(duplicated_names1$pos == 6, 2, 
                                             ifelse(duplicated_names1$pos == 4, 3,
@@ -288,6 +250,7 @@ hitters <- hitters %>%
   arrange(name)
 #clean working space
 rm(hitters_names, duplicated_names, duplicated_names_copy, duplicated_names1, duplicated_names2, duplicated_names3)
+rm(catchers, first_basemen, second_basemen, shortstops, third_basemen, outfielders)
 
 #subset by "regulars"; define as 300 or more plate appearances
 hitters_regulars <- hitters %>%
@@ -332,15 +295,6 @@ z_score_position <- function(df) {
   #   head(n_df)
 }
 
-#run sb_net fn for each position
-# catchers1$sb_net <- sb_net_fn(catchers1$sb, catchers1$cs)
-# first_basemen1$sb_net <- sb_net_fn(first_basemen1$sb, first_basemen1$cs)
-# second_basemen1$sb_net <- sb_net_fn(second_basemen1$sb, second_basemen1$cs)
-# third_basemen1$sb_net <- sb_net_fn(third_basemen1$sb, third_basemen1$cs)
-# shortstops1$sb_net <- sb_net_fn(shortstops1$sb, shortstops1$cs)
-# outfielders1$sb_net <- sb_net_fn(outfielders1$sb, outfielders1$cs)
-# hitters_new$sb_net <- sb_net_fn(hitters_new$sb, hitters_new$cs)
-
 #run z_score across all hitters
 hitters_regulars <- z_score_position(hitters_regulars) %>%  #want this for now
   arrange(desc(woba_z))
@@ -354,13 +308,21 @@ third_basemen1 <- hitters_regulars %>% filter(pos == "5")
 shortstops1 <- hitters_regulars %>% filter(pos == "6")
 outfielders1 <- hitters_regulars %>% filter(pos == "7")
 
-catchers1 <- z_score_position(catchers1)
+#create positive-relative z_scores
+catchers1 <- z_score_position(catchers1) %>%
+  mutate(z_pos = avg_z + hr_z + runs_z + rbi_z + sb_net_z + ops_z) %>%
+  arrange(desc(z_pos))
 first_basemen1 <- z_score_position(first_basemen1)
 second_basemen1 <- z_score_position(second_basemen1)
 third_basemen1 <- z_score_position(third_basemen1)
 shortstops1 <- z_score_position(shortstops1)
 outfielders1 <- z_score_position(outfielders1)
-hitters_reg <- catchers1 %>%
+
+##### Here is where to input user selected hitter stats. #####
+
+catchers1 <- 
+
+hitters_position_relative_zscores <- catchers1 %>%
   full_join(first_basemen1) %>%
   full_join(second_basemen1) %>%
   full_join(third_basemen1) %>%
@@ -418,36 +380,7 @@ hitters_zpos1 <- hitters2 %>%
 hitters_zpos2 <- hitters_zpos1 %>%
   arrange(desc(z_score))
 # 
-# #hitters_zpos2 <- hitters_zpos1 %>%
-# #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player
-# 
-# #model the stats in the population
-# #all look like some type of poisson distribution
-# #find the R function for self selection o
-# #setwd("~/Desktop/R_projects")
-# setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
-# 
-# #libraries
-# library(readxl)
-# library(tidyr)
-# library(dplyr)
-# library(stringr)
-# library(ggplot2)
-# 
-# #read in data
-# #df_sal <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 2)  #salaries entered manually in this df
-# #dfh <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 3)  #read in hitter 600 proj
-# #dfp <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 4)  #read in pitcher 200/65 proj
-# 
-# #df_grid <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx")  #rosters from cbs in grid format
-# 
-# df_sal <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 2)
-# dfh <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 3)
-# dfp <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 4)
-# 
 # ##### ##### ##### ##### #####
-# 
-# df_grid <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx")
 # 
 # #global vars and fns
 # gms_played <- 115  #approximate number of games played for each mlb team

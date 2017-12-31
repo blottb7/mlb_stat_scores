@@ -441,3 +441,4 @@ rpois(hitters_zpos1$sb_net, 3.5)
 hist(ppois(hitters_zpos1$sb_net, mean(hitters_zpos1$sb_net)))
 mean(hitters_zpos1$sb_net)
 sd(hitters_zpos1$sb_net)
+#box-cox included above

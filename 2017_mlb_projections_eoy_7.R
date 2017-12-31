@@ -226,7 +226,7 @@ third_basemen$pos <- "5"
 shortstops$pos <- "6"
 outfielders$pos <- "7"
 
-#combine all positions into a df
+#combine all positions into a single df
 hitters <- catchers %>%
   full_join(first_basemen) %>%
   full_join(second_basemen) %>%
@@ -286,21 +286,17 @@ hitters <- hitters %>%
   select(-waste1, -waste2, -waste3,  #remove spacer cols
          -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
   arrange(name)
+#clean working space
+rm(hitters_names, duplicated_names, duplicated_names_copy, duplicated_names1, duplicated_names2, duplicated_names3)
 
-hitters_reg <- hitters %>%
+#subset by "regulars"; define as 300 or more plate appearances
+hitters_regulars <- hitters %>%
   filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
   arrange(name)
-#save the discarded hitters for later comparison, i.e. for guys you may want to stream or add later in the year
-hitters_res <- hitters %>%
+#save the reserve hitters for later comparison, i.e. for guys you may want to stream or add later in the year
+hitters_reserves <- hitters %>%
   filter(pa < 300) %>%
   arrange(desc(woba))
-
-catchers1 <- hitters_reg %>% filter(pos == "2")
-first_basemen1 <- hitters_reg %>% filter(pos == "3")
-second_basemen1 <- hitters_reg %>% filter(pos == "4")
-third_basemen1 <- hitters_reg %>% filter(pos == "5")
-shortstops1 <- hitters_reg %>% filter(pos == "6")
-outfielders1 <- hitters_reg %>% filter(pos == "7")
 
 #create general form of function for creating z-score for position players
 #avg, rbi, r, sb, hr, obp, slg, ops, h, so, 2b, 3b, tb, bb, rbi+r, xBH, sb-cs, woba
@@ -309,6 +305,7 @@ z_score_position <- function(df) {
   #   filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
   #   select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
   
+  #create a z_score for all possible statistics:
   df$hit_z <- as.numeric(z_score(df$hit))
   df$double_z <- as.numeric(z_score(df$double))
   df$triple_z <- as.numeric(z_score(df$triple))
@@ -344,16 +341,25 @@ z_score_position <- function(df) {
 # outfielders1$sb_net <- sb_net_fn(outfielders1$sb, outfielders1$cs)
 # hitters_new$sb_net <- sb_net_fn(hitters_new$sb, hitters_new$cs)
 
+#run z_score across all hitters
+hitters_regulars <- z_score_position(hitters_regulars) %>%  #want this for now
+  arrange(desc(woba_z))
+#hitters_new1 <- z_score_position(hitters_new)
 
-#run z-score pos on each position df
+#filter each position and run z-score pos on each position df
+catchers1 <- hitters_regulars %>% filter(pos == "2")
+first_basemen1 <- hitters_regulars %>% filter(pos == "3")
+second_basemen1 <- hitters_regulars %>% filter(pos == "4")
+third_basemen1 <- hitters_regulars %>% filter(pos == "5")
+shortstops1 <- hitters_regulars %>% filter(pos == "6")
+outfielders1 <- hitters_regulars %>% filter(pos == "7")
+
 catchers1 <- z_score_position(catchers1)
 first_basemen1 <- z_score_position(first_basemen1)
 second_basemen1 <- z_score_position(second_basemen1)
 third_basemen1 <- z_score_position(third_basemen1)
 shortstops1 <- z_score_position(shortstops1)
 outfielders1 <- z_score_position(outfielders1)
-#hitters_new1 <- z_score_position(hitters_new)
-
 hitters_reg <- catchers1 %>%
   full_join(first_basemen1) %>%
   full_join(second_basemen1) %>%

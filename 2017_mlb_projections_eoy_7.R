@@ -406,28 +406,47 @@ middle_infielders <- second_basemen1 %>%
   bind_rows(shortstops1) %>%
   anti_join(second_basemen2, by = "name") %>%
   anti_join(shortstops2, by = "name")
-middle_infielders1 <- z_score_position(middle_infielders, n_middle_infielders)
+middle_infielders1 <- z_score_position(middle_infielders)
+middle_infielders1$z_tot <- z_total(middle_infielders1$hr_z, middle_infielders1$runs_z, middle_infielders1$rbi_z, middle_infielders1$avg_z, middle_infielders1$ops_z, middle_infielders1$sb_net_z)
+middle_infielders2 <- middle_infielders1 %>%
+  arrange(desc(z_tot))
+middle_infielders2 <- middle_infielders2[1:16,]
 
 #create corner infielders df and run z-score on corner infielders after removing already used players
 corner_infielders <- first_basemen1 %>%
   bind_rows(third_basemen1) %>%
   anti_join(first_basemen2, by = "name") %>%
   anti_join(third_basemen2, by = "name")
-corner_infielders1 <- z_score_position(corner_infielders, n_corner_infielders)
-#combine all selected players
-hitters <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
-                     middle_infielders1, corner_infielders1)
+corner_infielders1 <- z_score_position(corner_infielders)
+corner_infielders1$z_tot <- z_total(corner_infielders1$hr_z, corner_infielders1$runs_z, corner_infielders1$rbi_z, corner_infielders1$avg_z, corner_infielders1$ops_z, corner_infielders1$sb_net_z)
+corner_infielders2 <- corner_infielders1 %>%
+  arrange(desc(z_tot))
+corner_infielders2 <- corner_infielders2[1:16,]
 
-remaining_hitters <- hitters_new1 %>%
-  anti_join(hitters, by = "name") %>%
-  arrange(desc(z_score))
+#combine all selected players
+hitters_no_dh <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
+                     middle_infielders2, corner_infielders2)
+
+remaining_hitters <- hitters_reg %>%
+  anti_join(hitters_no_dh, by = "name")
 #create designated hitters
 
 #this needs to be fixed; "sb" not found √
-designated_hitters <- z_score_position(remaining_hitters, n_designated_hitters)
+designated_hitters <- z_score_position(remaining_hitters)
+designated_hitters$z_tot <- z_total(designated_hitters$hr_z, designated_hitters$runs_z, designated_hitters$rbi_z, designated_hitters$avg_z, designated_hitters$ops_z, designated_hitters$sb_net_z)
+designated_hitters1 <- designated_hitters %>%
+  arrange(desc(z_tot))
+designated_hitters1 <- designated_hitters1[1:16,]
+
 ##### #####
-hitters1 <- bind_rows(hitters, designated_hitters)
-hitters2 <- z_score_position(hitters1, nrow(hitters1))
+hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)
+hitters1 <- z_score_position(hitters1)
+hitters1$z_tot <- z_total(hitters1$hr_z, hitters1$runs_z, hitters1$rbi_z, hitters1$avg_z, hitters1$ops_z, hitters1$sb_net_z)
+hitters2 <- hitters1 %>%
+  arrange(desc(z_tot))
+#hitters2 <- hitters2[1:nrow(hitters2),]
+
+
 #hitters3 <- hitters2 %>%  #this makes it easy to visually look at duplicated names
 #  arrange(name)
 

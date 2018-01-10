@@ -317,24 +317,24 @@ z_score_position <- function(df) {
   #   filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
   #   select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
   
-  df$hit_z <- as.numeric(z_score(df$hit))
-  df$double_z <- as.numeric(z_score(df$double))
-  df$triple_z <- as.numeric(z_score(df$triple))
-  df$hr_z <- as.numeric(z_score(df$hr))
-  df$runs_z <- as.numeric(z_score(df$runs))
-  df$rbi_z <- as.numeric(z_score(df$rbi))
-  df$bb_z <- as.numeric(z_score(df$bb))
-  df$so_z <- as.numeric(z_score(df$so))
-  df$sb_z <- as.numeric(z_score(df$sb))
-  df$avg_z <- as.numeric(z_score(df$avg))
-  df$obp_z <- as.numeric(z_score(df$obp))
-  df$slg_z <- as.numeric(z_score(df$slg))
-  df$ops_z <- as.numeric(z_score(df$ops))
-  df$woba_z <- as.numeric(z_score(df$woba))
-  df$tb_z <- as.numeric(z_score(df$tb))
-  df$rbi_r_z <- as.numeric(z_score(df$rbi_r))
-  df$xbh_z <- as.numeric(z_score(df$xbh))
-  df$sb_net_z <- as.numeric(z_score(df$sb_net))
+  df$hit_z <- round(as.numeric(z_score(df$hit)), 3)
+  df$double_z <- round(as.numeric(z_score(df$double)), 3)
+  df$triple_z <- round(as.numeric(z_score(df$triple)), 3)
+  df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
+  df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
+  df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
+  df$bb_z <- round(as.numeric(z_score(df$bb)), 3)
+  df$so_z <- round(as.numeric(z_score(df$so)), 3)
+  df$sb_z <- round(as.numeric(z_score(df$sb)), 3)
+  df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
+  df$obp_z <- round(as.numeric(z_score(df$obp)), 3)
+  df$slg_z <- round(as.numeric(z_score(df$slg)), 3)
+  df$ops_z <- round(as.numeric(z_score(df$ops)), 3)
+  df$woba_z <- round(as.numeric(z_score(df$woba)), 3)
+  df$tb_z <- round(as.numeric(z_score(df$tb)), 3)
+  df$rbi_r_z <- round(as.numeric(z_score(df$rbi_r)), 3)
+  df$xbh_z <- round(as.numeric(z_score(df$xbh)), 3)
+  df$sb_net_z <- round(as.numeric(z_score(df$sb_net)), 3)
   
   df
   # df <- df %>%
@@ -468,7 +468,7 @@ hitters_zpos2 <- hitters_zpos1 %>%
   arrange(desc(z_tot))
 
 hitters3 <- hitters_zpos2 %>%
-  select(name, team, pos, z_tot, z_pos_mean, z_pos, hr_z, runs_z, rbi_z, avg_z, ops_z, sb_net_z) %>%
+  select(name, team, pos, z_pos, z_pos_mean, z_tot, hr_z, runs_z, rbi_z, avg_z, ops_z, sb_net_z) %>%
   arrange(desc(z_pos))
 # 
 # #hitters_zpos2 <- hitters_zpos1 %>%

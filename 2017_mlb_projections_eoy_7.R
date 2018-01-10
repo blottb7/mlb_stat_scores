@@ -125,13 +125,21 @@ z_score <- function(stat){
 #     head(n_df)
 # }
 #read in data
-catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
-first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
-second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
-third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
-shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
-outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
-# pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
+# catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
+# first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
+# second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
+# third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
+# shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
+# outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
+# # pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
+
+catchers <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 2)
+first_basemen <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 3)
+second_basemen <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 4)
+third_basemen <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 5)
+shortstops <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 6)
+outfielders <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 7)
+# pitchers <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 8)
 # 
 # #pitcher names need to be re-edited because there is a different length than in the 2017 df
 # #these are the names for 2018 df (does not include column: "adp")

@@ -444,25 +444,24 @@ hitters1 <- z_score_position(hitters1)
 hitters1$z_tot <- z_total(hitters1$hr_z, hitters1$runs_z, hitters1$rbi_z, hitters1$avg_z, hitters1$ops_z, hitters1$sb_net_z)
 hitters2 <- hitters1 %>%
   arrange(desc(z_tot))
-#hitters2 <- hitters2[1:nrow(hitters2),]
-
-
-#hitters3 <- hitters2 %>%  #this makes it easy to visually look at duplicated names
-#  arrange(name)
 
 #position relative z_score
 hitters_zpos <- hitters2 %>%
   group_by(pos) %>%
-  summarize(z_pos_mean = round(mean(z_score), 2)) %>%
+  summarize(z_pos_mean = round(mean(z_tot), 2)) %>%
   arrange(desc(z_pos_mean))
 
 hitters_zpos1 <- hitters2 %>%
   left_join(hitters_zpos, by = "pos") %>%
-  mutate(z_pos = round(z_score - z_pos_mean, 4)) %>%
+  mutate(z_pos = round(z_tot - z_pos_mean, 4)) %>%
   arrange(desc(z_pos))
 
 hitters_zpos2 <- hitters_zpos1 %>%
-  arrange(desc(z_score))
+  arrange(desc(z_tot))
+
+hitters3 <- hitters_zpos2 %>%
+  select(name, team, pos, z_tot, z_pos_mean, z_pos, hr_z, runs_z, rbi_z, avg_z, ops_z, sb_net_z) %>%
+  arrange(desc(z_pos))
 # 
 # #hitters_zpos2 <- hitters_zpos1 %>%
 # #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player

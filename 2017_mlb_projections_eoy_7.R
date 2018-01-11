@@ -479,6 +479,16 @@ hitters3 <- hitters_zpos2 %>%
 
 first_basemen3 <- hitters3 %>%
   filter(pos == 3)
+
+#COMBINE HITTERS WITH PITCHERS
+all_pitchers <- starters2 %>%
+  full_join(relievers2)
+all_players <- hitters3 %>%
+  full_join(all_pitchers) %>%
+  arrange(desc(z_pos))
+all_players$z_pos <- round(all_players$z_pos, 3)
+all_players$z_tot <- round(all_players$z_tot, 3)
+
 # 
 # #hitters_zpos2 <- hitters_zpos1 %>%
 # #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player

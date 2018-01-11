@@ -6,3 +6,13 @@ names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "sa
 pitchers <- pitchers %>%
   filter(ip > 1) %>%
   mutate(avg_p = round(hits / (3 * ip), 3)) 
+
+#METHOD 1: separate starters and relievers
+starters <- pitchers %>%
+  filter(gs > 0)
+relievers <- pitchers %>%
+  filter(gs == 0)
+
+#METHOD 2: starters and relievers in same group
+
+ggplot(pitchers, aes(k_rate)) + geom_histogram(binwidth = .25)

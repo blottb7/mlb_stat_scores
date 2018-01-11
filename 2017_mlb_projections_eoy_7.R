@@ -22,6 +22,7 @@ library(readxl)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
+library(forecast)
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
@@ -303,6 +304,10 @@ hitters_res <- hitters %>%
   filter(pa < 300) %>%
   arrange(desc(woba))
 
+# hitters_reg$sb_net_trans <- BoxCox(hitters_reg$sb_net, .45)
+# hitters_reg$sb_net_trans_z <- z_score(hitters_reg$sb_net_trans)
+hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
+
 catchers1 <- hitters_reg %>% filter(pos == "2")
 first_basemen1 <- hitters_reg %>% filter(pos == "3")
 second_basemen1 <- hitters_reg %>% filter(pos == "4")
@@ -334,7 +339,7 @@ z_score_position <- function(df) {
   df$tb_z <- round(as.numeric(z_score(df$tb)), 3)
   df$rbi_r_z <- round(as.numeric(z_score(df$rbi_r)), 3)
   df$xbh_z <- round(as.numeric(z_score(df$xbh)), 3)
-  df$sb_net_z <- round(as.numeric(z_score(df$sb_net)), 3)
+  #df$sb_net_z <- round(as.numeric(z_score(df$sb_net)), 3)
   
   df
   # df <- df %>%
@@ -433,7 +438,7 @@ corner_infielders2 <- corner_infielders2[1:16,]
 
 #combine all selected players
 hitters_no_dh <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
-                     middle_infielders2, corner_infielders2)
+                           middle_infielders2, corner_infielders2)
 
 remaining_hitters <- hitters_reg %>%
   anti_join(hitters_no_dh, by = "name")
@@ -448,6 +453,7 @@ designated_hitters1 <- designated_hitters1[1:16,]
 
 ##### #####
 hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)
+hitters1$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters1$sb_net, .45))), 3)
 hitters1 <- z_score_position(hitters1)
 hitters1$z_tot <- z_total(hitters1$hr_z, hitters1$runs_z, hitters1$rbi_z, hitters1$avg_z, hitters1$ops_z, hitters1$sb_net_z)
 hitters2 <- hitters1 %>%

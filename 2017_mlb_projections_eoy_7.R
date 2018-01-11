@@ -129,7 +129,7 @@ relievers$hra_z <- z_score(relievers$hra_z)
 relievers$z_tot <- as.numeric(z_total(relievers$saves_z, relievers$era_z, relievers$whip_z, relievers$k_z, relievers$hra_z, 0))
 
 relievers <- relievers %>%
-  arrange(desc(z_tot))
+  arrange(desc(as.numeric(saves_z)), desc(z_tot))
 relievers1 <- relievers[1:40,]
 
 #####
@@ -158,8 +158,8 @@ relievers1 <- relievers1 %>%
   arrange(desc(z_tot))
 
 relievers2 <- relievers1 %>%
-  select(name, team, pos, z_tot, wins_z, era_z, whip_z, k_z, hra_z) %>%
-  arrange(desc(z_tot))
+  select(name, team, pos, z_tot, saves_z, era_z, whip_z, k_z, hra_z) %>%
+  arrange(desc(as.numeric(saves_z)))
 
 #
 ggplot(pitchers, aes(k_rate)) + geom_histogram(binwidth = .25)

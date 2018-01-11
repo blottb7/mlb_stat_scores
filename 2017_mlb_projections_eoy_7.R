@@ -476,6 +476,9 @@ hitters_zpos2 <- hitters_zpos1 %>%
 hitters3 <- hitters_zpos2 %>%
   select(name, team, pos, z_pos, z_pos_mean, z_tot, hr_z, runs_z, rbi_z, avg_z, ops_z, sb_net_z) %>%
   arrange(desc(z_pos))
+
+first_basemen3 <- hitters3 %>%
+  filter(pos == 3)
 # 
 # #hitters_zpos2 <- hitters_zpos1 %>%
 # #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player

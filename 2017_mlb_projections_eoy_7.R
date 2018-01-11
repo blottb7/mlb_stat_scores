@@ -27,14 +27,14 @@ relievers$pos <- "rp"
 z_score_starters <- function(df) {
   
   #wins, saves, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs
-  df$wins_z <- round(z_score(df$wins), 3)
-  df$era_raw_z <- round(z_score(df$era) * -1, 3)
-  df$whip_raw_z <- round(z_score(df$whip) * -1, 3)
-  df$avg_p_raw_z <- round(z_score(df$avg_p) * -1, 3)
-  df$k_rate_z <- round(z_score(df$k_rate), 3)
-  df$bb_rate_z <- round(z_score(df$bb_rate) * -1, 3)
-  df$fip_raw_z <- round(z_score(df$fip) * -1, 3)
-  df$hra_rate_z <- round(z_score(df$hra_rate) * -1, 3)
+  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
+  df$era_raw_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  df$whip_raw_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  df$avg_p_raw_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  df$fip_raw_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
   #   
   df
 }
@@ -75,13 +75,13 @@ starters1$bb_z <- starters1$bb_rate_z * starters1$ip / mean(starters1$ip)
 starters1$fip_z <- starters1$fip_raw_z * starters1$ip / mean(starters1$ip)
 starters1$hra_z <- starters1$hra_rate_z * starters1$ip / mean(starters1$ip)
 
-starters1$era_z <- round(z_score(starters1$era_z), 3)
-starters1$whip_z <- round(z_score(starters1$whip_z), 3)
-starters1$avg_p_z <- round(z_score(starters1$avg_p_z), 3)
-starters1$k_z <- round(z_score(starters1$k_z), 3)
-starters1$bb_z <- round(z_score(starters1$bb_z), 3)
-starters1$fip_z <- round(z_score(starters1$fip_z), 3)
-starters1$hra_z <- round(z_score(starters1$hra_z), 3)
+starters1$era_z <- round(as.numeric(z_score(starters1$era_z)), 3)
+starters1$whip_z <- round(as.numeric(z_score(starters1$whip_z)), 3)
+starters1$avg_p_z <- round(as.numeric(z_score(starters1$avg_p_z)), 3)
+starters1$k_z <- round(as.numeric(z_score(starters1$k_z)), 3)
+starters1$bb_z <- round(as.numeric(z_score(starters1$bb_z)), 3)
+starters1$fip_z <- round(as.numeric(z_score(starters1$fip_z)), 3)
+starters1$hra_z <- round(as.numeric(z_score(starters1$hra_z)), 3)
 
 starters1$z_tot <- as.numeric(z_total(starters1$wins_z, starters1$era_z, starters1$whip_z, starters1$k_z, starters1$hra_z, 0))
 
@@ -91,6 +91,7 @@ starters1 <- starters1 %>%
 starters2 <- starters1 %>%
   select(name, team, pos, z_tot, wins_z, era_z, whip_z, k_z, hra_z) %>%
   arrange(desc(z_tot))
+starters2$z_pos <- starters2$z_tot
 
 #METHOD 2: starters and relievers in same group
 z_score_relievers <- function(df) {
@@ -160,6 +161,7 @@ relievers1 <- relievers1 %>%
 relievers2 <- relievers1 %>%
   select(name, team, pos, z_tot, saves_z, era_z, whip_z, k_z, hra_z) %>%
   arrange(desc(as.numeric(saves_z)))
+relievers2$z_pos <- relievers2$z_tot
 
 #
 ggplot(pitchers, aes(k_rate)) + geom_histogram(binwidth = .25)

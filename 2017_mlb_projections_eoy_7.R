@@ -421,6 +421,7 @@ qqnorm(BoxCox(hitters_zpos1$sb_net, .5), main="BoxCox(lambda=0.5)")
 qqnorm(BoxCox(hitters_zpos1$sb_net, .3), main="BoxCox(lambda=0.3)")
 
 hitters_zpos1$sb_net_trans <- BoxCox(hitters_zpos1$sb_net, .45)
+hitters_zpos1$sb_net_trans_z <- z_score(hitters_zpos1$sb_net_trans)
 plotdist(hitters_zpos1$sb_net_trans, histo = TRUE, demp = TRUE)
 
 

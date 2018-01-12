@@ -479,6 +479,10 @@ hitters3 <- hitters_zpos2 %>%
 
 first_basemen3 <- hitters3 %>%
   filter(pos == 3)
+second_basemen3 <- hitters3 %>%
+  filter(pos == 4)
+shortstops3 <- hitters3 %>%
+  filter(pos == 6)
 
 #COMBINE HITTERS WITH PITCHERS
 all_pitchers <- starters2 %>%
@@ -489,6 +493,11 @@ all_players <- hitters3 %>%
 all_players$z_pos <- round(all_players$z_pos, 3)
 all_players$z_tot <- round(all_players$z_tot, 3)
 
+fname <- function(name){
+  which(all_players$name == name)
+}
+
+ggplot(all_players, aes(z_tot)) + geom_histogram(binwidth = .5)
 # 
 # #hitters_zpos2 <- hitters_zpos1 %>%
 # #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player

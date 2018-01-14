@@ -65,47 +65,6 @@ z_score <- function(stat){
   scale(stat)
 }
 
-#sb_net calculation
-# sb_net_fn <- function(sb, cs) {
-#   sb_net = sb - cs
-# }
-
-# #create general form of function for creating z-score for position players
-# z_score_position <- function(df, n_df) {
-#   df <- df %>% 
-#     filter(pa > 1) %>%  #the majority of the df's contain players with 1 pa, presumably for ratio data if they do get "called up"
-#     select(name, team, pos, games, pa, avg, runs, hr, rbi, sb_net, ops)  #select stats used for fantasy league
-#   
-#   df$avg_z <- as.numeric(z_score(df$avg))
-#   df$runs_z <- as.numeric(z_score(df$runs))
-#   df$hr_z <- as.numeric(z_score(df$hr))
-#   df$rbi_z <- as.numeric(z_score(df$rbi))
-#   df$ops_z <- as.numeric(z_score(df$ops))
-#   
-#   df <- df %>%
-#     mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
-#     arrange(desc(z_score)) %>%
-#     head(n_df)
-# }
-# 
-# #z_score function for starting pitchers
-# z_score_sp <- function(df, n_df) {
-#   df <- df %>%
-#     filter(games > 1,  #many players have a default of "1" game played for "just in case they get moved to the majors" and other scenarios
-#            gs > 0) %>%  #filter for pitchers who project to start at least one game
-#     select(name, team, gs, games, ip, wins, era, saves, hra, so, whip)
-#   
-#   df$wins_z <- as.numeric(z_score(df$wins))
-#   df$era_z <- as.numeric(z_score(df$era) * -1)
-#   df$hra_z <- as.numeric(z_score(df$hra) * -1)
-#   df$so_z <- as.numeric(z_score(df$so))
-#   df$whip_z <- as.numeric(z_score(df$whip) * -1)
-#   
-#   df <- df %>%
-#     mutate(z_score = wins_z + era_z + hra_z + so_z + whip_z) %>%
-#     arrange(desc(z_score)) %>%
-#     head(n_df)
-# }
 # 
 # z_score_all_p <- function(df, n_df) {
 #   df <- df %>%
@@ -193,11 +152,6 @@ outfielders <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 7
 # 
 # #probably first need a straight scale. then have a second statistic that describes how it affects team outcome
 # #this second stat will be weighted with innings
-# 
-# #combine starters and relievers
-# pitchers1 <- starters1 %>%
-#   full_join(relievers1) %>%
-#   arrange(desc(z_score))
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp"
@@ -342,21 +296,7 @@ z_score_position <- function(df) {
   #df$sb_net_z <- round(as.numeric(z_score(df$sb_net)), 3)
   
   df
-  # df <- df %>%
-  #   mutate(z_score = avg_z + runs_z + hr_z + rbi_z + ops_z) %>%
-  #   arrange(desc(z_score)) %>%
-  #   head(n_df)
 }
-
-#run sb_net fn for each position
-# catchers1$sb_net <- sb_net_fn(catchers1$sb, catchers1$cs)
-# first_basemen1$sb_net <- sb_net_fn(first_basemen1$sb, first_basemen1$cs)
-# second_basemen1$sb_net <- sb_net_fn(second_basemen1$sb, second_basemen1$cs)
-# third_basemen1$sb_net <- sb_net_fn(third_basemen1$sb, third_basemen1$cs)
-# shortstops1$sb_net <- sb_net_fn(shortstops1$sb, shortstops1$cs)
-# outfielders1$sb_net <- sb_net_fn(outfielders1$sb, outfielders1$cs)
-# hitters_new$sb_net <- sb_net_fn(hitters_new$sb, hitters_new$cs)
-
 
 #run z-score pos on each position df
 catchers1 <- z_score_position(catchers1)
@@ -498,60 +438,6 @@ fname <- function(name){
 }
 
 ggplot(all_players, aes(z_tot)) + geom_histogram(binwidth = .5)
-# 
-# #hitters_zpos2 <- hitters_zpos1 %>%
-# #  arrange(name)  #alphabetized to check for duplicate names or to look at particular player
-# 
-# #model the stats in the population
-# #all look like some type of poisson distribution
-# #find the R function for self selection o
-# #setwd("~/Desktop/R_projects")
-# setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
-# 
-# #libraries
-# library(readxl)
-# library(tidyr)
-# library(dplyr)
-# library(stringr)
-# library(ggplot2)
-# 
-# #read in data
-# #df_sal <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 2)  #salaries entered manually in this df
-# #dfh <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 3)  #read in hitter 600 proj
-# #dfp <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx", sheet = 4)  #read in pitcher 200/65 proj
-# 
-# #df_grid <- read_excel("~/Desktop/R_projects/eiflb_rosters_2017.xlsx")  #rosters from cbs in grid format
-# 
-# df_sal <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 2)
-# dfh <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 3)
-# dfp <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx", sheet = 4)
-# 
-# ##### ##### ##### ##### #####
-# 
-# df_grid <- read_excel("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl/eiflb_rosters_2017.xlsx")
-# 
-# #global vars and fns
-# gms_played <- 115  #approximate number of games played for each mlb team
-# gms_tot <- 162  #total number of single team games in a seson
-# 
-# z_score <- function(stat){  #function to calculate z_score
-#   scale(stat)
-# }
-# 
-# #pois <- function(sb_net){
-# #  ppois(sb_net, 4.5)
-# #}
-# 
-# pc <- .95 * 200 / 65  #reliever to starter multiplier (keeps 95% of "positive" stats)
-# pc2 <- 1.05  #starter to reliever weight (gives 5% more credit to reliever)
-# 
-# #gather by player, join with salaries
-# df_new <- df_grid %>%
-#   gather(squad, player, assistant_to_the_traveling_secretary:tarrington_johsenators)  #gather the data by player from squad columns
-# df <- df_new %>%
-#   left_join(df_sal, by = "player") %>%  #join new df to player salaries
-#   select(player, squad, position, salary) %>%  #select col's
-#   arrange(player)  #alphabatize by player
 
 #clean player names: dff poisson distribution parameters
 ggplot(hitters_zpos1, aes(avg)) + geom_histogram(binwidth = .003)
@@ -570,18 +456,18 @@ ggplot(pitchers, aes(whip)) + geom_histogram(binwidth = .025)
 #write.csv(hitters_zpos_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zpos_samp.csv")
 #write.csv(hitters_zscore_samp, file = "C:/Users/Ben/Desktop/FF/baseball/hitters_zscore_samp.csv")
 
-pois <- function(stat){
-  ppois(stat, 4.5)
-}
-
-sb_pois <- ppois(hitters_zpos1$sb_net, 3.5)
-hist(sb_pois)
-
-dpois(hitters_zpos1$sb_net, 3.5)
-ppois(hitters_zpos1$sb_net, 3.5)
-qpois(hitters_zpos1$sb_net, 3.5)
-rpois(hitters_zpos1$sb_net, 3.5)
-
-hist(ppois(hitters_zpos1$sb_net, mean(hitters_zpos1$sb_net)))
-mean(hitters_zpos1$sb_net)
-sd(hitters_zpos1$sb_net)
+# pois <- function(stat){
+#   ppois(stat, 4.5)
+# }
+# 
+# sb_pois <- ppois(hitters_zpos1$sb_net, 3.5)
+# hist(sb_pois)
+# 
+# dpois(hitters_zpos1$sb_net, 3.5)
+# ppois(hitters_zpos1$sb_net, 3.5)
+# qpois(hitters_zpos1$sb_net, 3.5)
+# rpois(hitters_zpos1$sb_net, 3.5)
+# 
+# hist(ppois(hitters_zpos1$sb_net, mean(hitters_zpos1$sb_net)))
+# mean(hitters_zpos1$sb_net)
+# sd(hitters_zpos1$sb_net)

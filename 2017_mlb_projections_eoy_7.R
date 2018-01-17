@@ -417,12 +417,22 @@ rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outf
    hitters2)
 #FINISHED hitters for shiny
 #####
-# first_basemen3 <- hitters3 %>%
-#   filter(pos == 3)
-# second_basemen3 <- hitters3 %>%
-#   filter(pos == 4)
-# shortstops3 <- hitters3 %>%
-#   filter(pos == 6)
+catchers3 <- hitters3 %>%
+  filter(pos == 2)
+first_basemen3 <- hitters3 %>%
+  filter(pos == 3)
+second_basemen3 <- hitters3 %>%
+  filter(pos == 4)
+third_basemen3 <- hitters3 %>%
+  filter(pos == 5)
+shortstops3 <- hitters3 %>%
+  filter(pos == 6)
+outfielders3 <- hitters3 %>%
+  filter(pos == 7)
+middle_infielders3 <- hitters3 %>%
+  filter(pos == 4 | pos == 6)
+corner_infielders3 <- hitters3 %>%
+  filter(pos == 3 | pos == 5)
 
 ##### PITCHERS #####
 
@@ -629,4 +639,3 @@ all_players <- hitters3 %>%
 fname <- function(name){
   which(all_players$name == name)
 }
-

@@ -397,8 +397,6 @@ hitters_zpos1 <- hitters2 %>%
 hitters_zpos2 <- hitters_zpos1 %>%
   arrange(desc(z_tot))
 
-#hitters3 <- hitters_zpos2
-
 df <- hitters_zpos2
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -409,6 +407,13 @@ stat6 <- df["ops_z"]
 
 hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
+#remove unneeded df's
+rm(df)
+rm(stat1, stat2, stat3, stat4, stat5, stat6)
+rm(catchers1, first_basemen1, second_basemen1, third_basemen1, shortstops1, outfielders1, middle_infielders1, corner_infielders1,
+   designated_hitters1, hitters1)
+rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2, middle_infielders2, corner_infielders2,
+   hitters2)
 #FINISHED hitters for shiny
 #####
 first_basemen3 <- hitters3 %>%

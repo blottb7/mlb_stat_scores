@@ -405,7 +405,8 @@ stat4 <- df["avg_z"]
 stat5 <- df["sb_net_z"]
 stat6 <- df["ops_z"]
 
-hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #remove unneeded df's
 rm(df)
@@ -416,12 +417,204 @@ rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outf
    hitters2)
 #FINISHED hitters for shiny
 #####
-first_basemen3 <- hitters3 %>%
-  filter(pos == 3)
-second_basemen3 <- hitters3 %>%
-  filter(pos == 4)
-shortstops3 <- hitters3 %>%
-  filter(pos == 6)
+# first_basemen3 <- hitters3 %>%
+#   filter(pos == 3)
+# second_basemen3 <- hitters3 %>%
+#   filter(pos == 4)
+# shortstops3 <- hitters3 %>%
+#   filter(pos == 6)
+
+##### PITCHERS #####
+
+pitchers <- read_excel("2018_fangraphs_projections_2018_0110.xlsx", sheet = 8)
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+
+#all possible pitcher stats
+#wins, saves, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs
+pitchers <- pitchers %>%
+  filter(ip > 1) %>%  #filter for pitchers with more than 1 projected innings pitched
+  mutate(avg_p = round(hits / (bb + hits + 3 * ip), 3),  #hits against rate
+         win_rate = round(9 * wins / ip, 3),  #win rate per nine innings
+         saves_rate = round(saves / ip, 3),  #save rate per inning
+         hra_rate = round(9 * hra / ip, 3))  #home runs allowed rate per nine innings
+#no data on hld and qs
+
+#METHOD 1: separate starters and relievers
+starters <- pitchers %>%
+  filter(gs > 0)
+starters$pos <- "sp"
+relievers <- pitchers %>%
+  filter(gs == 0)
+relievers$pos <- "rp"
+
+z_score_starters <- function(df) {
+  
+  #wins, saves, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs
+  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
+  df$era_raw_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  df$whip_raw_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  df$avg_p_raw_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  df$fip_raw_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
+  #   
+  df
+}
+
+#apply z_score to starters
+starters <- z_score_starters(starters)
+
+#weight stats by innings pitched vs. the mean.
+starters$era_z <- starters$era_raw_z * starters$ip / mean(starters$ip)
+starters$whip_z <- starters$whip_raw_z * starters$ip / mean(starters$ip)
+starters$avg_p_z <- starters$avg_p_raw_z * starters$ip / mean(starters$ip)
+starters$k_z <- starters$k_rate_z * starters$ip / mean(starters$ip)
+starters$bb_z <- starters$bb_rate_z * starters$ip / mean(starters$ip)
+starters$fip_z <- starters$fip_raw_z * starters$ip / mean(starters$ip)
+starters$hra_z <- starters$hra_rate_z * starters$ip / mean(starters$ip)
+
+#re-scale the weighted vars
+starters$era_z <- z_score(starters$era_z)
+starters$whip_z <- z_score(starters$whip_z)
+starters$avg_p_z <- z_score(starters$avg_p_z)
+starters$k_z <- z_score(starters$k_z)
+starters$bb_z <- z_score(starters$bb_z)
+starters$fip_z <- z_score(starters$fip_z)
+starters$hra_z <- z_score(starters$hra_z)
+
+df <- starters
+stat1 <- df["wins_z"]
+stat2 <- df["era_z"]
+stat3 <- df["whip_z"]
+stat4 <- df["k_z"]
+stat5 <- df["hra_z"]
+stat6 <- 0
+
+starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+starters <- starters %>%
+  arrange(desc(z_tot))
+starters1 <- starters[1:n_starting_pitchers,]
+
+#####
+#Now run the same process with the starting pitchers in the actual playing pool
+starters1 <- z_score_starters(starters1)
+
+starters1$era_z <- starters1$era_raw_z * starters1$ip / mean(starters1$ip)
+starters1$whip_z <- starters1$whip_raw_z * starters1$ip / mean(starters1$ip)
+starters1$avg_p_z <- starters1$avg_p_raw_z * starters1$ip / mean(starters1$ip)
+starters1$k_z <- starters1$k_rate_z * starters1$ip / mean(starters1$ip)
+starters1$bb_z <- starters1$bb_rate_z * starters1$ip / mean(starters1$ip)
+starters1$fip_z <- starters1$fip_raw_z * starters1$ip / mean(starters1$ip)
+starters1$hra_z <- starters1$hra_rate_z * starters1$ip / mean(starters1$ip)
+
+starters1$era_z <- round(as.numeric(z_score(starters1$era_z)), 3)
+starters1$whip_z <- round(as.numeric(z_score(starters1$whip_z)), 3)
+starters1$avg_p_z <- round(as.numeric(z_score(starters1$avg_p_z)), 3)
+starters1$k_z <- round(as.numeric(z_score(starters1$k_z)), 3)
+starters1$bb_z <- round(as.numeric(z_score(starters1$bb_z)), 3)
+starters1$fip_z <- round(as.numeric(z_score(starters1$fip_z)), 3)
+starters1$hra_z <- round(as.numeric(z_score(starters1$hra_z)), 3)
+
+df <- starters1
+stat1 <- df["wins_z"]
+stat2 <- df["era_z"]
+stat3 <- df["whip_z"]
+stat4 <- df["k_z"]
+stat5 <- df["hra_z"]
+stat6 <- 0
+
+starters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+starters1 <- starters1 %>%
+  arrange(desc(z_tot))
+
+starters1$z_pos <- starters1$z_tot
+starters1$z_pos_mean <- 0
+starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+                           names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+
+#METHOD 2: starters and relievers in same group
+z_score_relievers <- function(df) {
+  
+  #wins, saves, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs
+  df$saves_z <- round(z_score(df$saves), 3)
+  df$era_raw_z <- round(z_score(df$era) * -1, 3)
+  df$whip_raw_z <- round(z_score(df$whip) * -1, 3)
+  df$avg_p_raw_z <- round(z_score(df$avg_p) * -1, 3)
+  df$k_rate_z <- round(z_score(df$k_rate), 3)
+  df$bb_rate_z <- round(z_score(df$bb_rate) * -1, 3)
+  df$fip_raw_z <- round(z_score(df$fip) * -1, 3)
+  df$hra_rate_z <- round(z_score(df$hra_rate) * -1, 3)
+  #   
+  df
+}
+
+relievers <- z_score_relievers(relievers)
+
+#weight stats by innings pitched vs. the mean.
+relievers$era_z <- relievers$era_raw_z * relievers$ip / mean(relievers$ip)
+relievers$whip_z <- relievers$whip_raw_z * relievers$ip / mean(relievers$ip)
+relievers$avg_p_z <- relievers$avg_p_raw_z * relievers$ip / mean(relievers$ip)
+relievers$k_z <- relievers$k_rate_z * relievers$ip / mean(relievers$ip)
+relievers$bb_z <- relievers$bb_rate_z * relievers$ip / mean(relievers$ip)
+relievers$fip_z <- relievers$fip_raw_z * relievers$ip / mean(relievers$ip)
+relievers$hra_z <- relievers$hra_rate_z * relievers$ip / mean(relievers$ip)
+
+#re-scale the weighted vars
+relievers$era_z <- z_score(relievers$era_z)
+relievers$whip_z <- z_score(relievers$whip_z)
+relievers$avg_p_z <- z_score(relievers$avg_p_z)
+relievers$k_z <- z_score(relievers$k_z)
+relievers$bb_z <- z_score(relievers$bb_z)
+relievers$fip_z <- z_score(relievers$fip_z)
+relievers$hra_z <- z_score(relievers$hra_z)
+
+#user selected vars
+df <- relievers
+stat1 <- df["saves_z"]
+stat2 <- df["era_z"]
+stat3 <- df["whip_z"]
+stat4 <- df["k_z"]
+stat5 <- df["hra_z"]
+stat6 <- 0
+
+relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+
+#select top relievers based on most saves, with z_tot being the tie-breaker
+relievers <- relievers %>%
+  arrange(desc(as.numeric(saves_z)), desc(z_tot))
+relievers1 <- relievers[1:n_relief_pitchers,]
+
+#####
+#Now run the same process with the rlief pitchers in the actual playing pool
+relievers1 <- z_score_relievers(relievers1)
+
+relievers1$era_z <- round(as.numeric(relievers1$era_raw_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$whip_z <- round(as.numeric(relievers1$whip_raw_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$avg_p_z <- round(as.numeric(relievers1$avg_p_raw_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$k_z <- round(as.numeric(relievers1$k_rate_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$bb_z <- round(as.numeric(relievers1$bb_rate_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$fip_z <- round(as.numeric(relievers1$fip_raw_z * relievers1$ip / mean(starters1$ip)), 3)
+relievers1$hra_z <- round(as.numeric(relievers1$hra_rate_z * relievers1$ip / mean(starters1$ip)), 3)
+
+df <- relievers1
+stat1 <- df["saves_z"]
+stat2 <- df["era_z"]
+stat3 <- df["whip_z"]
+stat4 <- df["k_z"]
+stat5 <- df["hra_z"]
+stat6 <- 0
+
+relievers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+
+relievers1 <- relievers1 %>%
+  arrange(desc(z_tot))
+
+relievers1$z_pos <- relievers1$z_tot
+relievers1$z_pos_mean <- 0
+relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+                             names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #COMBINE HITTERS WITH PITCHERS
 all_pitchers <- starters2 %>%
@@ -429,10 +622,11 @@ all_pitchers <- starters2 %>%
 all_players <- hitters3 %>%
   full_join(all_pitchers) %>%
   arrange(desc(z_pos))
-all_players$z_pos <- round(all_players$z_pos, 3)
-all_players$z_tot <- round(all_players$z_tot, 3)
+#all_players$z_pos <- round(all_players$z_pos, 3)
+#all_players$z_tot <- round(all_players$z_tot, 3)
 
-# fname <- function(name){
-#   which(all_players$name == name)
-# }
-# 
+#function for "finding names" in the full df
+fname <- function(name){
+  which(all_players$name == name)
+}
+

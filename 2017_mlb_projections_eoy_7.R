@@ -2,7 +2,7 @@
 
 #TO DO
 #Z_TOT function: add all possible stats; will need to build in zero's when an individual stat not selected
-  #z_stat: allow user define. start ~line 215
+#z_stat: allow user define. start ~line 215
 #user selected stats
 #add bench players? how to weight them?
 #what to do when two similar positions (i.e. SS and 2B) have too many players assigned to them
@@ -182,7 +182,7 @@ outfielders1 <- hitters_reg %>% filter(pos == "7")
 
 #create general form of function for creating z-score for position players
 z_score_hitter <- function(df) {
- #all hitter stats besides sb and sb_net
+  #all hitter stats besides sb and sb_net
   df$hit_z <- round(as.numeric(z_score(df$hit)), 3)
   df$double_z <- round(as.numeric(z_score(df$double)), 3)
   df$triple_z <- round(as.numeric(z_score(df$triple)), 3)
@@ -407,16 +407,11 @@ stat6 <- df["ops_z"]
 
 hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                               names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+hitters3 <- hitters3 %>%
+  arrange(desc(z_pos))
 
-#remove unneeded df's
-rm(df)
-rm(stat1, stat2, stat3, stat4, stat5, stat6)
-rm(catchers1, first_basemen1, second_basemen1, third_basemen1, shortstops1, outfielders1, middle_infielders1, corner_infielders1,
-   designated_hitters1, hitters1)
-rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2, middle_infielders2, corner_infielders2,
-   hitters2)
-#FINISHED hitters for shiny
 #####
+#position grouping df's
 catchers3 <- hitters3 %>%
   filter(pos == 2)
 first_basemen3 <- hitters3 %>%
@@ -433,6 +428,16 @@ middle_infielders3 <- hitters3 %>%
   filter(pos == 4 | pos == 6)
 corner_infielders3 <- hitters3 %>%
   filter(pos == 3 | pos == 5)
+
+
+#remove unneeded df's
+rm(df)
+rm(stat1, stat2, stat3, stat4, stat5, stat6)
+rm(catchers1, first_basemen1, second_basemen1, third_basemen1, shortstops1, outfielders1, middle_infielders1, corner_infielders1,
+   designated_hitters1, hitters1)
+rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2, middle_infielders2, corner_infielders2,
+   hitters2)
+#FINISHED hitters for shiny
 
 ##### PITCHERS #####
 

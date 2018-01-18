@@ -59,14 +59,24 @@ ui <- fluidPage(
       inputId = "starting_designated_hitters", label = "starting designated hitters/utilty per team", value = 1, min = 0, max = 3, step = 1
     )
     
+    #user inputs for stat categories
+    #hitter stats
+    #checkboxGroupInput() or #checkboxInput()?
   ),
   #MAIN PANEL
-  mainPanel()
+  mainPanel(
+    #contains output elements that get created in the server function
+    
+    #plot output
+    plotOutput()
+  )
 )
 
 #server
-server <- function() {
-  
+server <- function(input, output) {
+  #1) save output to display to output$xx
+  #2) build objects to display w render_____()
+  #3) use input values w input$xx
 }
 
 #shiny App

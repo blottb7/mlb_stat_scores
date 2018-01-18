@@ -24,7 +24,7 @@ library(forecast)
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
-n_teams <- 16
+n_teams <- 12
 starting_catchers <- 1
 starting_first_basemen <- 1
 starting_second_basemen <- 1
@@ -408,7 +408,7 @@ stat6 <- df["ops_z"]
 hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                               names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 hitters3 <- hitters3 %>%
-  arrange(desc(z_pos))
+  arrange(desc(z_tot))
 
 #####
 #position grouping df's

@@ -714,3 +714,10 @@ fname <- function(name){
 find_name <- function(name) {
   which(hitters3$name == name)
 }
+
+#notes need to separate starters and relievrs as i've done to cut down to ~6 starters and 3 relievers per team
+  #then, combine the starters and relievers and run the z_stats
+  #right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.
+    #kimbrel is projected for 100 K's and degrom is projected for ~220, so they should have drastically different scores.
+  #might need to again use k_rate in the combined df, then weight by innings pitched.
+    #as of now, i am essentially creating two different stats, relievers_k_z and starters_k_z, and calling them the same thing.

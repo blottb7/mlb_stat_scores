@@ -36,7 +36,7 @@ starting_corner_infielders <- 1
 starting_designated_hitters <- 1
 #pitchers
 starting_pitchers <- 7
-relief_pitchers <- 2.5
+relief_pitchers <- 3
 #costs
 min_cost <- 3
 
@@ -718,8 +718,6 @@ find_name <- function(name) {
 }
 
 #rank players in final league df
-#all_players$rank <- rank(all_players$z_pos[1:(nrow(all_players)-n_teams)])
-
 #subset out the last player on each team, then run rank function on the remaining players
 all_players1 <- all_players[1:(nrow(all_players)-n_teams),]
 all_players1$rank <- rank(all_players1$z_pos)
@@ -731,22 +729,46 @@ rm(all_players1)
 #cost function
   #for $275 and 16 team league
 cost_fn <- function(rank, min_cost = 3) {
-  1.01118 ^ rank + (min_cost - 1)
+  round(1.01118 ^ rank + (min_cost - 1), 2)
 }
 #assign cost to player ranks
 all_players$rank_cost <- cost_fn(all_players$rank)
 #assign min cost to last players
 all_players$rank_cost <- ifelse(is.na(all_players$rank_cost), min_cost, all_players$rank_cost)
 
-all_players$z_pos_sc <-scale(all_players$z_pos)
-all_players$rank_cost_sc <- scale(all_players$rank_cost)
+all_players$z_pos_sc <-round(scale(all_players$z_pos), 3)
+all_players$rank_cost_sc <- round(scale(all_players$rank_cost), 3)
 
 ggplot(all_players, aes(rank_cost_sc, z_pos_sc)) + geom_point()
 ggplot(all_players, aes(z_pos, z_pos_sc)) + geom_point()
 ggplot(all_players, aes(rank, z_pos)) + geom_point()
+ggplot(all_players, aes(rank, rank_cost_sc)) + geom_point()
+ggplot(all_players, aes(rank_cost, new_cost)) + geom_point()
+ggplot(all_players, aes(new_cost, z_pos)) + geom_point()
 #notes need to separate starters and relievrs as i've done to cut down to ~6 starters and 3 relievers per team
 #then, combine the starters and relievers and run the z_stats
 #right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.
 #kimbrel is projected for 100 K's and degrom is projected for ~220, so they should have drastically different scores.
 #might need to again use k_rate in the combined df, then weight by innings pitched.
 #as of now, i am essentially creating two different stats, relievers_k_z and starters_k_z, and calling them the same thing.
+
+df <- as.data.frame(450:1)
+names(df) <- "samp"
+df$samp_cost <- cost_fn(df$samp)
+df$samp_cost_sc <- scale(df$samp_cost)
+
+all_players1 <- all_players %>%
+  filter(z_pos_sc > 0, z_pos_sc < 2.5)
+lm(all_players1$rank_cost_sc ~ all_players1$z_pos_sc)
+
+#y = mx + b
+#rank_cost_sc <- -.1168 + 1.1994 * z_pos_sc
+
+new_fn <- function(z_pos_sc) {
+  round(-.1168 + 1.1994 * z_pos_sc, 3)
+  }
+
+all_players$new_rank_cost_sc <- new_fn(all_players$z_pos_sc)
+
+all_players$new_cost <- mean(all_players$rank_cost) + all_players$new_rank_cost_sc * sd(all_players$rank_cost)
+all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_cost, all_players$new_cost)

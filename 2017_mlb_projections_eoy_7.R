@@ -37,6 +37,8 @@ starting_designated_hitters <- 1
 #pitchers
 starting_pitchers <- 7
 relief_pitchers <- 2.5
+#costs
+min_cost <- 3
 
 #user selected stats
 #from fangraphs:
@@ -183,8 +185,8 @@ hitters <- unique(hitters)  #this removes rows where the name AND position are d
 
 #combine dfs so there is only one line for each player; each player now has the most valuable position
 hitters <- hitters %>%
-#  anti_join(duplicated_names_copy) %>%
-#  bind_rows(duplicated_names3) %>%
+  #  anti_join(duplicated_names_copy) %>%
+  #  bind_rows(duplicated_names3) %>%
   #build stat projections for all missing stats, i.e. sb_net
   mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
          rbi_r = rbi + runs, #rbis plus runs
@@ -659,7 +661,7 @@ relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 relievers <- relievers %>%
   #arrange(desc(z_tot))
   arrange(desc(saves_z), desc(z_tot))
-  #arrange(desc(as.numeric(saves_z)), desc(z_tot))
+#arrange(desc(as.numeric(saves_z)), desc(z_tot))
 relievers1 <- relievers[1:n_relief_pitchers,]
 
 #####
@@ -715,9 +717,30 @@ find_name <- function(name) {
   which(hitters3$name == name)
 }
 
+#rank players in final league df
+#all_players$rank <- rank(all_players$z_pos[1:(nrow(all_players)-n_teams)])
+
+#subset out the last player on each team, then run rank function on the remaining players
+all_players1 <- all_players[1:(nrow(all_players)-n_teams),]
+all_players1$rank <- rank(all_players1$z_pos)
+#join ranks with df
+all_players <- all_players %>%
+  left_join(all_players1)
+rm(all_players1)
+
+#cost function
+  #for $275 and 16 team league
+cost_fn <- function(rank, min_cost = 3) {
+  round(1.01118 ^ rank + (min_cost - 1), 0)
+}
+#assign cost to player ranks
+all_players$rank_cost <- cost_fn(all_players$rank)
+#assign min cost to last players
+all_players$rank_cost <- ifelse(is.na(all_players$rank_cost), min_cost, all_players$rank_cost)
+
 #notes need to separate starters and relievrs as i've done to cut down to ~6 starters and 3 relievers per team
-  #then, combine the starters and relievers and run the z_stats
-  #right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.
-    #kimbrel is projected for 100 K's and degrom is projected for ~220, so they should have drastically different scores.
-  #might need to again use k_rate in the combined df, then weight by innings pitched.
-    #as of now, i am essentially creating two different stats, relievers_k_z and starters_k_z, and calling them the same thing.
+#then, combine the starters and relievers and run the z_stats
+#right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.
+#kimbrel is projected for 100 K's and degrom is projected for ~220, so they should have drastically different scores.
+#might need to again use k_rate in the combined df, then weight by innings pitched.
+#as of now, i am essentially creating two different stats, relievers_k_z and starters_k_z, and calling them the same thing.

@@ -478,8 +478,9 @@ rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outf
 ##### PITCHERS #####
 
 pitchers <- read_excel("2018_fangraphs_projections_2018_0120.xlsx", sheet = 8)
+#pitchers <- read_excel("2018_fangraphs_projections_2018_0120.xlsx", sheet = 9)
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #all possible pitcher stats
 #wins, saves, era, whip, hr (allowed), so, avg, k/9, bb/9, k/bb, fip, ip, hld, qs
@@ -495,7 +496,8 @@ pitchers <- pitchers %>%
 
 #METHOD 1: separate starters and relievers
 starters <- pitchers %>%
-  filter(gs > 0)
+  filter(gs > 0) %>%
+  filter(ip >= 100)
 starters$pos <- "sp"
 relievers <- pitchers %>%
   filter(gs == 0)
@@ -549,7 +551,7 @@ stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -582,7 +584,7 @@ stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 starters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -652,7 +654,7 @@ stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -685,7 +687,7 @@ stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 relievers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -711,10 +713,6 @@ all_players <- hitters3 %>%
 #function for "finding names" in the full df
 fname <- function(name){
   which(all_players$name == name)
-}
-
-find_name <- function(name) {
-  which(hitters3$name == name)
 }
 
 #rank players in final league df
@@ -772,3 +770,11 @@ all_players$new_rank_cost_sc <- new_fn(all_players$z_pos_sc)
 
 all_players$new_cost <- mean(all_players$rank_cost) + all_players$new_rank_cost_sc * sd(all_players$rank_cost)
 all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_cost, all_players$new_cost)
+
+all_players1 <- all_players %>%
+  select(name, team, pos, z_pos, z_pos_mean, z_tot, new_cost)
+
+find_name <- function(name) {
+  which(all_players1$name == name)
+}
+

@@ -731,13 +731,19 @@ rm(all_players1)
 #cost function
   #for $275 and 16 team league
 cost_fn <- function(rank, min_cost = 3) {
-  round(1.01118 ^ rank + (min_cost - 1), 0)
+  1.01118 ^ rank + (min_cost - 1)
 }
 #assign cost to player ranks
 all_players$rank_cost <- cost_fn(all_players$rank)
 #assign min cost to last players
 all_players$rank_cost <- ifelse(is.na(all_players$rank_cost), min_cost, all_players$rank_cost)
 
+all_players$z_pos_sc <-scale(all_players$z_pos)
+all_players$rank_cost_sc <- scale(all_players$rank_cost)
+
+ggplot(all_players, aes(rank_cost_sc, z_pos_sc)) + geom_point()
+ggplot(all_players, aes(z_pos, z_pos_sc)) + geom_point()
+ggplot(all_players, aes(rank, z_pos)) + geom_point()
 #notes need to separate starters and relievrs as i've done to cut down to ~6 starters and 3 relievers per team
 #then, combine the starters and relievers and run the z_stats
 #right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.

@@ -35,8 +35,8 @@ starting_middle_infielders <- 1
 starting_corner_infielders <- 1
 starting_designated_hitters <- 1
 #pitchers
-starting_pitchers <- 7
-relief_pitchers <- 3
+starting_pitchers <- 6.5
+relief_pitchers <- 2.5
 #costs
 min_cost <- 3
 
@@ -773,8 +773,10 @@ all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_c
 
 all_players1 <- all_players %>%
   select(name, team, pos, z_pos, z_pos_mean, z_tot, new_cost)
+all_players1$new_cost <- round(all_players1$new_cost, 2)
 
 find_name <- function(name) {
   which(all_players1$name == name)
 }
 
+b = exp(log(y) / x)

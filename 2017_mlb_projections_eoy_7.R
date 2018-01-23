@@ -37,6 +37,8 @@ starting_designated_hitters <- 1
 #pitchers
 starting_pitchers <- 6.5
 relief_pitchers <- 2.5
+#bench players
+bench_players <- 2
 #costs
 min_cost <- 3
 
@@ -58,6 +60,8 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 #pitchers
 n_starting_pitchers <- n_teams * starting_pitchers
 n_relief_pitchers <- n_teams * relief_pitchers
+#bench
+n_bench <- n_teams * bench_players
 
 #FUNCTIONS
 #z_score calculation for each selected stat
@@ -780,3 +784,4 @@ find_name <- function(name) {
 }
 
 b = exp(log(y) / x)
+#make equation of actual var names for b_coef

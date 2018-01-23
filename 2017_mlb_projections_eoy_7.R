@@ -118,28 +118,31 @@ hitters <- catchers %>%
   filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
 
+#hitters my 16 team
 hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Ramirez", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Joey Gallo", 5, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Eric Thames", 7, hitters$pos)  #FG has him marked only has "3"
 hitters$pos <- ifelse(hitters$name == "Matt Olson", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Travis Shaw", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jose Ramirez", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Trey Mancini", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Brandon Moss", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Joey Gallo", 3, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Javier Baez", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Ian Happ", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 3, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Trey Mancini", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Brandon Moss", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
+
+#hitters standard 12 team
 
 # 
 hitters <- unique(hitters)  #this removes rows where the name AND position are duplicated
@@ -170,7 +173,7 @@ hitters <- unique(hitters)  #this removes rows where the name AND position are d
 # #call that new var "pos_rank"
 # 
 # duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
-#                                      ifelse(duplicated_names1$pos == 6, 2, 
+#                                      ifelse(duplicated_names1$pos == 6, 2,
 #                                             ifelse(duplicated_names1$pos == 4, 3,
 #                                                    ifelse(duplicated_names1$pos == 7, 4,
 #                                                           ifelse(duplicated_names1$pos == 3, 5, 6)))))
@@ -405,11 +408,10 @@ designated_hitters1 <- designated_hitters %>%
   arrange(desc(z_tot))
 designated_hitters1 <- designated_hitters1[1:n_designated_hitters,]
 
-# #remove dummy df
-# rm(df)
 ##### #####
 hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)  #bind "designated hitters"/utility players to rest of hitters
 hitters1$sb_z <- round(as.numeric(z_score(BoxCox(hitters1$sb, .45))), 3)  #generate sb related z_score
+hitters1$sb__net_z <- round(as.numeric(z_score(BoxCox(hitters1$sb_net, .45))), 3)  #generate sb related z_score
 hitters1 <- z_score_hitter(hitters1)
 
 df <- hitters1
@@ -451,24 +453,92 @@ hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_t
 hitters3 <- hitters3 %>%
   arrange(desc(z_tot))
 
-#####
-#position grouping df's
-catchers3 <- hitters3 %>%
-  filter(pos == 2)
-first_basemen3 <- hitters3 %>%
-  filter(pos == 3)
-second_basemen3 <- hitters3 %>%
-  filter(pos == 4)
-third_basemen3 <- hitters3 %>%
-  filter(pos == 5)
-shortstops3 <- hitters3 %>%
-  filter(pos == 6)
-outfielders3 <- hitters3 %>%
-  filter(pos == 7)
-middle_infielders3 <- hitters3 %>%
-  filter(pos == 4 | pos == 6)
-corner_infielders3 <- hitters3 %>%
-  filter(pos == 3 | pos == 5)
+find_name <- function(name) {
+  which(hitters3$name == name)
+}
+
+# #anti_join final hitters and final starters
+# #hitters bench
+# hitters_bench <- hitters_reg %>%
+#   anti_join(hitters3, by = "name")
+# 
+# #start searching for multi-position players
+# hitters_names <- as.data.frame(hitters_bench$name)  #creates a single col df of all starters' names
+# names(hitters_names) <- "name"  #names the col in above df
+# 
+# #creates an Nx1 df of duplicated names
+# duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])
+# names(duplicated_names) <- "name"  #names the col in above df
+# 
+# #creates full duplicated names df
+# duplicated_names1 <- hitters_bench %>%
+#   right_join(duplicated_names, by = "name")
+# #make a copy of this for anti_join with full hitters
+# duplicated_names_copy <- duplicated_names1
+# duplicated_names1$pos <- as.numeric(duplicated_names1$pos)
+# 
+# duplicated_names1 <- unique(duplicated_names1)  #this removes rows where the name AND position are duplicated
+# 
+# #create vector of position rankings, with the least productive position (catcher) having the highest relative value
+# #and assiging the most valuable position to each duplicate player
+# #call that new var "pos_rank"
+# 
+# duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
+#                                      ifelse(duplicated_names1$pos == 6, 2,
+#                                             ifelse(duplicated_names1$pos == 4, 3,
+#                                                    ifelse(duplicated_names1$pos == 7, 4,
+#                                                           ifelse(duplicated_names1$pos == 3, 5, 6)))))
+# 
+# 
+# #assign pos_rank to each duplicate player
+# duplicated_names2 <- duplicated_names1 %>%
+#   select(name, pos_rank) %>%
+#   group_by(name) %>%
+#   summarize(pos_rank = min(pos_rank))
+# #join the position rank df with the now singular duplicated player df
+# duplicated_names3 <- duplicated_names1 %>%
+#   right_join(duplicated_names2) %>%
+#   select(-pos_rank)  #remove the no longer needed pos_rank var
+# duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
+# 
+# hitters_bench <- hitters_bench %>%
+#   anti_join(duplicated_names_copy) %>%
+#   bind_rows(duplicated_names3)
+# 
+# #hitters_bench$name <- unique(hitters_bench$name)
+# hitters_bench1 <- z_score_hitter(hitters_bench)
+# 
+# df <- hitters_bench1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_z"]
+# stat6 <- df["ops_z"]
+# 
+# hitters_bench1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# hitters_bench1 <- hitters_bench1 %>%
+#   arrange(desc(z_tot))
+# hitters_bench2 <- hitters_bench1[1:n_bench,]
+# 
+# #####
+# #position grouping df's
+# catchers3 <- hitters3 %>%
+#   filter(pos == 2)
+# first_basemen3 <- hitters3 %>%
+#   filter(pos == 3)
+# second_basemen3 <- hitters3 %>%
+#   filter(pos == 4)
+# third_basemen3 <- hitters3 %>%
+#   filter(pos == 5)
+# shortstops3 <- hitters3 %>%
+#   filter(pos == 6)
+# outfielders3 <- hitters3 %>%
+#   filter(pos == 7)
+# middle_infielders3 <- hitters3 %>%
+#   filter(pos == 4 | pos == 6)
+# corner_infielders3 <- hitters3 %>%
+#   filter(pos == 3 | pos == 5)
 
 #remove unneeded df's
 rm(df)
@@ -506,9 +576,6 @@ starters$pos <- "sp"
 relievers <- pitchers %>%
   filter(gs == 0)
 relievers$pos <- "rp"
-
-# ggplot(starters, aes(y = so))
-# hist(starters$so)
 
 z_score_starters <- function(df) {
   
@@ -731,7 +798,7 @@ rm(all_players1)
 #cost function
   #for $275 and 16 team league
 cost_fn <- function(rank, min_cost = 3) {
-  round(1.01118 ^ rank + (min_cost - 1), 2)
+  round(1.011093759 ^ rank + (min_cost - 1), 2)
 }
 #assign cost to player ranks
 all_players$rank_cost <- cost_fn(all_players$rank)
@@ -778,10 +845,6 @@ all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_c
 all_players1 <- all_players %>%
   select(name, team, pos, z_pos, z_pos_mean, z_tot, new_cost)
 all_players1$new_cost <- round(all_players1$new_cost, 2)
-
-find_name <- function(name) {
-  which(all_players1$name == name)
-}
 
 b = exp(log(y) / x)
 #make equation of actual var names for b_coef

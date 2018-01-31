@@ -961,10 +961,10 @@ all_players$new_rank_cost_sc <- new_fn(all_players$z_pos_sc)
 
 all_players$new_cost <- round(mean(all_players$rank_cost) + all_players$new_rank_cost_sc * sd(all_players$rank_cost), 2)
 all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_cost, all_players$new_cost)
+all_players$value <- all_players$new_cost - all_players$salary
 
 all_players1 <- all_players %>%
-  select(name, team, pos, salary, z_pos, z_pos_mean, z_tot, new_cost) %>%
-  mutate(value = new_cost - salary)
+  select(name, team, pos, salary, z_pos, z_pos_mean, z_tot, new_cost)
 # all_players1$new_cost <- round(all_players1$new_cost, 2)
 
 # b = exp(log(y) / x)
@@ -974,14 +974,14 @@ sum(all_players1$new_cost)
 
 #saveRDS(all_players1, file = "~/Desktop/R_projects/baseball/eiflb/projections_2018_0126")
 
-catchers1 <- all_players %>% filter(pos == 2) %>% select(-c(wins_z:saves_z))
-first_basemen1 <- all_players %>% filter(pos == 3) %>% select(-c(wins_z:saves_z))
-second_basemen1 <- all_players %>% filter(pos == 4) %>% select(-c(wins_z:saves_z))
-third_basemen1 <- all_players %>% filter(pos == 5) %>% select(-c(wins_z:saves_z))
-shortstops1 <- all_players %>% filter(pos == 6) %>% select(-c(wins_z:saves_z))
-outfielders1 <- all_players %>% filter(pos == 7) %>% select(-c(wins_z:saves_z))
-middle_infielders1 <- all_players %>% filter(pos == 4 | pos == 6) %>% select(-c(wins_z:saves_z))
-corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(wins_z:saves_z))
+catchers1 <- all_players %>% filter(pos == 2) %>% select(-c(wins_z:k_z))
+first_basemen1 <- all_players %>% filter(pos == 3) %>% select(-c(wins_z:k_z))
+second_basemen1 <- all_players %>% filter(pos == 4) %>% select(-c(wins_z:k_z))
+third_basemen1 <- all_players %>% filter(pos == 5) %>% select(-c(wins_z:k_z))
+shortstops1 <- all_players %>% filter(pos == 6) %>% select(-c(wins_z:k_z))
+outfielders1 <- all_players %>% filter(pos == 7) %>% select(-c(wins_z:k_z))
+middle_infielders1 <- all_players %>% filter(pos == 4 | pos == 6) %>% select(-c(wins_z:k_z))
+corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(wins_z:k_z))
 
 # find_name <- function(name) {
 #   which(all_players_copy$name == name)

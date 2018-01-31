@@ -76,7 +76,9 @@ second_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet 
 third_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 5)
 shortstops <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 6)
 outfielders <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 7)
-# pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
+pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
+#pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 9)
+salaries <- read_excel("2018_eiflb_rosters.xlsx")
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp". Include "adp" if and when necessary.
@@ -114,9 +116,46 @@ hitters <- catchers %>%
   full_join(second_basemen) %>%
   full_join(third_basemen) %>%
   full_join(shortstops) %>%
-  full_join(outfielders) %>%
-  filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+  full_join(outfielders)
 
+#pitchers: var names and mutations
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+
+pitchers <- pitchers %>%
+  #filter(ip > 1) %>%  #filter for pitchers with more than 1 projected innings pitched
+  mutate(kbb = round(so / bb, 3),  #strikeouts per walk rate
+         avg_p = round(hits / (hits + 3 * ip), 3),  #hits against rate
+         #win_rate = round(9 * wins / ip, 3),  #win rate per nine innings
+         #saves_rate = round(saves / ip, 3),  #save rate per inning
+         hra_rate = round(9 * hra / ip, 3))  #home runs allowed rate per nine innings
+
+#remove non-letter chars from player names
+hitters$name <- gsub("\\.", "", hitters$name)  #removes periods from player names
+hitters$name <- gsub("\\'", "", hitters$name)  #removes apostrophes from player names
+hitters$name <- gsub("\\-", "", hitters$name)  #remove hyphens from player names
+hitters$name <- sub(pattern = " Jr", "", hitters$name)  #remove " Jr" (abbr. for junior) from anywhere in player names
+
+salaries$name <- gsub("\\.", "", salaries$name)  #removes periods from player names
+salaries$name <- gsub("\\'", "", salaries$name)  #removes apostrophes from player names
+salaries$name <- gsub("\\-", "", salaries$name)  #remove hyphens from player names
+salaries$name <- sub(pattern = " Jr", "", salaries$name)  #remove " jr" (abbr. for junior) from anywhere in player names
+salaries$name <- sub("Nicholas Castellanos", "Nick Castellanos", salaries$name)
+salaries$name <- sub("Greg Bird", "Gregory Bird", salaries$name)
+salaries$name <- sub("Michael Soroka", "Mike Soroka", salaries$name)
+
+pitchers$name <- gsub("\\.", "", pitchers$name)  #removes periods from player names
+pitchers$name <- gsub("\\'", "", pitchers$name)  #removes apostrophes from player names
+pitchers$name <- gsub("\\-", "", pitchers$name)  #remove hyphens from player names
+pitchers$name <- sub(pattern = " Jr", "", pitchers$name)  #remove " Jr" (abbr. for junior) from anywhere in player names
+
+hitters <- hitters %>%
+  left_join(salaries)
+hitters <- hitters %>% filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+
+pitchers <- pitchers %>%
+  left_join(salaries)
+pitchers <- pitchers %>% filter(ip > 1)
 #hitters my 16 team
 hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
@@ -442,17 +481,17 @@ stat4 <- df["avg_z"]
 stat5 <- df["sb_net_z"]
 stat6 <- df["ops_z"]
 
-hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "salary", "z_pos_mean", "z_tot", 
                               names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 hitters3 <- hitters3 %>%
   arrange(desc(z_tot))
 
 #remove unncessary df's
 rm(catchers1, catchers2, corner_infielders, corner_infielders1, corner_infielders2,
-  designated_hitters1, first_basemen1, first_basemen2, hitters_no_dh, hitters1, hitters2,
-  middle_infielders1, middle_infielders2, outfielders1, outfielders2, remaining_hitters,
-  second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1,
-  third_basemen2)
+   designated_hitters1, first_basemen1, first_basemen2, hitters_no_dh, hitters1, hitters2,
+   middle_infielders1, middle_infielders2, outfielders1, outfielders2, remaining_hitters,
+   second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1,
+   third_basemen2)
 
 find_name <- function(name) {
   which(hitters3$name == name)
@@ -551,21 +590,21 @@ find_name <- function(name) {
 
 ##### PITCHERS #####
 
-pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
-#pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 9)
-names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+# pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
+# #pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 9)
+# names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+#                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #all possible pitcher stats
 #wins, saves, era, whip, hr (allowed), so, avg, k/9, bb/9, k/bb, fip, ip, hld, qs
 #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing); re-ordered
-pitchers <- pitchers %>%
-  filter(ip > 1) %>%  #filter for pitchers with more than 1 projected innings pitched
-  mutate(kbb = round(so / bb, 3),  #strikeouts per walk rate
-         avg_p = round(hits / (hits + 3 * ip), 3),  #hits against rate
-         #win_rate = round(9 * wins / ip, 3),  #win rate per nine innings
-         #saves_rate = round(saves / ip, 3),  #save rate per inning
-         hra_rate = round(9 * hra / ip, 3))  #home runs allowed rate per nine innings
+# pitchers <- pitchers %>%
+#   #filter(ip > 1) %>%  #filter for pitchers with more than 1 projected innings pitched
+#   mutate(kbb = round(so / bb, 3),  #strikeouts per walk rate
+#          avg_p = round(hits / (hits + 3 * ip), 3),  #hits against rate
+#          #win_rate = round(9 * wins / ip, 3),  #win rate per nine innings
+#          #saves_rate = round(saves / ip, 3),  #save rate per inning
+#          hra_rate = round(9 * hra / ip, 3))  #home runs allowed rate per nine innings
 #no data on hld and qs
 
 #METHOD 1: separate starters and relievers
@@ -664,7 +703,7 @@ starters1 <- starters1 %>%
 
 starters1$z_pos <- starters1$z_tot
 starters1$z_pos_mean <- 0
-starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+starters2 <- starters1[, c("name", "team", "pos", "salary", "z_pos", "z_pos_mean", "z_tot", 
                            names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #METHOD 2: starters and relievers in same group
@@ -768,7 +807,7 @@ relievers1 <- z_score_relievers(relievers1)
 
 relievers1$z_pos <- relievers1$z_tot
 relievers1$z_pos_mean <- 0
-relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
+relievers2 <- relievers1[, c("name", "team", "pos", "salary", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #METHOD 2: starters and relievers in same group
@@ -798,9 +837,9 @@ all_pitchers <- starters1 %>%
 all_pitchers <- z_score_pitchers(all_pitchers)
 
 #weight rate stats by number of innings; leave counting stats as is
-  #the weighting can't be right; z_score rates are way more extreme
-  #plus, you're actually weighting relievers closer to 0, the middle of the pack. you don't necessarily 
-  #want this. they won't be worth ~$12.
+#the weighting can't be right; z_score rates are way more extreme
+#plus, you're actually weighting relievers closer to 0, the middle of the pack. you don't necessarily 
+#want this. they won't be worth ~$12.
 #I think the correct operationi is addition or subtraction, not multiplication or division.
 
 # all_pitchers$era_z <- round(as.numeric(all_pitchers$era_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
@@ -835,8 +874,8 @@ all_pitchers$z_pos <- all_pitchers$z_tot + all_pitchers$z_pos_mean
 all_pitchers <- all_pitchers %>%
   arrange(desc(z_tot))
 
-all_pitchers1 <- all_pitchers[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
-                             names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+all_pitchers1 <- all_pitchers[, c("name", "team", "pos", "salary", "z_pos", "z_pos_mean", "z_tot", 
+                                  names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #combine pitchers and position players
 # all_pitchers <- starters2 %>%
@@ -904,14 +943,19 @@ ggplot(starters1, aes(ip, z_tot)) + geom_point()
 
 all_players1 <- all_players %>%
   filter(z_pos_sc > 0, z_pos_sc < 2.5)
-lm(all_players1$rank_cost_sc ~ all_players1$z_pos_sc)
+lm_model <- lm(all_players1$rank_cost_sc ~ all_players1$z_pos_sc)
 
 #y = mx + b
 #rank_cost_sc <- -.1168 + 1.1994 * z_pos_sc
 
+# new_fn <- function(z_pos_sc) {
+#   round(-.2218 + 1.2637 * z_pos_sc, 3)
+# }
+
 new_fn <- function(z_pos_sc) {
-  round(-.1748 + 1.2430 * z_pos_sc, 3)
+  round(lm_model$coefficients[1] + lm_model$coefficients[2] * z_pos_sc, 3)
 }
+
 
 all_players$new_rank_cost_sc <- new_fn(all_players$z_pos_sc)
 
@@ -919,12 +963,14 @@ all_players$new_cost <- round(mean(all_players$rank_cost) + all_players$new_rank
 all_players$new_cost <- ifelse(all_players$rank_cost_sc <= 0, all_players$rank_cost, all_players$new_cost)
 
 all_players1 <- all_players %>%
-  select(name, team, pos, z_pos, z_pos_mean, z_tot, new_cost)
+  select(name, team, pos, salary, z_pos, z_pos_mean, z_tot, new_cost) %>%
+  mutate(value = new_cost - salary)
 # all_players1$new_cost <- round(all_players1$new_cost, 2)
 
 # b = exp(log(y) / x)
 #make equation of actual var names for b_coef
 sum(all_players1$new_cost)
+#sum(all_players1$salary, na.rm = TRUE)
 
 #saveRDS(all_players1, file = "~/Desktop/R_projects/baseball/eiflb/projections_2018_0126")
 
@@ -937,6 +983,6 @@ outfielders1 <- all_players %>% filter(pos == 7) %>% select(-c(wins_z:saves_z))
 middle_infielders1 <- all_players %>% filter(pos == 4 | pos == 6) %>% select(-c(wins_z:saves_z))
 corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(wins_z:saves_z))
 
-find_name <- function(name) {
-  which(all_players_copy$name == name)
-}
+# find_name <- function(name) {
+#   which(all_players_copy$name == name)
+# }

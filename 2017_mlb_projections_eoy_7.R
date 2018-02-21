@@ -73,7 +73,7 @@ second_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet 
 third_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 5)
 shortstops <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 6)
 outfielders <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 7)
-# pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
+pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp". Include "adp" if and when necessary.
@@ -410,7 +410,6 @@ find_name <- function(name) {
 
 ##### PITCHERS #####
 
-pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 

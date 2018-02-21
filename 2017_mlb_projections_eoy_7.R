@@ -1,3 +1,4 @@
+
 #Code for generalized yearlong category data
 
 #TO DO
@@ -11,9 +12,10 @@
 #remove "old" df's as you go along
 
 #Set working directory
-setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
+#setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
 #setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
 #setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
+setwd("C:/Users/Ben/Desktop/R projects")  #new toshiba working directory
 
 #libraries
 library(readxl)
@@ -41,11 +43,6 @@ relief_pitchers <- 2.5
 # bench_players <- 2
 #costs
 min_cost <- 3
-
-#user selected stats
-#from fangraphs:
-#avg, rbi, r, sb, hr, obp, slg, ops, h, so, 2b, 3b, tb, bb, rbi+r, xBH, sb-cs, woba (hitter possibilities)
-#w, sv, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs (pitcher possibilities)
 
 #staring players per position for a fantasy league
 n_catchers <- n_teams * starting_catchers
@@ -117,7 +114,7 @@ hitters <- catchers %>%
   full_join(outfielders) %>%
   filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
-#hitters my 16 team
+#set positions for hitters in my 16 team league
 hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
@@ -146,49 +143,6 @@ hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
 # 
 hitters <- unique(hitters)  #this removes rows where the name AND position are duplicated
 
-# #start searching for multi-position players
-# hitters_names <- as.data.frame(hitters$name)  #creates a single col df of all starters' names
-# names(hitters_names) <- "name"  #names the col in above df
-# 
-# #creates an Nx1 df of duplicated names
-# duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])
-# names(duplicated_names) <- "name"  #names the col in above df
-# 
-# #creates full duplicated names df
-# duplicated_names1 <- hitters %>%
-#   right_join(duplicated_names, by = "name")
-# #make a copy of this for anti_join with full hitters
-# duplicated_names_copy <- duplicated_names1
-# duplicated_names1$pos <- as.numeric(duplicated_names1$pos)
-# 
-# #duplicated_names1$pos <- ifelse(duplicated_names1$name == "Cody Bellinger", 7, duplicated_names1$pos)
-# #duplicated_names1$pos <- ifelse(duplicated_names1$name == "Jose Ramirez", 4, duplicated_names1$pos)
-# 
-# duplicated_names1 <- unique(duplicated_names1)  #this removes rows where the name AND position are duplicated
-# 
-# 
-# #create vector of position rankings, with the least productive position (catcher) having the highest relative value
-# #and assiging the most valuable position to each duplicate player
-# #call that new var "pos_rank"
-# 
-# duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
-#                                      ifelse(duplicated_names1$pos == 6, 2,
-#                                             ifelse(duplicated_names1$pos == 4, 3,
-#                                                    ifelse(duplicated_names1$pos == 7, 4,
-#                                                           ifelse(duplicated_names1$pos == 3, 5, 6)))))
-# 
-# 
-# #assign pos_rank to each duplicate player
-# duplicated_names2 <- duplicated_names1 %>%
-#   select(name, pos_rank) %>%
-#   group_by(name) %>%
-#   summarize(pos_rank = min(pos_rank))
-# #join the position rank df with the now singular duplicated player df
-# duplicated_names3 <- duplicated_names1 %>%
-#   right_join(duplicated_names2) %>%
-#   select(-pos_rank)  #remove the no longer needed pos_rank var
-# duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
-
 #combine dfs so there is only one line for each player; each player now has the most valuable position
 hitters <- hitters %>%
   #  anti_join(duplicated_names_copy) %>%
@@ -206,10 +160,6 @@ hitters <- hitters %>%
 hitters_reg <- hitters %>%
   filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
   arrange(name)
-#save the discarded hitters for later comparison, i.e. for guys you may want to stream or add later in the year
-# hitters_res <- hitters %>%
-#   filter(pa < 300) %>%
-#   arrange(desc(woba))
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
 hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
@@ -449,115 +399,22 @@ hitters3 <- hitters3 %>%
 
 #remove unncessary df's
 rm(catchers1, catchers2, corner_infielders, corner_infielders1, corner_infielders2,
-  designated_hitters1, first_basemen1, first_basemen2, hitters_no_dh, hitters1, hitters2,
-  middle_infielders1, middle_infielders2, outfielders1, outfielders2, remaining_hitters,
-  second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1,
-  third_basemen2)
+   designated_hitters1, first_basemen1, first_basemen2, hitters_no_dh, hitters1, hitters2,
+   middle_infielders1, middle_infielders2, outfielders1, outfielders2, remaining_hitters,
+   second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1,
+   third_basemen2)
 
 find_name <- function(name) {
   which(hitters3$name == name)
 }
 
-# #anti_join final hitters and final starters
-# #hitters bench
-# hitters_bench <- hitters_reg %>%
-#   anti_join(hitters3, by = "name")
-# 
-# #start searching for multi-position players
-# hitters_names <- as.data.frame(hitters_bench$name)  #creates a single col df of all starters' names
-# names(hitters_names) <- "name"  #names the col in above df
-# 
-# #creates an Nx1 df of duplicated names
-# duplicated_names <- as.data.frame(hitters_names[duplicated(hitters_names),])
-# names(duplicated_names) <- "name"  #names the col in above df
-# 
-# #creates full duplicated names df
-# duplicated_names1 <- hitters_bench %>%
-#   right_join(duplicated_names, by = "name")
-# #make a copy of this for anti_join with full hitters
-# duplicated_names_copy <- duplicated_names1
-# duplicated_names1$pos <- as.numeric(duplicated_names1$pos)
-# 
-# duplicated_names1 <- unique(duplicated_names1)  #this removes rows where the name AND position are duplicated
-# 
-# #create vector of position rankings, with the least productive position (catcher) having the highest relative value
-# #and assiging the most valuable position to each duplicate player
-# #call that new var "pos_rank"
-# 
-# duplicated_names1$pos_rank <- ifelse(duplicated_names1$pos == 2, 1,
-#                                      ifelse(duplicated_names1$pos == 6, 2,
-#                                             ifelse(duplicated_names1$pos == 4, 3,
-#                                                    ifelse(duplicated_names1$pos == 7, 4,
-#                                                           ifelse(duplicated_names1$pos == 3, 5, 6)))))
-# 
-# 
-# #assign pos_rank to each duplicate player
-# duplicated_names2 <- duplicated_names1 %>%
-#   select(name, pos_rank) %>%
-#   group_by(name) %>%
-#   summarize(pos_rank = min(pos_rank))
-# #join the position rank df with the now singular duplicated player df
-# duplicated_names3 <- duplicated_names1 %>%
-#   right_join(duplicated_names2) %>%
-#   select(-pos_rank)  #remove the no longer needed pos_rank var
-# duplicated_names3$pos <- as.character(duplicated_names3$pos)  #switch back to char class for joining with rest of hitters
-# 
-# hitters_bench <- hitters_bench %>%
-#   anti_join(duplicated_names_copy) %>%
-#   bind_rows(duplicated_names3)
-# 
-# #hitters_bench$name <- unique(hitters_bench$name)
-# hitters_bench1 <- z_score_hitter(hitters_bench)
-# 
-# df <- hitters_bench1
-# stat1 <- df["hr_z"]
-# stat2 <- df["runs_z"]
-# stat3 <- df["rbi_z"]
-# stat4 <- df["avg_z"]
-# stat5 <- df["sb_z"]
-# stat6 <- df["ops_z"]
-# 
-# hitters_bench1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-# hitters_bench1 <- hitters_bench1 %>%
-#   arrange(desc(z_tot))
-# hitters_bench2 <- hitters_bench1[1:n_bench,]
-# 
-# #####
-# #position grouping df's
-# catchers3 <- hitters3 %>%
-#   filter(pos == 2)
-# first_basemen3 <- hitters3 %>%
-#   filter(pos == 3)
-# second_basemen3 <- hitters3 %>%
-#   filter(pos == 4)
-# third_basemen3 <- hitters3 %>%
-#   filter(pos == 5)
-# shortstops3 <- hitters3 %>%
-#   filter(pos == 6)
-# outfielders3 <- hitters3 %>%
-#   filter(pos == 7)
-# middle_infielders3 <- hitters3 %>%
-#   filter(pos == 4 | pos == 6)
-# corner_infielders3 <- hitters3 %>%
-#   filter(pos == 3 | pos == 5)
-
-#remove unneeded df's
-# rm(df)
-# rm(stat1, stat2, stat3, stat4, stat5, stat6)
-# rm(catchers1, first_basemen1, second_basemen1, third_basemen1, shortstops1, outfielders1, middle_infielders1, corner_infielders1,
-#    designated_hitters1, hitters1)
-# rm(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2, middle_infielders2, corner_infielders2,
-#    hitters2)
-
 ##### PITCHERS #####
 
 pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
-#pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 9)
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #all possible pitcher stats
-#wins, saves, era, whip, hr (allowed), so, avg, k/9, bb/9, k/bb, fip, ip, hld, qs
 #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing); re-ordered
 pitchers <- pitchers %>%
   filter(ip > 1) %>%  #filter for pitchers with more than 1 projected innings pitched
@@ -599,24 +456,6 @@ z_score_starters <- function(df) {
 #apply z_score to starters
 starters <- z_score_starters(starters)
 
-# #weight stats by innings pitched vs. the mean.
-# starters$era_z <- starters$era_raw_z * starters$ip / mean(starters$ip)
-# starters$whip_z <- starters$whip_raw_z * starters$ip / mean(starters$ip)
-# starters$avg_p_z <- starters$avg_p_raw_z * starters$ip / mean(starters$ip)
-# starters$k_z <- starters$k_rate_z * starters$ip / mean(starters$ip)
-# starters$bb_z <- starters$bb_rate_z * starters$ip / mean(starters$ip)
-# starters$fip_z <- starters$fip_raw_z * starters$ip / mean(starters$ip)
-# starters$hra_z <- starters$hra_rate_z * starters$ip / mean(starters$ip)
-# 
-# #re-scale the weighted vars
-# starters$era_z <- z_score(starters$era_z)
-# starters$whip_z <- z_score(starters$whip_z)
-# starters$avg_p_z <- z_score(starters$avg_p_z)
-# starters$k_z <- z_score(starters$k_z)
-# starters$bb_z <- z_score(starters$bb_z)
-# starters$fip_z <- z_score(starters$fip_z)
-# starters$hra_z <- z_score(starters$hra_z)
-
 df <- starters
 stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
@@ -633,22 +472,6 @@ starters1 <- starters[1:n_starting_pitchers,]
 #####
 #Now run the same process with the starting pitchers in the actual playing pool
 starters1 <- z_score_starters(starters1)
-
-# starters1$era_z <- starters1$era_raw_z * starters1$ip / mean(starters1$ip)
-# starters1$whip_z <- starters1$whip_raw_z * starters1$ip / mean(starters1$ip)
-# starters1$avg_p_z <- starters1$avg_p_raw_z * starters1$ip / mean(starters1$ip)
-# starters1$k_z <- starters1$k_rate_z * starters1$ip / mean(starters1$ip)
-# starters1$bb_z <- starters1$bb_rate_z * starters1$ip / mean(starters1$ip)
-# starters1$fip_z <- starters1$fip_raw_z * starters1$ip / mean(starters1$ip)
-# starters1$hra_z <- starters1$hra_rate_z * starters1$ip / mean(starters1$ip)
-# 
-# starters1$era_z <- round(as.numeric(z_score(starters1$era_z)), 3)
-# starters1$whip_z <- round(as.numeric(z_score(starters1$whip_z)), 3)
-# starters1$avg_p_z <- round(as.numeric(z_score(starters1$avg_p_z)), 3)
-# starters1$k_z <- round(as.numeric(z_score(starters1$k_z)), 3)
-# starters1$bb_z <- round(as.numeric(z_score(starters1$bb_z)), 3)
-# starters1$fip_z <- round(as.numeric(z_score(starters1$fip_z)), 3)
-# starters1$hra_z <- round(as.numeric(z_score(starters1$hra_z)), 3)
 
 df <- starters1
 stat1 <- df["wins_z"]
@@ -685,39 +508,9 @@ z_score_relievers <- function(df) {
   df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
   #   
   df
-  # #wins, saves, era, whip, so, avg, k/9, bb/9, k/bb, fip, ip, hr, hld, qs
-  # df$saves_z <- round(z_score(df$saves), 3)
-  # df$era_raw_z <- round(z_score(df$era) * -1, 3)
-  # df$so_z <- round(as.numeric(z_score(df$so)), 3)
-  # df$whip_raw_z <- round(z_score(df$whip) * -1, 3)
-  # df$avg_p_raw_z <- round(z_score(df$avg_p) * -1, 3)
-  # df$k_rate_z <- round(z_score(df$k_rate), 3)
-  # df$bb_rate_z <- round(z_score(df$bb_rate) * -1, 3)
-  # df$fip_raw_z <- round(z_score(df$fip) * -1, 3)
-  # df$hra_rate_z <- round(z_score(df$hra_rate) * -1, 3)
-  # #   
-  # df
 }
 
 relievers <- z_score_relievers(relievers)
-
-# #weight stats by innings pitched vs. the mean.
-# relievers$era_z <- relievers$era_raw_z * relievers$ip / mean(relievers$ip)
-# relievers$whip_z <- relievers$whip_raw_z * relievers$ip / mean(relievers$ip)
-# relievers$avg_p_z <- relievers$avg_p_raw_z * relievers$ip / mean(relievers$ip)
-# relievers$k_z <- relievers$k_rate_z * relievers$ip / mean(relievers$ip)
-# relievers$bb_z <- relievers$bb_rate_z * relievers$ip / mean(relievers$ip)
-# relievers$fip_z <- relievers$fip_raw_z * relievers$ip / mean(relievers$ip)
-# relievers$hra_z <- relievers$hra_rate_z * relievers$ip / mean(relievers$ip)
-# 
-# #re-scale the weighted vars
-# relievers$era_z <- z_score(relievers$era_z)
-# relievers$whip_z <- z_score(relievers$whip_z)
-# relievers$avg_p_z <- z_score(relievers$avg_p_z)
-# relievers$k_z <- z_score(relievers$k_z)
-# relievers$bb_z <- z_score(relievers$bb_z)
-# relievers$fip_z <- z_score(relievers$fip_z)
-# relievers$hra_z <- z_score(relievers$hra_z)
 
 #user selected vars
 df <- relievers
@@ -740,31 +533,6 @@ relievers1 <- relievers[1:n_relief_pitchers,]
 #####
 #Now run the same process with the rlief pitchers in the actual playing pool
 relievers1 <- z_score_relievers(relievers1)
-
-#weight relievers stats by starters stats before combining relievers with starters
-# relievers1$era_z <- round(as.numeric(relievers1$era_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$hra_z <- round(as.numeric(relievers1$hra_z * relievers1$hra / mean(starters1$hra)), 3)
-# relievers1$k_z <- round(as.numeric(relievers1$k_z * relievers1$so / mean(starters1$so)), 3)
-# relievers1$whip_z <- round(as.numeric(relievers1$whip_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$k_rate_z <- round(as.numeric(relievers1$k_rate_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$bb_z <- round(as.numeric(relievers1$bb_rate_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$fip_z <- round(as.numeric(relievers1$fip_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$kbb_rate_z <- round(as.numeric(relievers1$kbb_rate_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$avg_p_z <- round(as.numeric(relievers1$avg_p_z * relievers1$ip / mean(starters1$ip)), 3)
-# relievers1$hra_rate_z <- round(as.numeric(relievers1$hra_rate_z * relievers1$ip / mean(starters1$ip)), 3)
-
-# df <- relievers1
-# stat1 <- df["saves_z"]
-# stat2 <- df["era_z"]
-# stat3 <- df["whip_z"]
-# stat4 <- df["k_z"]
-# stat5 <- df["hra_rate_z"]
-# stat6 <- 0
-# 
-# relievers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-# 
-# relievers1 <- relievers1 %>%
-#   arrange(desc(z_tot))
 
 relievers1$z_pos <- relievers1$z_tot
 relievers1$z_pos_mean <- 0
@@ -797,30 +565,6 @@ all_pitchers <- starters1 %>%
   full_join(relievers1)
 all_pitchers <- z_score_pitchers(all_pitchers)
 
-#weight rate stats by number of innings; leave counting stats as is
-  #the weighting can't be right; z_score rates are way more extreme
-  #plus, you're actually weighting relievers closer to 0, the middle of the pack. you don't necessarily 
-  #want this. they won't be worth ~$12.
-#I think the correct operationi is addition or subtraction, not multiplication or division.
-
-# all_pitchers$era_z <- round(as.numeric(all_pitchers$era_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$whip_z <- round(as.numeric(all_pitchers$whip_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$k_rate_z <- round(as.numeric(all_pitchers$k_rate_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$fip_z <- round(as.numeric(all_pitchers$fip_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$kbb_rate_z <- round(as.numeric(all_pitchers$kbb_rate_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$avg_p_z <- round(as.numeric(all_pitchers$avg_p_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# all_pitchers$hra_rate_z <- round(as.numeric(all_pitchers$hra_rate_z * all_pitchers$ip / mean(all_pitchers$ip)), 3)
-# 
-# #re-center weighted z_scores for rates
-#   #this really doesn't change the outcomes very much, but it seems to be the correct thing to do
-# all_pitchers$era_z <- round(as.numeric(z_score(all_pitchers$era_z)), 3)
-# all_pitchers$whip_z <- round(as.numeric(z_score(all_pitchers$whip_z)), 3)
-# all_pitchers$k_rate_z <- round(as.numeric(z_score(all_pitchers$k_rate_z)), 3)
-# all_pitchers$fip_z <- round(as.numeric(z_score(all_pitchers$fip_z)), 3)
-# all_pitchers$kbb_rate_z <- round(as.numeric(z_score(all_pitchers$kbb_rate_z)), 3)
-# all_pitchers$avg_p_z <- round(as.numeric(z_score(all_pitchers$avg_p_z)), 3)
-# all_pitchers$hra_rate_z <- round(as.numeric(z_score(all_pitchers$hra_rate_z)), 3)
-
 df <- all_pitchers
 stat1 <- df["wins_z"]
 stat2 <- df["saves_z"]
@@ -836,17 +580,12 @@ all_pitchers <- all_pitchers %>%
   arrange(desc(z_tot))
 
 all_pitchers1 <- all_pitchers[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
-                             names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+                                  names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
 #combine pitchers and position players
-# all_pitchers <- starters2 %>%
-#   full_join(relievers2) %>%
-#   arrange(desc(z_tot))
 all_players <- hitters3 %>%
   full_join(all_pitchers1) %>%
   arrange(desc(z_pos))
-# all_players$z_pos <- round(all_players$z_pos, 3)
-# all_players$z_tot <- round(all_players$z_tot, 3)
 
 #remove old pitcher dfs
 rm(relievers, relievers2, starters, starters2)
@@ -897,11 +636,6 @@ ggplot(starters1, aes(ip, z_tot)) + geom_point()
 #might need to again use k_rate in the combined df, then weight by innings pitched.
 #as of now, i am essentially creating two different stats, relievers_k_z and starters_k_z, and calling them the same thing.
 
-# df <- as.data.frame(450:1)
-# names(df) <- "samp"
-# df$samp_cost <- cost_fn(df$samp)
-# df$samp_cost_sc <- scale(df$samp_cost)
-
 all_players1 <- all_players %>%
   filter(z_pos_sc > 0, z_pos_sc < 2.5)
 lm(all_players1$rank_cost_sc ~ all_players1$z_pos_sc)
@@ -938,5 +672,5 @@ middle_infielders1 <- all_players %>% filter(pos == 4 | pos == 6) %>% select(-c(
 corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(wins_z:saves_z))
 
 find_name <- function(name) {
-  which(all_players_copy$name == name)
+  which(all_players1$name == name)
 }

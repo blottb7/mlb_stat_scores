@@ -67,13 +67,13 @@ z_score <- function(stat){
 }
 
 #read in data
-catchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 2)
-first_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 3)
-second_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 4)
-third_basemen <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 5)
-shortstops <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 6)
-outfielders <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 7)
-pitchers <- read_excel("2018_fangraphs_projections_2018_0126.xlsx", sheet = 8)
+catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
+first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
+second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
+third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
+shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
+outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
+pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp". Include "adp" if and when necessary.
@@ -130,7 +130,7 @@ hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
 # hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
 # hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
@@ -570,7 +570,7 @@ stat2 <- df["saves_z"]
 stat3 <- df["era_z"]
 stat4 <- df["whip_z"]
 stat5 <- df["k_z"]
-stat6 <- df["hra_z"]
+stat6 <- df["hra_rate_z"]
 
 all_pitchers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 all_pitchers$z_pos <- all_pitchers$z_tot + all_pitchers$z_pos_mean
@@ -661,6 +661,7 @@ sum(all_players1$new_cost)
 
 #saveRDS(all_players1, file = "~/Desktop/R_projects/baseball/eiflb/projections_2018_0126")
 
+
 catchers1 <- all_players %>% filter(pos == 2) %>% select(-c(wins_z:saves_z))
 first_basemen1 <- all_players %>% filter(pos == 3) %>% select(-c(wins_z:saves_z))
 second_basemen1 <- all_players %>% filter(pos == 4) %>% select(-c(wins_z:saves_z))
@@ -673,3 +674,4 @@ corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(
 find_name <- function(name) {
   which(all_players1$name == name)
 }
+

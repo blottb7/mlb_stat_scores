@@ -66,6 +66,94 @@ z_score <- function(stat){
   scale(stat)
 }
 
+#create general form of function for creating z-score for position players
+z_score_hitter <- function(df) {
+  #all hitter stats besides sb and sb_net
+  df$hit_z <- round(as.numeric(z_score(df$hit)), 3)
+  df$double_z <- round(as.numeric(z_score(df$double)), 3)
+  df$triple_z <- round(as.numeric(z_score(df$triple)), 3)
+  df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
+  df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
+  df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
+  df$bb_z <- round(as.numeric(z_score(df$bb)), 3)
+  df$so_z <- round(as.numeric(z_score(df$so)), 3)
+  df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
+  df$obp_z <- round(as.numeric(z_score(df$obp)), 3)
+  df$slg_z <- round(as.numeric(z_score(df$slg)), 3)
+  df$ops_z <- round(as.numeric(z_score(df$ops)), 3)
+  df$woba_z <- round(as.numeric(z_score(df$woba)), 3)
+  df$tb_z <- round(as.numeric(z_score(df$tb)), 3)
+  df$rbi_r_z <- round(as.numeric(z_score(df$rbi_r)), 3)
+  df$xbh_z <- round(as.numeric(z_score(df$xbh)), 3)
+  
+  df
+}
+
+#function for user selected hitter stats
+z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
+  z_tot <- (stat1 + stat2 + stat3 + stat4 + stat5 + stat6)
+}
+
+z_score_starters <- function(df) {
+  
+  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
+  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
+  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
+  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
+  df$k_z <- round(as.numeric(z_score(df$so)), 3)
+  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
+  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
+  #   
+  df
+}
+
+#METHOD 2: starters and relievers in same group
+z_score_relievers <- function(df) {
+  
+  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
+  df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
+  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
+  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
+  df$k_z <- round(as.numeric(z_score(df$so)), 3)
+  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
+  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
+  #   
+  df
+}
+
+#METHOD 2: starters and relievers in same group
+z_score_pitchers <- function(df) {
+  
+  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
+  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
+  df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
+  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
+  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
+  df$k_z <- round(as.numeric(z_score(df$so)), 3)
+  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
+  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
+  #   
+  df
+}
+
 #read in data
 catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
 first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
@@ -173,29 +261,6 @@ third_basemen1 <- hitters_reg %>% filter(pos == "5")
 shortstops1 <- hitters_reg %>% filter(pos == "6")
 outfielders1 <- hitters_reg %>% filter(pos == "7")
 
-#create general form of function for creating z-score for position players
-z_score_hitter <- function(df) {
-  #all hitter stats besides sb and sb_net
-  df$hit_z <- round(as.numeric(z_score(df$hit)), 3)
-  df$double_z <- round(as.numeric(z_score(df$double)), 3)
-  df$triple_z <- round(as.numeric(z_score(df$triple)), 3)
-  df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
-  df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
-  df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
-  df$bb_z <- round(as.numeric(z_score(df$bb)), 3)
-  df$so_z <- round(as.numeric(z_score(df$so)), 3)
-  df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
-  df$obp_z <- round(as.numeric(z_score(df$obp)), 3)
-  df$slg_z <- round(as.numeric(z_score(df$slg)), 3)
-  df$ops_z <- round(as.numeric(z_score(df$ops)), 3)
-  df$woba_z <- round(as.numeric(z_score(df$woba)), 3)
-  df$tb_z <- round(as.numeric(z_score(df$tb)), 3)
-  df$rbi_r_z <- round(as.numeric(z_score(df$rbi_r)), 3)
-  df$xbh_z <- round(as.numeric(z_score(df$xbh)), 3)
-  
-  df
-}
-
 #run z-score pos on each position df
 catchers1 <- z_score_hitter(catchers1)
 first_basemen1 <- z_score_hitter(first_basemen1)
@@ -203,11 +268,6 @@ second_basemen1 <- z_score_hitter(second_basemen1)
 third_basemen1 <- z_score_hitter(third_basemen1)
 shortstops1 <- z_score_hitter(shortstops1)
 outfielders1 <- z_score_hitter(outfielders1)
-
-#function for user selected hitter stats
-z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
-  z_tot <- (stat1 + stat2 + stat3 + stat4 + stat5 + stat6)
-}
 
 df <- catchers1
 stat1 <- df["hr_z"]
@@ -433,25 +493,6 @@ relievers <- pitchers %>%
   filter(gs == 0)
 relievers$pos <- "rp"
 
-z_score_starters <- function(df) {
-  
-  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
-  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
-  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
-  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
-  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
-  df$k_z <- round(as.numeric(z_score(df$so)), 3)
-  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
-  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
-  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
-  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
-  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
-  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
-  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
-  #   
-  df
-}
-
 #apply z_score to starters
 starters <- z_score_starters(starters)
 
@@ -489,25 +530,6 @@ starters1$z_pos_mean <- 0
 starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                            names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
-#METHOD 2: starters and relievers in same group
-z_score_relievers <- function(df) {
-  
-  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
-  df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
-  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
-  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
-  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
-  df$k_z <- round(as.numeric(z_score(df$so)), 3)
-  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
-  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
-  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
-  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
-  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
-  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
-  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
-  #   
-  df
-}
 
 relievers <- z_score_relievers(relievers)
 
@@ -538,26 +560,6 @@ relievers1$z_pos_mean <- 0
 relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
-#METHOD 2: starters and relievers in same group
-z_score_pitchers <- function(df) {
-  
-  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
-  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
-  df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
-  df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
-  df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
-  df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
-  df$k_z <- round(as.numeric(z_score(df$so)), 3)
-  df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
-  df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
-  df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
-  df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
-  df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
-  df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
-  df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
-  #   
-  df
-}
 
 #COMBINE HITTERS WITH PITCHERS
 all_pitchers <- starters1 %>%

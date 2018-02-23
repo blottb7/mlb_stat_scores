@@ -523,17 +523,22 @@ pitchers <- pitchers %>%
 #no data on hld and qs
 
 #METHOD 1: separate starters and relievers
+#starters
 starters <- pitchers %>%
-  filter(gs > 0) %>%
-  filter(ip >= 100)
-starters$pos <- "sp"
+  filter(gs > 0) %>%  #must be projected to start a game
+  filter(ip >= 100)  #only want "regulars"; make cut off 100 innings pitched (projected)
+starters$pos <- "sp"  #designate position
+#relievers
 relievers <- pitchers %>%
-  filter(gs == 0)
-relievers$pos <- "rp"
+  filter(gs == 0)  #all remaining pitchers
+relievers$pos <- "rp"  #designate position
 
 #apply z_score to starters
 starters <- z_score_starters(starters)
 
+#select starting pitcher stat categories
+  #because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
+  #no saves, which would be stat6
 df <- starters
 stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
@@ -545,7 +550,7 @@ stat6 <- 0
 starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters <- starters %>%
   arrange(desc(z_tot))
-starters1 <- starters[1:n_starting_pitchers,]
+starters1 <- starters[1:(n_starting_pitchers + n_bench / 2),]  #include 1 bench pitcher per team
 
 #####
 #Now run the same process with the starting pitchers in the actual playing pool
@@ -563,15 +568,18 @@ starters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters1 <- starters1 %>%
   arrange(desc(z_tot))
 
+#set z-pos values for later joining with hitters
 starters1$z_pos <- starters1$z_tot
 starters1$z_pos_mean <- 0
+#select columns to keep for joining with hitters
 starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                            names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
-
+#RELIEVERS
 relievers <- z_score_relievers(relievers)
 
 #user selected vars
+  #use saves instead of wins
 df <- relievers
 stat1 <- df["saves_z"]
 stat2 <- df["era_z"]

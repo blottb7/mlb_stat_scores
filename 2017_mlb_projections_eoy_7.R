@@ -40,7 +40,7 @@ starting_designated_hitters <- 1
 starting_pitchers <- 6.5
 relief_pitchers <- 2.5
 #bench players
-# bench_players <- 2
+bench_players <- 2
 #costs
 min_cost <- 3
 
@@ -58,7 +58,7 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 n_starting_pitchers <- n_teams * starting_pitchers
 n_relief_pitchers <- n_teams * relief_pitchers
 #bench
-# n_bench <- n_teams * bench_players
+n_bench <- n_teams * bench_players
 
 #FUNCTIONS
 #z_score calculation for each selected stat
@@ -217,7 +217,7 @@ hitters$pos <- ifelse(hitters$name == "Ian Happ", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
@@ -237,7 +237,11 @@ hitters$pos <- ifelse(hitters$name == "J.P. Crawford", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Johan Camargo", 5, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jose Martinez", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jose Pirela", 4, hitters$pos)
-
+hitters$pos <- ifelse(hitters$name == "Luis Valbuena", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Steve Pearce", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Travis Shaw", 5, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Austin Barnes", 2, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Dixon Machado", 4, hitters$pos)
 #hitters standard 12 team
 #remove rows where the name AND position are duplicated
 hitters <- unique(hitters)
@@ -279,6 +283,8 @@ shortstops1 <- z_score_hitter(shortstops1)
 outfielders1 <- z_score_hitter(outfielders1)
 
 #select only the z_scores I want for the chosen league
+#run for each position
+df <- catchers1  #set dataframe var
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
@@ -286,8 +292,6 @@ stat4 <- df["avg_z"]
 stat5 <- df["sb_net_z"]
 stat6 <- df["ops_z"]
 
-#run for each position
-df <- catchers1  #set dataframe var
 #run for catchers
 catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
 catchers2 <- catchers1 %>%
@@ -413,6 +417,7 @@ remaining_hitters <- hitters_reg %>%
   anti_join(hitters_no_dh, by = "name")
 
 #create designated hitters
+#run z_score on designated hitters
 designated_hitters <- z_score_hitter(remaining_hitters)
 
 df <- designated_hitters
@@ -425,13 +430,14 @@ stat6 <- df["ops_z"]
 
 designated_hitters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 
-#designated_hitters$z_tot <- z_total(designated_hitters$hr_z, designated_hitters$runs_z, designated_hitters$rbi_z, designated_hitters$avg_z, 0, designated_hitters$sb_z)
+#designated hitters plus once bench hitter per team
 designated_hitters1 <- designated_hitters %>%
   arrange(desc(z_tot))
-designated_hitters1 <- designated_hitters1[1:n_designated_hitters,]
+designated_hitters1 <- designated_hitters1[1:(n_designated_hitters + n_bench / 2),]
 
 ##### #####
-hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)  #bind "designated hitters"/utility players to rest of hitters
+#Run numbers across all "selected" hitters
+hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)  #bind "designated hitters"/utility players/bench to rest of hitters
 hitters1$sb_z <- round(as.numeric(z_score(BoxCox(hitters1$sb, .45))), 3)  #generate sb related z_score
 hitters1$sb__net_z <- round(as.numeric(z_score(BoxCox(hitters1$sb_net, .45))), 3)  #generate sb related z_score
 hitters1 <- z_score_hitter(hitters1)
@@ -449,19 +455,24 @@ hitters2 <- hitters1 %>%
   arrange(desc(z_tot))
 
 #position relative z_score
+#generate a mean z_score for each position across all players at the position in the "league"
 hitters_zpos <- hitters2 %>%
   group_by(pos) %>%
   summarize(z_pos_mean = round(mean(z_tot), 2)) %>%
   arrange(desc(z_pos_mean))
 
+#join the hitters with the mean z_score/position: z_pos
 hitters_zpos1 <- hitters2 %>%
   left_join(hitters_zpos, by = "pos") %>%
   mutate(z_pos = round(z_tot - z_pos_mean, 4)) %>%
   arrange(desc(z_pos))
 
+#arrange by z_tot
 hitters_zpos2 <- hitters_zpos1 %>%
   arrange(desc(z_tot))
 
+#create final hitters df with only relevant stats
+#name the stats to keep
 df <- hitters_zpos2
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -470,8 +481,10 @@ stat4 <- df["avg_z"]
 stat5 <- df["sb_net_z"]
 stat6 <- df["ops_z"]
 
+#select the columns
 hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                               names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+#arrange the columns
 hitters3 <- hitters3 %>%
   arrange(desc(z_tot))
 

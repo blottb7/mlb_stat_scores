@@ -221,20 +221,28 @@ hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 6, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
 # hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Ryan McMahon", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Adam Frazier", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Brad Miller", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Brandon Drury", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Chad Pinder", 6, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Chris Owings", 6, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Colin Moran", 3, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Derek Dietrich", 5, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "J.P. Crawford", 6, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Johan Camargo", 5, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jose Martinez", 7, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Jose Pirela", 4, hitters$pos)
 
 #hitters standard 12 team
+#remove rows where the name AND position are duplicated
+hitters <- unique(hitters)
 
-# 
-hitters <- unique(hitters)  #this removes rows where the name AND position are duplicated
-
-#combine dfs so there is only one line for each player; each player now has the most valuable position
 hitters <- hitters %>%
-  #  anti_join(duplicated_names_copy) %>%
-  #  bind_rows(duplicated_names3) %>%
   #build stat projections for all missing stats, i.e. sb_net
   mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
          rbi_r = rbi + runs, #rbis plus runs
@@ -250,6 +258,7 @@ hitters_reg <- hitters %>%
   arrange(name)
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
+  #box-cox transformation of sb and sb_net; a normal distribution is more useful
 hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
 hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
 
@@ -269,7 +278,7 @@ third_basemen1 <- z_score_hitter(third_basemen1)
 shortstops1 <- z_score_hitter(shortstops1)
 outfielders1 <- z_score_hitter(outfielders1)
 
-df <- catchers1
+#select only the z_scores I want for the chosen league
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
@@ -277,10 +286,15 @@ stat4 <- df["avg_z"]
 stat5 <- df["sb_net_z"]
 stat6 <- df["ops_z"]
 
-catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+#run for each position
+df <- catchers1  #set dataframe var
+#run for catchers
+catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
 catchers2 <- catchers1 %>%
-  arrange(desc(z_tot))
-catchers2 <- catchers2[1:n_catchers,]
+  arrange(desc(z_tot))  #arrange by descending z_tot
+catchers2 <- catchers2[1:n_catchers,]  #keep only the amount of catchers warranted for the league
+
+#repeat this process for each position
 
 df <- first_basemen1
 stat1 <- df["hr_z"]
@@ -347,13 +361,15 @@ outfielders2 <- outfielders1 %>%
   arrange(desc(z_tot))
 outfielders2 <- outfielders2[1:n_outfielders,]
 
-#create middle infielders df and run z-score on middle infielders after removing already used players
+#create middle infielders df
 middle_infielders <- second_basemen1 %>%
-  bind_rows(shortstops1) %>%
-  anti_join(second_basemen2, by = "name") %>%
-  anti_join(shortstops2, by = "name")
+  bind_rows(shortstops1) %>%  #combine ALL QUALIFIED (300+ PA) SS and 2B-men
+  anti_join(second_basemen2, by = "name") %>%  #remove the 2B already selected
+  anti_join(shortstops2, by = "name")  #remove the SS already selected
+#run z-score on middle infielders after removing already used players
 middle_infielders1 <- z_score_hitter(middle_infielders)
 
+#run selection process on middle infielders
 df <- middle_infielders1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -367,7 +383,7 @@ middle_infielders2 <- middle_infielders1 %>%
   arrange(desc(z_tot))
 middle_infielders2 <- middle_infielders2[1:n_middle_infielders,]
 
-#create corner infielders df and run z-score on corner infielders after removing already used players
+#run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
   bind_rows(third_basemen1) %>%
   anti_join(first_basemen2, by = "name") %>%
@@ -389,8 +405,10 @@ corner_infielders2 <- corner_infielders2[1:n_corner_infielders,]
 
 #combine all selected players
 hitters_no_dh <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
-                           middle_infielders2, corner_infielders2)
+                           middle_infielders2, corner_infielders2) %>%
+  arrange(name)
 
+#anti_join remaining hitters to selected hitters for use with DH/util and bench players
 remaining_hitters <- hitters_reg %>%
   anti_join(hitters_no_dh, by = "name")
 

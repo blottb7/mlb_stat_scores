@@ -494,13 +494,20 @@ rm(catchers1, catchers2, corner_infielders, corner_infielders1, corner_infielder
    middle_infielders1, middle_infielders2, outfielders1, outfielders2, remaining_hitters,
    second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1,
    third_basemen2)
+rm(hitters_zpos, hitters_zpos1)
+#remove replaceable stats
+rm(df, stat1, stat2, stat3, stat4, stat5, stat6)
+
+#keep only final hitters_df with the stats I want, "hitters_3" and hitters_zpos2
+rm(catchers, designated_hitters, first_basemen, hitters, hitters_reg, middle_infielders,
+   outfielders, second_basemen, shortstops, third_basemen)
 
 find_name <- function(name) {
   which(hitters3$name == name)
 }
 
 ##### PITCHERS #####
-
+#name pitchers
 names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 

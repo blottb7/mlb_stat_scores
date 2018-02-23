@@ -606,9 +606,6 @@ relievers1$z_pos_mean <- 0
 relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
-#Need to do an exploratory analysis of relation between stat and z_score for whip, era, and hra
-ggplot(starters1, aes(x = era, y = era_z)) + geom_point()
-
 #need a new function for combining pitchers and relievers
 z_score_pitchers <- function(df) {
   
@@ -635,7 +632,10 @@ relievers1$era_z <- 0
 relievers1$whip_z <- 0
 relievers1$hra_z <- 0
 
-#COMBINE HITTERS WITH PITCHERS
+#COMBINE starters and relievers
+#Need to do an exploratory analysis of relation between stat and dollars for whip, era, and hra
+ggplot(starters1, aes(x = era_z)) + geom_histogram(bins = 20)
+
 all_pitchers <- starters1 %>%
   full_join(relievers1)
 all_pitchers <- z_score_pitchers(all_pitchers)
@@ -654,6 +654,9 @@ all_pitchers$z_pos <- all_pitchers$z_tot + all_pitchers$z_pos_mean
 all_pitchers <- all_pitchers %>%
   arrange(desc(z_tot))
 
+#Here's where to do some dollar v stat analysis
+
+#####
 all_pitchers1 <- all_pitchers[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                                   names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 

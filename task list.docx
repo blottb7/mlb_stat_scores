@@ -1,0 +1,15 @@
+Task list mlb_stat_scores
+•	Figure out correct parameter on box-cox transformation; .45 is probably pretty good. This is not a high priority
+o	SB
+o	SB_net
+•	Get paste() function going for league selected variables, i.e. paste(`ops_z`)
+•	Turn the league specific stats into a function for each position instead of having ~10 lines of code for each position.
+•	Update number of players in the league and pricing to account for bench players
+
+Notes for combining pitchers and relivers
+•	Run z_score on wins, saves, and strikeouts.
+•	Need to assign dollar values to rate stats (era, whip, and maybe hra); basically, need a positive value to multiply innings pitched discrepancy by. So say a starter ERA of 1.30 was worth $3. If a relievers ERA is 1.30, multiply $3 by his ip vs. the mean starters ip, or about 65/150, and get something like $1.30 for the value of the relievers ERA.
+o	Do the same for whip and homeruns
+	I suppose the problem is not really with the rate stats, but with the “reverse” stats, like ERA, WHIP, and HRA, where less is more.
+o	I should probably do the same with catchers, but that’s a 1% left type project
+Ok, this new method seems to work better than anything I’ve tried before.

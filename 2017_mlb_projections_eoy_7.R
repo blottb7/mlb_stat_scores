@@ -625,11 +625,11 @@ all_players$z_pos_sc <-round(scale(all_players$z_pos), 3)
 # ggplot(all_players, aes(rank, rank_cost_sc)) + geom_point()
 # ggplot(all_players, aes(rank_cost, new_cost)) + geom_point()
 # ggplot(all_players, aes(new_cost, z_pos)) + geom_point()
-ggplot(all_pitchers, aes(whip_z)) + geom_histogram(bins = 25)
-ggplot(all_pitchers, aes(hra)) + geom_histogram(bins = 30)
-ggplot(all_pitchers, aes(hra_z)) + geom_histogram(bins = 30)
-ggplot(hitters_zpos2, aes(pa, z_pos)) + geom_point()
-ggplot(starters1, aes(ip, z_tot)) + geom_point()
+# ggplot(all_pitchers, aes(whip_z)) + geom_histogram(bins = 25)
+# ggplot(all_pitchers, aes(hra)) + geom_histogram(bins = 30)
+# ggplot(all_pitchers, aes(hra_z)) + geom_histogram(bins = 30)
+# ggplot(hitters_zpos2, aes(pa, z_pos)) + geom_point()
+# ggplot(starters1, aes(ip, z_tot)) + geom_point()
 #notes need to separate starters and relievrs as i've done to cut down to ~6 starters and 3 relievers per team
 #then, combine the starters and relievers and run the z_stats
 #right now, degrom and kimbrel have the same k_z scores even after weighting relievers by the mean starters.

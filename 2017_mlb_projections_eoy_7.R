@@ -486,7 +486,7 @@ hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_t
                               names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 #arrange the columns
 hitters3 <- hitters3 %>%
-  arrange(desc(z_tot))
+  arrange(desc(z_pos))
 
 #remove unncessary df's
 rm(catchers1, catchers2, corner_infielders, corner_infielders1, corner_infielders2,
@@ -606,6 +606,34 @@ relievers1$z_pos_mean <- 0
 relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
+#Need to do an exploratory analysis of relation between stat and z_score for whip, era, and hra
+ggplot(starters1, aes(x = era, y = era_z)) + geom_point()
+
+#need a new function for combining pitchers and relievers
+z_score_pitchers <- function(df) {
+  
+  #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
+  df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
+  df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
+  #df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
+  #df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
+  #df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
+  df$k_z <- round(as.numeric(z_score(df$so)), 3)
+  #df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
+  #df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
+  #df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
+  #df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
+  #df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
+  #df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
+  #df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
+  #   
+  df
+}
+
+#reset reliever z_scores on "reverse" stats to "0"
+relievers1$era_z <- 0
+relievers1$whip_z <- 0
+relievers1$hra_z <- 0
 
 #COMBINE HITTERS WITH PITCHERS
 all_pitchers <- starters1 %>%
@@ -615,10 +643,10 @@ all_pitchers <- z_score_pitchers(all_pitchers)
 df <- all_pitchers
 stat1 <- df["wins_z"]
 stat2 <- df["saves_z"]
-stat3 <- df["era_z"]
-stat4 <- df["whip_z"]
-stat5 <- df["k_z"]
-stat6 <- df["hra_rate_z"]
+stat3 <- df["k_z"]
+stat4 <- 0
+stat5 <- 0
+stat6 <- 0
 
 all_pitchers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 all_pitchers$z_pos <- all_pitchers$z_tot + all_pitchers$z_pos_mean

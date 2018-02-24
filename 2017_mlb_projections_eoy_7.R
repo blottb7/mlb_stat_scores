@@ -649,38 +649,62 @@ starters1$hra_price <- 1.0184 ^ rank(-starters1$hra) - 1
 #join starters and relievers
 all_pitchers <- starters1 %>%
   full_join(relievers1)
-#all_pitchers <- z_score_pitchers(all_pitchers)
 
 #get relievers era, whip, and hra scores
-df <- all_pitchers %>%
-  select(name, team, era, ip, pos, era_z, era_price) %>%
+all_pitchers1 <- all_pitchers %>%
+  select(name, team, era, whip, hra, ip, pos, era_price, whip_price, hra_price) %>%
   arrange(era)#%>%
-  #mutate(era_rank = rank(-era))
-  #arrange(era_rank)
-  #
+
 #assing nearest value
-df$new <- ifelse(is.na(df$era_price), na.locf(df$era_price, fromLast = TRUE), NA)
-df$new1 <- ifelse(is.na(df$era_price), na.locf(df$era_price), NA)
-# df$new2 <- 0
-df$new2 <- ifelse(is.na(df$era_price), (df$new + df$new1) / 2 * df$ip / mean(starters1$ip), NA)
-# df$new <- ifelse(is.na(df$era_price), (na.locf(df$era_price, fromLast = TRUE) + na.locf(df$era_price)) / 2, NA)
-df$era_price_new <- ifelse(!is.na(df$era_price), df$era_price * sum(df$era_price, na.rm = TRUE) /
-                             (sum(df$era_price, na.rm = TRUE) + sum(df$new2, na.rm = TRUE)),
-                           df$new2 * sum(df$era_price, na.rm = TRUE) / 
-                             (sum(df$era_price, na.rm = TRUE) + sum(df$new2, na.rm = TRUE)))
-#
-# df$new <- ifelse(is.na(df$era_price), which.min(abs()))
-# #
-# df$new <- ifelse(is.na(df$era_price), approx(df$era_price), NA)
-# df$new <- approx(!is.na(df$era_price))
-# #
-# all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), which(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))==min(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))))
-# , NA)
-# all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), which.min(abs(x-your.number))
-#                             , NA)
-# 
-# #which(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))==min(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))))
-# which.min(abs(x-your.number))
+all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), na.locf(all_pitchers1$era_price, fromLast = TRUE), NA)
+all_pitchers1$new1 <- ifelse(is.na(all_pitchers1$era_price), na.locf(all_pitchers1$era_price), NA)
+all_pitchers1$new2 <- ifelse(is.na(all_pitchers1$era_price), (all_pitchers1$new + all_pitchers1$new1) / 2 * all_pitchers1$ip / mean(starters1$ip), NA)
+all_pitchers1$era_price_new <- ifelse(!is.na(all_pitchers1$era_price), all_pitchers1$era_price * sum(all_pitchers1$era_price, na.rm = TRUE) /
+                                        (sum(all_pitchers1$era_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
+                                      all_pitchers1$new2 * sum(all_pitchers1$era_price, na.rm = TRUE) / 
+                                        (sum(all_pitchers1$era_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
+#all_pitchers1$era_price <- all_pitchers1$era_price_new
+all_pitchers1$new <- NULL
+all_pitchers1$new1 <- NULL
+all_pitchers1$new2 <- NULL
+#all_pitchers1$era_price_new <- NULL
+
+#assing nearest value WHIP
+all_pitchers1 <- all_pitchers1 %>%
+  arrange(whip)
+all_pitchers1$new <- ifelse(is.na(all_pitchers1$whip_price), na.locf(all_pitchers1$whip_price, fromLast = TRUE), NA)
+all_pitchers1$new1 <- ifelse(is.na(all_pitchers1$whip_price), na.locf(all_pitchers1$whip_price), NA)
+all_pitchers1$new2 <- ifelse(is.na(all_pitchers1$whip_price), (all_pitchers1$new + all_pitchers1$new1) / 2 * all_pitchers1$ip / mean(starters1$ip), NA)
+all_pitchers1$whip_price_new <- ifelse(!is.na(all_pitchers1$whip_price), all_pitchers1$whip_price * sum(all_pitchers1$whip_price, na.rm = TRUE) /
+                                         (sum(all_pitchers1$whip_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
+                                       all_pitchers1$new2 * sum(all_pitchers1$whip_price, na.rm = TRUE) / 
+                                         (sum(all_pitchers1$whip_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
+#all_pitchers1$whip_price <- all_pitchers1$whip_price_new
+all_pitchers1$new <- NULL
+all_pitchers1$new1 <- NULL
+all_pitchers1$new2 <- NULL
+#all_pitchers1$whip_price_new <- NULL
+
+#assing nearest value hra; need hra_rate OR! multiply and create a virtual weighted HRA
+#create weighted HRA
+all_pitchers1$hra_w <- ifelse(all_pitchers1$pos == "rp", all_pitchers1$hra * mean(starters1$ip) / all_pitchers1$ip, all_pitchers1$hra)
+
+all_pitchers1 <- all_pitchers1 %>%
+  arrange(hra_w)
+all_pitchers1$new <- ifelse(is.na(all_pitchers1$hra_price), na.locf(all_pitchers1$hra_price, fromLast = TRUE), NA)
+all_pitchers1$new1 <- ifelse(is.na(all_pitchers1$hra_price), na.locf(all_pitchers1$hra_price), NA)
+all_pitchers1$new2 <- ifelse(is.na(all_pitchers1$hra_price), (all_pitchers1$new + all_pitchers1$new1) / 2 * all_pitchers1$ip / mean(starters1$ip), NA)
+all_pitchers1$hra_price_new <- ifelse(!is.na(all_pitchers1$hra_price), all_pitchers1$hra_price * sum(all_pitchers1$hra_price, na.rm = TRUE) /
+                                        (sum(all_pitchers1$hra_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
+                                      all_pitchers1$new2 * sum(all_pitchers1$hra_price, na.rm = TRUE) / 
+                                        (sum(all_pitchers1$hra_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
+#all_pitchers1$hra_price <- all_pitchers1$hra_price_new
+all_pitchers1$new <- NULL
+all_pitchers1$new1 <- NULL
+all_pitchers1$new2 <- NULL
+all_pitchers1$hra_w <- NULL
+#all_pitchers1$hra_price_new <- NULL
+
 #
 df <- all_pitchers
 stat1 <- df["wins_z"]

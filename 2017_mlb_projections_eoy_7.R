@@ -1,4 +1,3 @@
-
 #Code for generalized yearlong category data
 
 #TO DO
@@ -262,7 +261,7 @@ hitters_reg <- hitters %>%
   arrange(name)
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
-  #box-cox transformation of sb and sb_net; a normal distribution is more useful
+#box-cox transformation of sb and sb_net; a normal distribution is more useful
 hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
 hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
 
@@ -537,8 +536,8 @@ relievers$pos <- "rp"  #designate position
 starters <- z_score_starters(starters)
 
 #select starting pitcher stat categories
-  #because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
-  #no saves, which would be stat6
+#because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
+#no saves, which would be stat6
 df <- starters
 stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
@@ -579,7 +578,7 @@ starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot"
 relievers <- z_score_relievers(relievers)
 
 #user selected vars
-  #use saves instead of wins
+#use saves instead of wins
 df <- relievers
 stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
@@ -636,9 +635,15 @@ relievers1$hra_z <- 0
 #Need to do an exploratory analysis of relation between stat and dollars for whip, era, and hra
 ggplot(starters1, aes(x = era_z)) + geom_histogram(bins = 20)
 
-#y = 1.0144 ^ rank
-copy <- starters1
-copy$era_price <- 1.0144 ^ rank(-copy$era)
+#y = (1.0184 ^ rank) - 1
+# copy <- starters1
+# copy$era_price <- 1.0184 ^ rank(-copy$era) - 1
+# copy$whip_price <- 1.0184 ^ rank(-copy$whip) - 1
+# copy$hra_price <- 1.0184 ^ rank(-copy$hra) - 1
+
+starters1$era_price <- 1.0184 ^ rank(-starters1$era) - 1
+starters1$whip_price <- 1.0184 ^ rank(-starters1$whip) - 1
+starters1$hra_price <- 1.0184 ^ rank(-starters1$hra) - 1
 
 #####
 all_pitchers <- starters1 %>%
@@ -660,6 +665,7 @@ all_pitchers <- all_pitchers %>%
   arrange(desc(z_tot))
 
 #Here's where to do some dollar v stat analysis
+
 
 #####
 all_pitchers1 <- all_pitchers[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
@@ -758,4 +764,3 @@ corner_infielders1 <- all_players %>% filter(pos == 3 | pos == 5) %>% select(-c(
 find_name <- function(name) {
   which(all_players1$name == name)
 }
-

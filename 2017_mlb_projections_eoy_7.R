@@ -636,6 +636,11 @@ relievers1$hra_z <- 0
 #Need to do an exploratory analysis of relation between stat and dollars for whip, era, and hra
 ggplot(starters1, aes(x = era_z)) + geom_histogram(bins = 20)
 
+#y = 1.0144 ^ rank
+copy <- starters1
+copy$era_price <- 1.0144 ^ rank(-copy$era)
+
+#####
 all_pitchers <- starters1 %>%
   full_join(relievers1)
 all_pitchers <- z_score_pitchers(all_pitchers)

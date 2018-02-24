@@ -646,10 +646,42 @@ starters1$whip_price <- 1.0184 ^ rank(-starters1$whip) - 1
 starters1$hra_price <- 1.0184 ^ rank(-starters1$hra) - 1
 
 #####
+#join starters and relievers
 all_pitchers <- starters1 %>%
   full_join(relievers1)
-all_pitchers <- z_score_pitchers(all_pitchers)
+#all_pitchers <- z_score_pitchers(all_pitchers)
 
+#get relievers era, whip, and hra scores
+df <- all_pitchers %>%
+  select(name, team, era, ip, pos, era_z, era_price) %>%
+  arrange(era)#%>%
+  #mutate(era_rank = rank(-era))
+  #arrange(era_rank)
+  #
+#assing nearest value
+df$new <- ifelse(is.na(df$era_price), na.locf(df$era_price, fromLast = TRUE), NA)
+df$new1 <- ifelse(is.na(df$era_price), na.locf(df$era_price), NA)
+# df$new2 <- 0
+df$new2 <- ifelse(is.na(df$era_price), (df$new + df$new1) / 2 * df$ip / mean(starters1$ip), NA)
+# df$new <- ifelse(is.na(df$era_price), (na.locf(df$era_price, fromLast = TRUE) + na.locf(df$era_price)) / 2, NA)
+df$era_price_new <- ifelse(!is.na(df$era_price), df$era_price * sum(df$era_price, na.rm = TRUE) /
+                             (sum(df$era_price, na.rm = TRUE) + sum(df$new2, na.rm = TRUE)),
+                           df$new2 * sum(df$era_price, na.rm = TRUE) / 
+                             (sum(df$era_price, na.rm = TRUE) + sum(df$new2, na.rm = TRUE)))
+#
+# df$new <- ifelse(is.na(df$era_price), which.min(abs()))
+# #
+# df$new <- ifelse(is.na(df$era_price), approx(df$era_price), NA)
+# df$new <- approx(!is.na(df$era_price))
+# #
+# all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), which(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))==min(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))))
+# , NA)
+# all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), which.min(abs(x-your.number))
+#                             , NA)
+# 
+# #which(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))==min(abs(is.na(all_pitchers1$era)-!is.na(all_pitchers1$era))))
+# which.min(abs(x-your.number))
+#
 df <- all_pitchers
 stat1 <- df["wins_z"]
 stat2 <- df["saves_z"]

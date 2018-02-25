@@ -633,7 +633,7 @@ relievers1$hra_z <- 0
 
 #COMBINE starters and relievers
 #Need to do an exploratory analysis of relation between stat and dollars for whip, era, and hra
-ggplot(starters1, aes(x = era_z)) + geom_histogram(bins = 20)
+#ggplot(starters1, aes(x = era_z)) + geom_histogram(bins = 20)
 
 #y = (1.0184 ^ rank) - 1
 # copy <- starters1
@@ -651,9 +651,10 @@ all_pitchers <- starters1 %>%
   full_join(relievers1)
 
 #get relievers era, whip, and hra scores
-all_pitchers1 <- all_pitchers %>%
-  select(name, team, era, whip, hra, ip, pos, era_price, whip_price, hra_price) %>%
-  arrange(era)#%>%
+# all_pitchers1 <- all_pitchers %>%
+#   select(name, team, era, whip, hra, ip, pos, era_price, whip_price, hra_price) %>%
+#   arrange(era)#%>%
+all_pitchers1 <- all_pitchers
 
 #assing nearest value
 all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), na.locf(all_pitchers1$era_price, fromLast = TRUE), NA)
@@ -698,6 +699,7 @@ all_pitchers1$hra_price_new <- ifelse(!is.na(all_pitchers1$hra_price), all_pitch
                                         (sum(all_pitchers1$hra_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
                                       all_pitchers1$new2 * sum(all_pitchers1$hra_price, na.rm = TRUE) / 
                                         (sum(all_pitchers1$hra_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
+
 #all_pitchers1$hra_price <- all_pitchers1$hra_price_new
 all_pitchers1$new <- NULL
 all_pitchers1$new1 <- NULL
@@ -705,6 +707,22 @@ all_pitchers1$new2 <- NULL
 all_pitchers1$hra_w <- NULL
 #all_pitchers1$hra_price_new <- NULL
 
+#might be more accurate to do hra on hra_rate, then weight it by innings
+all_pitchers1 <- all_pitchers1 %>%
+  arrange(hra_rate)
+all_pitchers1$hra_rate_price <- 1.01188 ^ rank(-all_pitchers1$hra_rate) - 1
+all_pitchers1$hra_rate_price <- all_pitchers1$hra_rate_price * all_pitchers1$ip / mean(all_pitchers1$ip)
+#THIS WORKS BUT NEED TO REWEIGHT IT BY DOLLARS
+all_pitchers1$hra_rate_price <- all_pitchers1$hra_rate_price * 318.4035 / sum(all_pitchers1$hra_rate_price)
+#wins, saves, k's
+all_pitchers1$wins_price <- 1.01188 ^ rank(all_pitchers1$wins) - 1
+all_pitchers1$saves_price <- 1.01188 ^ rank(all_pitchers1$saves) - 1
+all_pitchers1$k_price <- 1.01188 ^ rank(all_pitchers1$so) - 1
+
+all_pitchers1$price <- all_pitchers1$wins_price + all_pitchers1$saves_price + all_pitchers1$k_price +
+  all_pitchers1$era_price_new + all_pitchers1$whip_price_new + all_pitchers1$hra_rate_price
+all_pitchers1 <- all_pitchers1 %>%
+  arrange(desc(price))
 #
 df <- all_pitchers
 stat1 <- df["wins_z"]

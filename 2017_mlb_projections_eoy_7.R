@@ -724,6 +724,40 @@ all_pitchers1$price <- all_pitchers1$wins_price + all_pitchers1$saves_price + al
 all_pitchers1 <- all_pitchers1 %>%
   arrange(desc(price))
 #
+#START new hitter pricing
+hitters <- hitters_zpos2
+
+#stats: avg, hr, rbi, sb_net, runs, ops
+hitters$avg_price <- 1.00914 ^ rank(hitters$avg) - 1
+hitters$hr_price <- 1.00914 ^ rank(hitters$hr) - 1
+hitters$rbi_price <- 1.00914 ^ rank(hitters$rbi) - 1
+hitters$sb_net_price <- 1.00914 ^ rank(hitters$sb_net) - 1
+hitters$runs_price <- 1.00914 ^ rank(hitters$runs) - 1
+hitters$ops_price <- 1.00914 ^ rank(hitters$ops) - 1
+#sum stats
+hitters$price <- hitters$avg_price + hitters$hr_price + hitters$rbi_price + hitters$sb_net_price +
+                     hitters$runs_price + hitters$ops_price
+hitters <- hitters %>%
+  arrange(desc(price))
+#combine hitters and pitchers
+#subset to players I need
+all_pitchers2 <- all_pitchers1 %>%
+  select(name, team, pos, price)
+hitters1 <- hitters %>%
+  select(name, team, pos, price)
+ap <- all_pitchers2 %>%
+  full_join(hitters1) %>%
+  arrange(desc(price))
+
+#find player function
+fname <- function(name) {
+  which(ap$name == name)
+}
+
+#exploratory analysis
+ggplot(ap, aes(x = rank(price), y = price)) + geom_point()
+ggplot(all_pitchers1, aes(saves > 0)) + geom_histogram()
+#
 df <- all_pitchers
 stat1 <- df["wins_z"]
 stat2 <- df["saves_z"]

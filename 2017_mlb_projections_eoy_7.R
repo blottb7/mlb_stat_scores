@@ -22,6 +22,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(forecast)
+library(zoo)  #for na.locf fn
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
@@ -627,6 +628,7 @@ z_score_pitchers <- function(df) {
 }
 
 #reset reliever z_scores on "reverse" stats to "0"
+  #do this for combining with starters, so they'll be graded on an equal plane
 relievers1$era_z <- 0
 relievers1$whip_z <- 0
 relievers1$hra_z <- 0
@@ -654,9 +656,14 @@ all_pitchers <- starters1 %>%
 # all_pitchers1 <- all_pitchers %>%
 #   select(name, team, era, whip, hra, ip, pos, era_price, whip_price, hra_price) %>%
 #   arrange(era)#%>%
-all_pitchers1 <- all_pitchers
 
-#assing nearest value
+
+#RUN Z_SCORE METHOD
+
+#COMPONENT METHOD on price
+all_pitchers1 <- all_pitchers  #make a copy of all_pitchers
+
+#assing nearest starter era value for reliever era value
 all_pitchers1$new <- ifelse(is.na(all_pitchers1$era_price), na.locf(all_pitchers1$era_price, fromLast = TRUE), NA)
 all_pitchers1$new1 <- ifelse(is.na(all_pitchers1$era_price), na.locf(all_pitchers1$era_price), NA)
 all_pitchers1$new2 <- ifelse(is.na(all_pitchers1$era_price), (all_pitchers1$new + all_pitchers1$new1) / 2 * all_pitchers1$ip / mean(starters1$ip), NA)
@@ -664,11 +671,10 @@ all_pitchers1$era_price_new <- ifelse(!is.na(all_pitchers1$era_price), all_pitch
                                         (sum(all_pitchers1$era_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
                                       all_pitchers1$new2 * sum(all_pitchers1$era_price, na.rm = TRUE) / 
                                         (sum(all_pitchers1$era_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
-#all_pitchers1$era_price <- all_pitchers1$era_price_new
+#remove place holder vars
 all_pitchers1$new <- NULL
 all_pitchers1$new1 <- NULL
 all_pitchers1$new2 <- NULL
-#all_pitchers1$era_price_new <- NULL
 
 #assing nearest value WHIP
 all_pitchers1 <- all_pitchers1 %>%
@@ -680,14 +686,15 @@ all_pitchers1$whip_price_new <- ifelse(!is.na(all_pitchers1$whip_price), all_pit
                                          (sum(all_pitchers1$whip_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)),
                                        all_pitchers1$new2 * sum(all_pitchers1$whip_price, na.rm = TRUE) / 
                                          (sum(all_pitchers1$whip_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
-#all_pitchers1$whip_price <- all_pitchers1$whip_price_new
+#remove place holder vars
 all_pitchers1$new <- NULL
 all_pitchers1$new1 <- NULL
 all_pitchers1$new2 <- NULL
-#all_pitchers1$whip_price_new <- NULL
 
 #assing nearest value hra; need hra_rate OR! multiply and create a virtual weighted HRA
 #create weighted HRA
+
+#SCRATCH THIS; WEIGHTS LOW IP STARTING PITCHERS HIGHLY BASED SOLELY ON INNINGS
 all_pitchers1$hra_w <- ifelse(all_pitchers1$pos == "rp", all_pitchers1$hra * mean(starters1$ip) / all_pitchers1$ip, all_pitchers1$hra)
 
 all_pitchers1 <- all_pitchers1 %>%
@@ -700,7 +707,7 @@ all_pitchers1$hra_price_new <- ifelse(!is.na(all_pitchers1$hra_price), all_pitch
                                       all_pitchers1$new2 * sum(all_pitchers1$hra_price, na.rm = TRUE) / 
                                         (sum(all_pitchers1$hra_price, na.rm = TRUE) + sum(all_pitchers1$new2, na.rm = TRUE)))
 
-#all_pitchers1$hra_price <- all_pitchers1$hra_price_new
+#remove place holder vars
 all_pitchers1$new <- NULL
 all_pitchers1$new1 <- NULL
 all_pitchers1$new2 <- NULL
@@ -708,24 +715,27 @@ all_pitchers1$hra_w <- NULL
 #all_pitchers1$hra_price_new <- NULL
 
 #might be more accurate to do hra on hra_rate, then weight it by innings
-all_pitchers1 <- all_pitchers1 %>%
-  arrange(hra_rate)
+# all_pitchers1 <- all_pitchers1 %>%
+#   arrange(hra_rate)  #Don't need to arrange first in the df; rank() does that.
+
+#run the exponential funciton on hra_rate
 all_pitchers1$hra_rate_price <- 1.01188 ^ rank(-all_pitchers1$hra_rate) - 1
 all_pitchers1$hra_rate_price <- all_pitchers1$hra_rate_price * all_pitchers1$ip / mean(all_pitchers1$ip)
-#THIS WORKS BUT NEED TO REWEIGHT IT BY DOLLARS
+#THIS WORKS BUT NEED TO REWEIGHT IT BY DOLLARS, which are less than the allocation: a small % change
 all_pitchers1$hra_rate_price <- all_pitchers1$hra_rate_price * 318.4035 / sum(all_pitchers1$hra_rate_price)
 #wins, saves, k's
 all_pitchers1$wins_price <- 1.01188 ^ rank(all_pitchers1$wins) - 1
 all_pitchers1$saves_price <- 1.01188 ^ rank(all_pitchers1$saves) - 1
 all_pitchers1$k_price <- 1.01188 ^ rank(all_pitchers1$so) - 1
 
+#add pitcher vars together
 all_pitchers1$price <- all_pitchers1$wins_price + all_pitchers1$saves_price + all_pitchers1$k_price +
   all_pitchers1$era_price_new + all_pitchers1$whip_price_new + all_pitchers1$hra_rate_price
 all_pitchers1 <- all_pitchers1 %>%
   arrange(desc(price))
-#
+
 #START new hitter pricing
-hitters <- hitters_zpos2
+hitters <- hitters_zpos2  #make a copy of last full hitters df
 
 #stats: avg, hr, rbi, sb_net, runs, ops
 hitters$avg_price <- 1.00914 ^ rank(hitters$avg) - 1
@@ -736,9 +746,12 @@ hitters$runs_price <- 1.00914 ^ rank(hitters$runs) - 1
 hitters$ops_price <- 1.00914 ^ rank(hitters$ops) - 1
 #sum stats
 hitters$price <- hitters$avg_price + hitters$hr_price + hitters$rbi_price + hitters$sb_net_price +
-                     hitters$runs_price + hitters$ops_price
+  hitters$runs_price + hitters$ops_price
 hitters <- hitters %>%
   arrange(desc(price))
+
+#This gives me prices that I don't really want
+  #This makes sense because I solely used the rank of each stat cat.
 
 #new pitcher value pricing
 # ggplot(hitters, aes(rank(hr), hr)) + geom_jitter()
@@ -747,7 +760,7 @@ hitters <- hitters %>%
 # ggplot(hitters, aes(rank(sb_net), sb_net)) + geom_jitter()  #change this to box cox
 # ggplot(hitters, aes(rank(runs), runs)) + geom_jitter()
 # ggplot(hitters, aes(rank(ops), ops)) + geom_jitter()
-# 
+ggplot(hitters, aes(rank(price), price)) + geom_point()
 # ggplot(all_pitchers1, aes(rank(wins), wins)) + geom_jitter()
 # ggplot(all_pitchers1, aes(rank(-era), era)) + geom_point()
 # ggplot(all_pitchers1, aes(rank(-whip), whip)) + geom_point()
@@ -763,76 +776,98 @@ hitters <- hitters %>%
 # 
 # sum(all_pitchers1$so)
 
+#run exponential function on ACTUAL value, not the rank of the value; this should produce more desirable results.
+#K's
 all_pitchers1$k_value <- (1.00866^all_pitchers1$so) - 1
-sum(all_pitchers1$k_value)
-ggplot(all_pitchers1, aes(x=so, y=k_value)) + geom_point()
+#sum(all_pitchers1$k_value)
+#ggplot(all_pitchers1, aes(x=so, y=k_value)) + geom_point()
 
+#Wins
 all_pitchers1$win_value <- (1.1419^all_pitchers1$wins) - 1
-sum(all_pitchers1$win_value)
-ggplot(all_pitchers1, aes(x=wins, y=win_value)) + geom_jitter()
+#sum(all_pitchers1$win_value)
+#ggplot(all_pitchers1, aes(x=wins, y=win_value)) + geom_jitter()
 
+#Saves
 all_pitchers1$save_value <- (1.0916^all_pitchers1$saves) - 1
-sum(all_pitchers1$save_value)
-ggplot(all_pitchers1, aes(x=saves, y=save_value)) + geom_jitter()
+#sum(all_pitchers1$save_value)
+#ggplot(all_pitchers1, aes(x=saves, y=save_value)) + geom_jitter()
 
 #all_pitchers1$era_value <- (1/(1.3 ^ -all_pitchers1$era)) - 1
 # all_pitchers1$era_value <- (13.046 ^ 1/all_pitchers1$era)-1
 # all_pitchers1$era_value <- (23 ^ 1/all_pitchers1$era) - 3.5
 # all_pitchers1$era_value <- (50 ^ 1/all_pitchers1$era) - 10  #this works the best of what i've tried, and sets era of 5.00 to 0 value
 #the above were all linear
+
+#ERA
 B <- 1500
-all_pitchers1$era_value <- (B ^ (1/all_pitchers1$era)) - B^.2
-sum(all_pitchers1$era_value)
-ggplot(all_pitchers1, aes(x=era, y=era_value)) + geom_jitter()
+all_pitchers1$era_value <- (B ^ (1/all_pitchers1$era)) - B^.2  #sets 5.00 era to 0 value
+#sum(all_pitchers1$era_value)
+#ggplot(all_pitchers1, aes(x=era, y=era_value)) + geom_jitter()
 
 B <- 15
-all_pitchers1$whip_value <- (B ^ (1/all_pitchers1$whip)) - B^(1/1.5)  #this works the best of what i've tried, and sets era of 5.00 to 0 value
-sum(all_pitchers1$whip_value)
-ggplot(all_pitchers1, aes(x=whip, y=whip_value)) + geom_jitter()
+all_pitchers1$whip_value <- (B ^ (1/all_pitchers1$whip)) - B^(1/1.5)  #this works the best of what i've tried, and sets whip of 1.50 to 0 value
+#sum(all_pitchers1$whip_value)
+#ggplot(all_pitchers1, aes(x=whip, y=whip_value)) + geom_jitter()
 
-B <- 10.295
-all_pitchers1$hra_rate_value <- (B ^ (1/all_pitchers1$hra_rate)) - B^(1/1.6)  #this works the best of what i've tried, and sets era of 5.00 to 0 value
-sum(all_pitchers1$hra_rate_value)
-ggplot(all_pitchers1, aes(x=hra_rate, y=hra_rate_value)) + geom_jitter()
+B <- 6.564
+all_pitchers1$hra_rate_value <- (B ^ (1/all_pitchers1$hra_rate)) - B^(1/1.6)  #this works the best of what i've tried, and sets hra_rate of 1.6 hr/9 to 0 value
+#sum(all_pitchers1$hra_rate_value)
+#ggplot(all_pitchers1, aes(x=hra_rate, y=hra_rate_value)) + geom_jitter()
 
-#weight rate stats
-all_pitchers1$era_value <- all_pitchers1$era_value * all_pitchers1$ip / mean(all_pitchers1$ip)
-all_pitchers1$whip_value <- all_pitchers1$whip_value * all_pitchers1$ip / mean(all_pitchers1$ip)
-all_pitchers1$hra_rate_value <- all_pitchers1$hra_rate_value * all_pitchers1$ip / mean(all_pitchers1$ip)
-#re-price rate stats
-all_pitchers1$era_value <- all_pitchers1$era_value * 366.67 / sum(all_pitchers1$era_value)
-all_pitchers1$whip_value <- all_pitchers1$whip_value * 366.67 / sum(all_pitchers1$whip_value)
-all_pitchers1$hra_rate_value <- all_pitchers1$hra_rate_value * 366.67 / sum(all_pitchers1$hra_rate_value)
+#weight rate stats by innings pitched.
+#NO!!!!! If I'm already deprecating value for roster construction (which I am),
+  #I am penalizing relievers twice!
+    #DO NOT WEIGHT RATE STATS!
+# all_pitchers1$era_value <- all_pitchers1$era_value * all_pitchers1$ip / mean(all_pitchers1$ip)
+# all_pitchers1$whip_value <- all_pitchers1$whip_value * all_pitchers1$ip / mean(all_pitchers1$ip)
+# all_pitchers1$hra_rate_value <- all_pitchers1$hra_rate_value * all_pitchers1$ip / mean(all_pitchers1$ip)
+# #re-price rate stats
+# all_pitchers1$era_value <- all_pitchers1$era_value * 366.67 / sum(all_pitchers1$era_value)
+# all_pitchers1$whip_value <- all_pitchers1$whip_value * 366.67 / sum(all_pitchers1$whip_value)
+# all_pitchers1$hra_rate_value <- all_pitchers1$hra_rate_value * 366.67 / sum(all_pitchers1$hra_rate_value)
+
 #calculate value
 all_pitchers1$value <- all_pitchers1$k_value + all_pitchers1$win_value + all_pitchers1$save_value +
   all_pitchers1$era_value + all_pitchers1$whip_value + all_pitchers1$hra_rate_value
 #arrange by value
 all_pitchers1 <- all_pitchers1 %>%
   arrange(desc(value))
+
+#So as of here, the top relievers are priced WAY higher than the top pitchers; this is as it should be:
+  #relievers perform better than starters on a per inning basis. They throw harder because they are in for shorter
+  #stints. This results in lower whip and era.
+
 # all_pitchers1$save_value <- (.33*all_pitchers1$saves)
 # sum(all_pitchers1$save_value)
 # ggplot(all_pitchers1, aes(x=saves, y=save_value)) + geom_jitter()
 # 
 # hist(all_pitchers1$saves)
-ggplot(hitters, aes(rank(hr), hr)) + geom_jitter()
-ggplot(hitters, aes(rank(avg), avg)) + geom_point()
-ggplot(hitters, aes(rank(rbi), rbi)) + geom_jitter()
-ggplot(hitters, aes(rank(sb_net), sb_net)) + geom_jitter()  #change this to box cox
-ggplot(hitters, aes(rank(runs), runs)) + geom_jitter()
-ggplot(hitters, aes(rank(ops), ops)) + geom_jitter()
+
+#hitter exploratory graphs
+
+# ggplot(hitters, aes(rank(hr), hr)) + geom_jitter()
+# ggplot(hitters, aes(rank(avg), avg)) + geom_point()
+# ggplot(hitters, aes(rank(rbi), rbi)) + geom_jitter()
+# ggplot(hitters, aes(rank(sb_net), sb_net)) + geom_jitter()  #change this to box cox
+# ggplot(hitters, aes(rank(runs), runs)) + geom_jitter()
+# ggplot(hitters, aes(rank(ops), ops)) + geom_jitter()
 
 hitters$sb_net_BC <- round(as.numeric(BoxCox(hitters$sb_net, .45) + 2.223), 3)
 ggplot(hitters, aes(rank(sb_net), as.numeric(sb_net_BC))) + geom_jitter()
 
 B <- 596
-hitters$avg_value <- (B^hitters$avg) - B^.208
-sum(hitters$avg_value)
-ggplot(hitters, aes(avg, avg_value)) + geom_point()
+hitters$avg_value <- (B^hitters$avg) - B^.208  #Mendoza Line! (though these days .191 or so might be more right)
+#sum(hitters$avg_value)
+#ggplot(hitters, aes(avg, avg_value)) + geom_point()
+#gives surprisingly little value to batting average and actually looks more linear than exponential.
+  #however, we want this because BA is less sticky than other stats
+  #a lower mendoza line will devalue BA further
 
 B <- 1.0525
-hitters$hr_value <- (B^hitters$hr) - B ^ 5
-sum(hitters$hr_value)
-ggplot(hitters, aes(hr, hr_value)) + geom_point()
+hitters$hr_value <- (B^hitters$hr) - B ^ 5  #using the current sample min, 5, as 0-value
+#sum(hitters$hr_value)
+#ggplot(hitters, aes(hr, hr_value)) + geom_point()
+#the lower you make the 0-value threshold, the less you're valuing the stat, and the flatter the graph
 
 # B <- 1.016817
 # hitters$rbi_value <- (B^hitters$rbi) - B ^ 25
@@ -841,21 +876,21 @@ ggplot(hitters, aes(hr, hr_value)) + geom_point()
 
 B <- 1.01922
 hitters$rbi_value <- (B^hitters$rbi) - B ^ 40
-sum(hitters$rbi_value)
-ggplot(hitters, aes(rbi, rbi_value)) + geom_point()
+#sum(hitters$rbi_value)
+#ggplot(hitters, aes(rbi, rbi_value)) + geom_point()
 
 B <- 1.2862
 hitters$sb_net_BC_value <- round((B^hitters$sb_net_BC) - 1, 3)
-sum(hitters$sb_net_BC_value)
-ggplot(hitters, aes(sb_net_BC, sb_net_BC_value)) + geom_point()
+#sum(hitters$sb_net_BC_value)
+#ggplot(hitters, aes(sb_net_BC, sb_net_BC_value)) + geom_point()
 
 B <- 1.01968
 hitters$runs_value <- (B^hitters$runs) - B ^ 40
-sum(hitters$runs_value)
-ggplot(hitters, aes(runs, runs_value)) + geom_point()
+#sum(hitters$runs_value)
+#ggplot(hitters, aes(runs, runs_value)) + geom_point()
 
 B <- 13
-hitters$ops_value <- (B^hitters$ops) - B^.7
+hitters$ops_value <- (B^hitters$ops) - B^.7  #sets .700 ops to 0-value
 sum(hitters$ops_value)
 ggplot(hitters, aes(ops, ops_value)) + geom_point()
 
@@ -866,32 +901,34 @@ hitters$value <- hitters$avg_value + hitters$hr_value + hitters$rbi_value + hitt
 hitters <- hitters %>%
   arrange(desc(value))
 
-ggplot(all_pitchers1, aes(rank(wins), wins)) + geom_jitter()
-ggplot(all_pitchers1, aes(rank(-era), era)) + geom_point()
-ggplot(all_pitchers1, aes(rank(-whip), whip)) + geom_point()
-ggplot(all_pitchers1, aes(rank(-hra_rate), hra_rate)) + geom_point()
-ggplot(all_pitchers1, aes(rank(saves), saves)) + geom_jitter()
-ggplot(all_pitchers1, aes(rank(so), so)) + geom_point()
+#old exploratory analysis
+# ggplot(all_pitchers1, aes(rank(wins), wins)) + geom_jitter()
+# ggplot(all_pitchers1, aes(rank(-era), era)) + geom_point()
+# ggplot(all_pitchers1, aes(rank(-whip), whip)) + geom_point()
+# ggplot(all_pitchers1, aes(rank(-hra_rate), hra_rate)) + geom_point()
+# ggplot(all_pitchers1, aes(rank(saves), saves)) + geom_jitter()
+# ggplot(all_pitchers1, aes(rank(so), so)) + geom_point()
+# 
+# ggplot(all_pitchers1, aes(so, rank(so))) + geom_point()
+# ggplot(all_pitchers1, aes(-rank(era), -era)) + geom_point()
+# ggplot(all_pitchers1, aes(-rank(hra_rate), -hra_rate)) + geom_point()
+# 
+# hist(all_pitchers1$so)
+# 
+# sum(all_pitchers1$so)
 
-ggplot(all_pitchers1, aes(so, rank(so))) + geom_point()
-ggplot(all_pitchers1, aes(-rank(era), -era)) + geom_point()
-ggplot(all_pitchers1, aes(-rank(hra_rate), -hra_rate)) + geom_point()
-
-hist(all_pitchers1$so)
-
-sum(all_pitchers1$so)
-
-all_pitchers1$k_value <- (1.00866^all_pitchers1$so) - 1
-sum(all_pitchers1$k_value)
-ggplot(all_pitchers1, aes(x=so, y=k_value)) + geom_point()
-
-all_pitchers1$win_value <- (1.1419^all_pitchers1$wins) - 1
-sum(all_pitchers1$win_value)
-ggplot(all_pitchers1, aes(x=wins, y=win_value)) + geom_jitter()
-
-all_pitchers1$save_value <- (1.0916^all_pitchers1$saves) - 1
-sum(all_pitchers1$save_value)
-ggplot(all_pitchers1, aes(x=saves, y=save_value)) + geom_jitter()
+#duplicated code
+# all_pitchers1$k_value <- (1.00866^all_pitchers1$so) - 1
+# sum(all_pitchers1$k_value)
+# ggplot(all_pitchers1, aes(x=so, y=k_value)) + geom_point()
+# 
+# all_pitchers1$win_value <- (1.1419^all_pitchers1$wins) - 1
+# sum(all_pitchers1$win_value)
+# ggplot(all_pitchers1, aes(x=wins, y=win_value)) + geom_jitter()
+# 
+# all_pitchers1$save_value <- (1.0916^all_pitchers1$saves) - 1
+# sum(all_pitchers1$save_value)
+# ggplot(all_pitchers1, aes(x=saves, y=save_value)) + geom_jitter()
 
 #all_pitchers1$era_value <- (1/(1.3 ^ -all_pitchers1$era)) - 1
 # all_pitchers1$era_value <- (13.046 ^ 1/all_pitchers1$era)-1

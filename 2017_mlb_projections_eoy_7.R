@@ -992,6 +992,10 @@ sum(ap$auction_value)
 ggplot(ap, aes(x = rank(auction_value), y = auction_value)) + geom_point()
 #ggplot(all_pitchers1, aes(saves > 0)) + geom_histogram()
 
+#2.) get original z_score pricing
+  #re-weight that pricing for $4400
+  #combine it with the component value pricng
+
 #value players by position
 first_basemen <- filter(ap, pos == "3")
 second_basemen <- filter(ap, pos == "4")

@@ -544,6 +544,8 @@ starters <- z_score_starters(starters)
 #because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
   #on this interation, this is sufficient for K's, but not not hra's, so go back to hra_rate
 #no saves, which would be stat6
+
+#select the stats you want, organize by largest to smallest Z_score, then cut down the list to number of league players
 df <- starters
 stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
@@ -607,10 +609,28 @@ relievers1 <- relievers[1:n_relief_pitchers,]
 #Now run the same process with the rlief pitchers in the actual playing pool
 relievers1 <- z_score_relievers(relievers1)
 
+#select the desired stats again
+  #i missed the next 7 lines for the first time through so was getting inflated reliever scores
+df <- relievers1
+stat1 <- df["saves_z"]
+stat2 <- df["era_z"]
+stat3 <- df["whip_z"]
+stat4 <- df["k_z"]
+stat5 <- df["hra_rate_z"]
+stat6 <- 0
+
+relievers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+
 relievers1$z_pos <- relievers1$z_tot
 relievers1$z_pos_mean <- 0
 relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
+
+#organize relievers by z_pos for exploration
+relievers2 <- relievers2 %>%
+  arrange(desc(z_pos))
+
+##### Finished initial groupings #####
 
 #Trying a new method. Let's just combine the starters, relievers, and hitters with their z_scores as is.
   #I will give them prices
@@ -638,6 +658,7 @@ ggplot(all_players1, aes(rank(price), price)) + geom_point()
 
 #transform prices
 ggplot(all_players1, aes(z_pos)) + geom_histogram()
+ggplot(starters2, aes(z_pos)) + geom_histogram()
 library(grt)
 all_players1$z_new <- unscale(all_players1$z_pos)
 all_players1$z_new <- unscale(all_players1$z_tot)

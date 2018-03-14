@@ -299,7 +299,7 @@ catchers2 <- catchers1 %>%
 catchers2 <- catchers2[1:n_catchers,]  #keep only the amount of catchers warranted for the league
 
 #repeat this process for each position
-
+#first basemen
 df <- first_basemen1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -313,6 +313,7 @@ first_basemen2 <- first_basemen1 %>%
   arrange(desc(z_tot))
 first_basemen2 <- first_basemen2[1:n_first_basemen,]
 
+#second basemen
 df <- second_basemen1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -326,6 +327,7 @@ second_basemen2 <- second_basemen1 %>%
   arrange(desc(z_tot))
 second_basemen2 <- second_basemen2[1:n_second_basemen,]
 
+#third basemen
 df <- third_basemen1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -339,6 +341,7 @@ third_basemen2 <- third_basemen1 %>%
   arrange(desc(z_tot))
 third_basemen2 <- third_basemen2[1:n_third_basemen,]
 
+#shortstops
 df <- shortstops1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -352,6 +355,7 @@ shortstops2 <- shortstops1 %>%
   arrange(desc(z_tot))
 shortstops2 <- shortstops2[1:n_shortstops,]
 
+#outfielders
 df <- outfielders1
 stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
@@ -433,7 +437,7 @@ designated_hitters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 #designated hitters plus once bench hitter per team
 designated_hitters1 <- designated_hitters %>%
   arrange(desc(z_tot))
-designated_hitters1 <- designated_hitters1[1:(n_designated_hitters + n_bench / 2),]
+designated_hitters1 <- designated_hitters1[1:(n_designated_hitters + n_bench / 2),]  #adds 1 DH and 1 bench hitter per team
 
 ##### #####
 #Run numbers across all "selected" hitters
@@ -526,7 +530,7 @@ pitchers <- pitchers %>%
 #starters
 starters <- pitchers %>%
   filter(gs > 0) %>%  #must be projected to start a game
-  filter(ip >= 100)  #only want "regulars"; make cut off 100 innings pitched (projected)
+  filter(ip >= 100)  #only want "regulars"; make cut off 100 projected innings pitched
 starters$pos <- "sp"  #designate position
 #relievers
 relievers <- pitchers %>%
@@ -538,18 +542,20 @@ starters <- z_score_starters(starters)
 
 #select starting pitcher stat categories
 #because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
+  #on this interation, this is sufficient for K's, but not not hra's, so go back to hra_rate
 #no saves, which would be stat6
 df <- starters
 stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters <- starters %>%
   arrange(desc(z_tot))
+#subset by number of starters in the league
 starters1 <- starters[1:(n_starting_pitchers + n_bench / 2),]  #include 1 bench pitcher per team
 
 #####
@@ -561,7 +567,7 @@ stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 starters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -585,7 +591,7 @@ stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_z"]
+stat5 <- df["hra_rate_z"]
 stat6 <- 0
 
 relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -628,7 +634,7 @@ z_score_pitchers <- function(df) {
 }
 
 #reset reliever z_scores on "reverse" stats to "0"
-  #do this for combining with starters, so they'll be graded on an equal plane
+#do this for combining with starters, so they'll be graded on an equal plane
 relievers1$era_z <- 0
 relievers1$whip_z <- 0
 relievers1$hra_z <- 0
@@ -751,7 +757,7 @@ hitters <- hitters %>%
   arrange(desc(price))
 
 #This gives me prices that I don't really want
-  #This makes sense because I solely used the rank of each stat cat.
+#This makes sense because I solely used the rank of each stat cat.
 
 #new pitcher value pricing
 # ggplot(hitters, aes(rank(hr), hr)) + geom_jitter()
@@ -816,8 +822,8 @@ all_pitchers1$hra_rate_value <- (B ^ (1/all_pitchers1$hra_rate)) - B^(1/1.6)  #t
 
 #weight rate stats by innings pitched.
 #NO!!!!! If I'm already deprecating value for roster construction (which I am),
-  #I am penalizing relievers twice!
-    #DO NOT WEIGHT RATE STATS!
+#I am penalizing relievers twice!
+#DO NOT WEIGHT RATE STATS!
 # all_pitchers1$era_value <- all_pitchers1$era_value * all_pitchers1$ip / mean(all_pitchers1$ip)
 # all_pitchers1$whip_value <- all_pitchers1$whip_value * all_pitchers1$ip / mean(all_pitchers1$ip)
 # all_pitchers1$hra_rate_value <- all_pitchers1$hra_rate_value * all_pitchers1$ip / mean(all_pitchers1$ip)
@@ -834,8 +840,8 @@ all_pitchers1 <- all_pitchers1 %>%
   arrange(desc(value))
 
 #So as of here, the top relievers are priced WAY higher than the top pitchers; this is as it should be:
-  #relievers perform better than starters on a per inning basis. They throw harder because they are in for shorter
-  #stints. This results in lower whip and era.
+#relievers perform better than starters on a per inning basis. They throw harder because they are in for shorter
+#stints. This results in lower whip and era.
 
 # all_pitchers1$save_value <- (.33*all_pitchers1$saves)
 # sum(all_pitchers1$save_value)
@@ -860,8 +866,8 @@ hitters$avg_value <- (B^hitters$avg) - B^.208  #Mendoza Line! (though these days
 #sum(hitters$avg_value)
 #ggplot(hitters, aes(avg, avg_value)) + geom_point()
 #gives surprisingly little value to batting average and actually looks more linear than exponential.
-  #however, we want this because BA is less sticky than other stats
-  #a lower mendoza line will devalue BA further
+#however, we want this because BA is less sticky than other stats
+#a lower mendoza line will devalue BA further
 
 B <- 1.0525
 hitters$hr_value <- (B^hitters$hr) - B ^ 5  #using the current sample min, 5, as 0-value
@@ -993,8 +999,8 @@ ggplot(ap, aes(x = rank(auction_value), y = auction_value)) + geom_point()
 #ggplot(all_pitchers1, aes(saves > 0)) + geom_histogram()
 
 #2.) get original z_score pricing
-  #re-weight that pricing for $4400
-  #combine it with the component value pricng
+#re-weight that pricing for $4400
+#combine it with the component value pricng
 
 #value players by position
 first_basemen <- filter(ap, pos == "3")

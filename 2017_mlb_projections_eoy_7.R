@@ -612,6 +612,37 @@ relievers1$z_pos_mean <- 0
 relievers2 <- relievers1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                              names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
+#Trying a new method. Let's just combine the starters, relievers, and hitters with their z_scores as is.
+  #I will give them prices
+  #Then, I'll weight them by my own parameters.
+    #First I'll try 13, 7.5, and 2.5
+  #Then I'll reweight everything to equal 4400
+
+#first, combine all players
+all_players <- hitters3 %>%
+  full_join(starters2) %>%
+  full_join(relievers2) %>%
+  arrange(desc(z_pos))
+
+#next I'll price them
+#weight functions for entire player pool pricing
+all_players1 <- all_players
+
+#all_players1$z_unscaled <- all_players1$z_pos - min(all_players1$z_pos)  #this is not how to unscale
+#NEED TO UNSCALE Z_POS
+
+B <- 1.25375
+all_players1$price <- B ^ all_players1$z_unscaled + 2
+sum(all_players1$price)
+ggplot(all_players1, aes(rank(price), price)) + geom_point()
+
+#transform prices
+ggplot(all_players1, aes(z_pos)) + geom_histogram()
+library(grt)
+all_players1$z_new <- unscale(all_players1$z_pos)
+all_players1$z_new <- unscale(all_players1$z_tot)
+
+
 #need a new function for combining pitchers and relievers
 z_score_pitchers <- function(df) {
   

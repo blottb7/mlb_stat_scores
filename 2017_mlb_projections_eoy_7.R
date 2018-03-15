@@ -663,6 +663,14 @@ library(grt)
 all_players1$z_new <- unscale(all_players1$z_pos)
 all_players1$z_new <- unscale(all_players1$z_tot)
 
+#find hypothetical standard deviation of price
+B <- 1.009838
+all_players1$price <- B ^ rank(all_players1$z_pos) + 2
+sum(all_players1$price)
+ggplot(all_players1, aes(rank(price), price)) + geom_point()
+
+all_players1$new_price <- 9.471 * all_players1$z_pos + 11.957
+ggplot(all_players1, aes(rank(price), new_price)) + geom_point()
 
 #need a new function for combining pitchers and relievers
 z_score_pitchers <- function(df) {

@@ -1,19 +1,8 @@
-#Code for generalized yearlong category data
-
-#TO DO
-#Z_TOT function: add all possible stats; will need to build in zero's when an individual stat not selected
-#z_stat: allow user define. start ~line 215
-#user selected stats
-#add bench players? how to weight them?
-#what to do when two similar positions (i.e. SS and 2B) have too many players assigned to them
-#best gamma parameter for SB and SB_net
-#I'm going to need two sets of pitcher dfs... one for leagues that require sp and rp, and one that does not have designations, but has inning requirements
-#remove "old" df's as you go along
+#Description
 
 #Set working directory
 #setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
 #setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
-#setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
 setwd("C:/Users/Ben/Desktop/R projects")  #new toshiba working directory
 
 #libraries
@@ -199,8 +188,10 @@ hitters <- catchers %>%
   full_join(second_basemen) %>%
   full_join(third_basemen) %>%
   full_join(shortstops) %>%
-  full_join(outfielders) %>%
-  filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+  full_join(outfielders) #%>%
+  #filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+
+#removing the filter for combination with taken league players
 
 #set positions for hitters in my 16 team league
 hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
@@ -224,7 +215,7 @@ hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Ryan McMahon", 3, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Adam Frazier", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Brad Miller", 4, hitters$pos)
@@ -256,9 +247,31 @@ hitters <- hitters %>%
          -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
   arrange(name)
 
+#read in pitchers, combine with hitters, combine with taken players, separate again
+taken <- read_excel("eiflb_2018_draft_empty_slots.xlsx")
+
+#name pitchers here
+names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+pitchers <- pitchers %>% arrange(name)
+
+#regulate these players names
+hitters$name <- ifelse(hitters$name == "Nick Castellanos", "Nicholas Castellanos", hitters$name)
+hitters$name <- ifelse(hitters$name == "Raul Mondesi", "Adalberto Mondesi", hitters$name)
+pitchers$name <- ifelse(pitchers$name == "Jakob Junis", "Jake Junis", pitchers$name)
+pitchers$name <- ifelse(pitchers$name == "Jacob deGrom", "Jacob DeGrom", pitchers$name)
+#also move Greg Holland, who has no projections because he is not yet on a team, but is owned.
+
+  #first check for matching
+taken1 <- taken %>%
+  left_join(hitters) %>%
+  left_join(pitchers, by = "name") %>%
+  arrange(name)
+
+#
 #keep "regulars", those players who are going to start more days than not
 hitters_reg <- hitters %>%
-  filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
+  filter(pa >= 250) %>%  #switch this to 250 so grandal is in
   arrange(name)
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
@@ -542,7 +555,7 @@ starters <- z_score_starters(starters)
 
 #select starting pitcher stat categories
 #because innings are already controlled for with a threshold, use counting stats, not rate stats for k and hra
-  #on this interation, this is sufficient for K's, but not not hra's, so go back to hra_rate
+#on this interation, this is sufficient for K's, but not not hra's, so go back to hra_rate
 #no saves, which would be stat6
 
 #select the stats you want, organize by largest to smallest Z_score, then cut down the list to number of league players
@@ -610,7 +623,7 @@ relievers1 <- relievers[1:n_relief_pitchers,]
 relievers1 <- z_score_relievers(relievers1)
 
 #select the desired stats again
-  #i missed the next 7 lines for the first time through so was getting inflated reliever scores
+#i missed the next 7 lines for the first time through so was getting inflated reliever scores
 df <- relievers1
 stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
@@ -633,10 +646,10 @@ relievers2 <- relievers2 %>%
 ##### Finished initial groupings #####
 
 #Trying a new method. Let's just combine the starters, relievers, and hitters with their z_scores as is.
-  #I will give them prices
-  #Then, I'll weight them by my own parameters.
-    #First I'll try 13, 7.5, and 2.5
-  #Then I'll reweight everything to equal 4400
+#I will give them prices
+#Then, I'll weight them by my own parameters.
+#First I'll try 13, 7.5, and 2.5
+#Then I'll reweight everything to equal 4400
 
 #first, combine all players
 all_players <- hitters3 %>%

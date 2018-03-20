@@ -209,7 +209,7 @@ hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 3, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
@@ -233,6 +233,7 @@ hitters$pos <- ifelse(hitters$name == "Steve Pearce", 7, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Travis Shaw", 5, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Austin Barnes", 2, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Dixon Machado", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Hernan Perez", 7, hitters$pos)
 #hitters standard 12 team
 #remove rows where the name AND position are duplicated
 hitters <- unique(hitters)
@@ -268,11 +269,17 @@ taken1 <- taken %>%
   left_join(pitchers, by = "name") %>%
   arrange(name)
 
-#
 #keep "regulars", those players who are going to start more days than not
 hitters_reg <- hitters %>%
   filter(pa >= 250) %>%  #switch this to 250 so grandal is in
   arrange(name)
+
+#how, anti-join taken players with hitters and pitchers
+hitters_reg <- hitters_reg %>%
+  anti_join(taken1, by = "name")
+
+pitchers <- pitchers %>%
+  anti_join(taken1, by = "name")
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
 #box-cox transformation of sb and sb_net; a normal distribution is more useful
@@ -309,7 +316,7 @@ stat6 <- df["ops_z"]
 catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
 catchers2 <- catchers1 %>%
   arrange(desc(z_tot))  #arrange by descending z_tot
-catchers2 <- catchers2[1:n_catchers,]  #keep only the amount of catchers warranted for the league
+catchers2 <- catchers2[1:5,]  #keep only the amount of catchers warranted for the league
 
 #repeat this process for each position
 #first basemen
@@ -324,7 +331,7 @@ stat6 <- df["ops_z"]
 first_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 first_basemen2 <- first_basemen1 %>%
   arrange(desc(z_tot))
-first_basemen2 <- first_basemen2[1:n_first_basemen,]
+first_basemen2 <- first_basemen2[1:1,]
 
 #second basemen
 df <- second_basemen1
@@ -338,7 +345,7 @@ stat6 <- df["ops_z"]
 second_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 second_basemen2 <- second_basemen1 %>%
   arrange(desc(z_tot))
-second_basemen2 <- second_basemen2[1:n_second_basemen,]
+second_basemen2 <- second_basemen2[1:2,]
 
 #third basemen
 df <- third_basemen1
@@ -352,7 +359,7 @@ stat6 <- df["ops_z"]
 third_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 third_basemen2 <- third_basemen1 %>%
   arrange(desc(z_tot))
-third_basemen2 <- third_basemen2[1:n_third_basemen,]
+third_basemen2 <- third_basemen2[1:3,]
 
 #shortstops
 df <- shortstops1
@@ -366,7 +373,7 @@ stat6 <- df["ops_z"]
 shortstops1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 shortstops2 <- shortstops1 %>%
   arrange(desc(z_tot))
-shortstops2 <- shortstops2[1:n_shortstops,]
+shortstops2 <- shortstops2[0,]
 
 #outfielders
 df <- outfielders1
@@ -380,7 +387,7 @@ stat6 <- df["ops_z"]
 outfielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 outfielders2 <- outfielders1 %>%
   arrange(desc(z_tot))
-outfielders2 <- outfielders2[1:n_outfielders,]
+outfielders2 <- outfielders2[1:7,]
 
 #create middle infielders df
 middle_infielders <- second_basemen1 %>%
@@ -402,7 +409,7 @@ stat6 <- df["ops_z"]
 middle_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 middle_infielders2 <- middle_infielders1 %>%
   arrange(desc(z_tot))
-middle_infielders2 <- middle_infielders2[1:n_middle_infielders,]
+middle_infielders2 <- middle_infielders2[1:4,]
 
 #run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
@@ -422,7 +429,7 @@ stat6 <- df["ops_z"]
 corner_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 corner_infielders2 <- corner_infielders1 %>%
   arrange(desc(z_tot))
-corner_infielders2 <- corner_infielders2[1:n_corner_infielders,]
+corner_infielders2 <- corner_infielders2[1:8,]
 
 #combine all selected players
 hitters_no_dh <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
@@ -450,7 +457,7 @@ designated_hitters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 #designated hitters plus once bench hitter per team
 designated_hitters1 <- designated_hitters %>%
   arrange(desc(z_tot))
-designated_hitters1 <- designated_hitters1[1:(n_designated_hitters + n_bench / 2),]  #adds 1 DH and 1 bench hitter per team
+designated_hitters1 <- designated_hitters1[1:(9 + 12),]  #adds 1 DH and 1 bench hitter per team
 
 ##### #####
 #Run numbers across all "selected" hitters
@@ -525,8 +532,8 @@ find_name <- function(name) {
 
 ##### PITCHERS #####
 #name pitchers
-names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+# names(pitchers) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+#                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #all possible pitcher stats
 #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing); re-ordered
@@ -571,7 +578,7 @@ starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters <- starters %>%
   arrange(desc(z_tot))
 #subset by number of starters in the league
-starters1 <- starters[1:(n_starting_pitchers + n_bench / 2),]  #include 1 bench pitcher per team
+starters1 <- starters[1:(30 + 16),]  #include 1 bench pitcher per team
 
 #####
 #Now run the same process with the starting pitchers in the actual playing pool
@@ -616,7 +623,7 @@ relievers <- relievers %>%
   #arrange(desc(z_tot))
   arrange(desc(saves_z), desc(z_tot))
 #arrange(desc(as.numeric(saves_z)), desc(z_tot))
-relievers1 <- relievers[1:n_relief_pitchers,]
+relievers1 <- relievers[1:13,]
 
 #####
 #Now run the same process with the rlief pitchers in the actual playing pool

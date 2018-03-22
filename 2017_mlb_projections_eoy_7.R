@@ -670,7 +670,9 @@ all_players1 <- all_players
 
 #all_players1$z_unscaled <- all_players1$z_pos - min(all_players1$z_pos)  #this is not how to unscale
 #NEED TO UNSCALE Z_POS
-
+#exploratory analysis
+ggplot(all_players1, aes(rank(z_pos), z_pos)) + geom_point()
+#
 B <- 1.25375
 all_players1$price <- B ^ all_players1$z_unscaled + 2
 sum(all_players1$price)

@@ -15,39 +15,39 @@ library(zoo)  #for na.locf fn
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
-n_teams <- 16
-starting_catchers <- 1
-starting_first_basemen <- 1
-starting_second_basemen <- 1
-starting_third_basemen <- 1
-starting_shortstops <- 1
-starting_outfielders <- 4
-starting_middle_infielders <- 1
-starting_corner_infielders <- 1
-starting_designated_hitters <- 1
-#pitchers
-starting_pitchers <- 6.5
-relief_pitchers <- 2.5
-#bench players
-bench_players <- 2
-#costs
-min_cost <- 3
-
-#staring players per position for a fantasy league
-n_catchers <- n_teams * starting_catchers
-n_first_basemen <- n_teams * starting_first_basemen
-n_second_basemen <- n_teams * starting_second_basemen
-n_third_basemen <- n_teams * starting_third_basemen
-n_shortstops <- n_teams * starting_shortstops
-n_outfielders <- n_teams * starting_outfielders
-n_middle_infielders <- n_teams * starting_middle_infielders
-n_corner_infielders <- n_teams * starting_corner_infielders
-n_designated_hitters <- n_teams * starting_designated_hitters
-#pitchers
-n_starting_pitchers <- n_teams * starting_pitchers
-n_relief_pitchers <- n_teams * relief_pitchers
-#bench
-n_bench <- n_teams * bench_players
+# n_teams <- 16
+# starting_catchers <- 1
+# starting_first_basemen <- 1
+# starting_second_basemen <- 1
+# starting_third_basemen <- 1
+# starting_shortstops <- 1
+# starting_outfielders <- 4
+# starting_middle_infielders <- 1
+# starting_corner_infielders <- 1
+# starting_designated_hitters <- 1
+# #pitchers
+# starting_pitchers <- 6.5
+# relief_pitchers <- 2.5
+# #bench players
+# bench_players <- 2
+# #costs
+# min_cost <- 3
+# 
+# #staring players per position for a fantasy league
+# n_catchers <- n_teams * starting_catchers
+# n_first_basemen <- n_teams * starting_first_basemen
+# n_second_basemen <- n_teams * starting_second_basemen
+# n_third_basemen <- n_teams * starting_third_basemen
+# n_shortstops <- n_teams * starting_shortstops
+# n_outfielders <- n_teams * starting_outfielders
+# n_middle_infielders <- n_teams * starting_middle_infielders
+# n_corner_infielders <- n_teams * starting_corner_infielders
+# n_designated_hitters <- n_teams * starting_designated_hitters
+# #pitchers
+# n_starting_pitchers <- n_teams * starting_pitchers
+# n_relief_pitchers <- n_teams * relief_pitchers
+# #bench
+# n_bench <- n_teams * bench_players
 
 #FUNCTIONS
 #z_score calculation for each selected stat
@@ -525,6 +525,8 @@ rm(df, stat1, stat2, stat3, stat4, stat5, stat6)
 #keep only final hitters_df with the stats I want, "hitters_3" and hitters_zpos2
 rm(catchers, designated_hitters, first_basemen, hitters, hitters_reg, middle_infielders,
    outfielders, second_basemen, shortstops, third_basemen)
+#remove taken players df
+rm(taken, taken1)
 
 find_name <- function(name) {
   which(hitters3$name == name)
@@ -550,7 +552,8 @@ pitchers <- pitchers %>%
 #starters
 starters <- pitchers %>%
   filter(gs > 0) %>%  #must be projected to start a game
-  filter(ip >= 100)  #only want "regulars"; make cut off 100 projected innings pitched
+  filter(ip >= 80)  #only want "regulars"; make cut off 100 projected innings pitched
+  #moved this to 80 bc league is so deep and so many need to be added
 starters$pos <- "sp"  #designate position
 #relievers
 relievers <- pitchers %>%
@@ -663,6 +666,140 @@ all_players <- hitters3 %>%
   full_join(starters2) %>%
   full_join(relievers2) %>%
   arrange(desc(z_pos))
+
+#Get work from other workbook
+ap <- all_players
+ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
+
+#subtract z_saves from starters and z_wins from relievers, ~.7
+
+#available dollars - milb dollars - last 5 players @$3 each.
+dollars <- 1103 - 85 - 15
+
+ap <- head(ap, -5)  #remove last 5 ROWS (that's where it tails off)
+ap$z_rank <- rank(ap$z_pos)  #rank var
+
+#z_pos shift var
+ap$z_shift <- ap$z_pos - min(ap$z_pos)
+
+# #find equation for #1003, n = 99
+# B <- 1.801
+# ap$p1 <- B ^ ap$z_pos + 3
+# sum(ap$p1)
+# ggplot(ap, aes(z_pos, p1)) + geom_point()
+# 
+# C <- 1.04243
+# ap$p2 <- C ^ ap$p1
+# sum(ap$p2)
+
+# #So, this give me what I want, but it WAY overvalues top players
+# #(Greinke @56)
+# ap$z_shift <- ap$z_pos - min(ap$z_pos)
+# D <- 1.4
+# ap$p3 <- D ^ ap$z_shift + 2
+# sum(ap$p3)
+# ggplot(ap, aes(z_pos, p3)) + geom_point()
+
+# #let's try z_shift + X
+# #this is almost linear; this is not what I want, though it's closer
+# #plus, the min value is 6
+# ap$z_shift1 <- ap$z_shift + 10
+# E <- 1.1524
+# ap$p4 <- E ^ ap$z_shift1 + 2
+# sum(ap$p4)
+# ggplot(ap, aes(z_pos, p4)) + geom_point()
+# 
+# #so now let's change the "+2"
+# #yeah, this pretty much works
+# G <- 1.1852
+# ap$p5 <- G ^ ap$z_shift1 - 2
+# sum(ap$p5)
+# ggplot(ap, aes(z_pos, p5)) + geom_point()
+# 
+# #let's try shifting by other numbers than 10
+# ap$z_shift2 <- ap$z_shift + 3
+# 
+# H <- 1.327
+# ap$p6 <- H ^ ap$z_shift2
+# sum(ap$p6)
+# ggplot(ap, aes(z_pos, p6)) + geom_point()
+
+# #So I think 10 is too much and 3 is too little, so something in between
+# #I'll make the top player 3X the least
+# ap$z_shift3 <- ap$z_shift + 6
+# 
+# I <- 1.237
+# ap$p7 <- I ^ ap$z_shift3
+# sum(ap$p7)
+# ggplot(ap, aes(z_pos, p7)) + geom_point()
+# ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
+
+#try the above with the lowest value set closer to 3
+ap$z_shift3 <- ap$z_shift + 6
+
+I <- 1.243
+ap$p7 <- I ^ ap$z_shift3 - .5
+sum(ap$p7)
+#ggplot(ap, aes(z_pos, p7)) + geom_point()
+#this gives me a usable model using method = 'loess'
+ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point() +
+  geom_smooth(method = 'loess', span = .1)
+
+ggplot(ap, aes(z_pos, p7)) + geom_point()
+ggplot(ap, aes(z_rank, z_pos)) + geom_point() + geom_line(aes(y=ap$p7))
+
+#reduce price of relievers to account for less innings pitched in terms of whip, era, and hra_rate
+
+#####
+#now divide these into position groups
+sp <- ap %>%
+  filter(pos == "sp")
+of <- ap %>%
+  filter(pos == "7")
+
+# #So, now try fitting a loess model
+# loess1 <- loess(z_pos ~ z_rank, data = ap)
+# ap$loess1 <- predict(loess1)
+# 
+# #want a highly fitted model, so make span close to 0
+# loess2 <- loess(z_pos ~ z_rank, data = ap, span = .1)
+# ap$loess2 <- predict(loess2)
+# #see how they look
+# ggplot(ap, aes(z_pos, loess2)) + geom_point()
+# #try a linear model with everything below z_pos = 2.5
+# 
+# #probably have a separate break down for <0, and 0 - 2.5
+# ap_lo <- ap[18:105,]
+# #price <- m * z_pos
+# #ap$rank <- rank(ap$z_pos)
+# model <- lm(z_pos ~ rank(z_pos), ap_lo)
+# ap_lo$price <- rank(ap_lo$z_pos) * model$coefficients[2] + 3 #+ model$coefficients[1]
+# ggplot(ap_lo, aes(rank(z_pos), z_pos)) + geom_point() + 
+#   geom_abline(intercept = -3.61, slope = model$coefficients[2])
+# 
+# # plot(ap_lo$z_pos, ap_lo$price)
+# # abline(a = model$coefficients[1], b = model$coefficients[2])
+# 
+# #now do the same for 2.5 - 5, and greater than 5
+# ap_mid <- ap[7:17,]
+# model1 <- lm(z_pos ~ z_rank, ap_mid)
+# ap_mid$price <- ap_mid$z_rank * model1$coefficients[2] + model1$coefficients[1]
+# ggplot(ap_mid, aes(z_rank, z_pos)) + geom_point() +
+#   geom_abline(intercept = -5.17813, slope = model1$coefficients[2])
+# 
+# #set up a best fit line or best fit lines to allocate $970 to 94
+# #players, where all players cost at least $3
+
+# ap$z_rank <- rank(ap$z_pos)
+
+# fit <- lm(z_pos~bs(z_rank,knots=c(75,88)),data=ap)
+# plot(z_rank,z_pos,col="grey",xlab="Rank",ylab="Z Pos Score")
+# abline(v=c(75,88),lty=2,col="darkgreen")
+# ranks<-data.frame(z_rank = ap$z_rank)
+# points(z_rank,predict(fit,newdata=ranks),col="darkgreen",lwd=2,type="l")
+# ranks$predicted <- predict(fit,newdata=ranks)
+
+
 
 #next I'll price them
 #weight functions for entire player pool pricing

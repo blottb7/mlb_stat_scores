@@ -695,7 +695,7 @@ ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
 #available dollars - milb dollars - last 5 players @$3 each.
 dollars <- 1103 - 85 - 18
 
-ap <- head(ap, -6)  #remove last 5 ROWS (that's where it tails off)
+ap <- head(ap, -6)  #remove last 6 ROWS (that's where it tails off)
 ap$z_rank <- rank(ap$z_pos)  #rank var
 ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
 
@@ -737,13 +737,41 @@ ap$z_shift <- ap$z_pos - min(ap$z_pos)
 # ap$p4 <- E ^ ap$z_shift1 + 2
 # sum(ap$p4)
 # ggplot(ap, aes(z_pos, p4)) + geom_point()
+#
+
+
+#These are candiates for the final pricing model
+#so now let's change the "+2"
+#yeah, this pretty much works
+# ap$z_shift1 <- ap$z_shift + 10
 # 
-# #so now let's change the "+2"
-# #yeah, this pretty much works
-# G <- 1.1852
-# ap$p5 <- G ^ ap$z_shift1 - 2
+# G <- 1.1903
+# ap$p5 <- G ^ ap$z_shift1 - 2.7
 # sum(ap$p5)
 # ggplot(ap, aes(z_pos, p5)) + geom_point()
+# 
+# #shift between 6 and 10
+# ap$z_shift2 <- ap$z_shift + 8
+# 
+# H <- 1.2124
+# ap$p6 <- H ^ ap$z_shift2 - 1.5
+# sum(ap$p6)
+# ggplot(ap, aes(z_pos, p6)) + geom_point()
+
+#now try 15
+ap$z_shift3 <- ap$z_shift + 15
+
+I <- 1.149514
+ap$auction_price <- I ^ ap$z_shift3 - 5
+sum(ap$auction_price)
+ggplot(ap, aes(z_pos, auction_price)) + geom_point()
+
+#observe
+ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
+ggplot(ap, aes(z_pos, p5)) + geom_point()
+ggplot(ap, aes(z_pos, p6)) + geom_point()
+ggplot(ap, aes(z_pos, auction_price)) + geom_point()
+ggplot(ap, aes(z_pos, p7)) + geom_point()
 # 
 # #let's try shifting by other numbers than 10
 # ap$z_shift2 <- ap$z_shift + 3

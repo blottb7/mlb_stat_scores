@@ -189,7 +189,7 @@ hitters <- catchers %>%
   full_join(third_basemen) %>%
   full_join(shortstops) %>%
   full_join(outfielders) #%>%
-  #filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+#filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
 #removing the filter for combination with taken league players
 
@@ -263,7 +263,7 @@ pitchers$name <- ifelse(pitchers$name == "Jakob Junis", "Jake Junis", pitchers$n
 pitchers$name <- ifelse(pitchers$name == "Jacob deGrom", "Jacob DeGrom", pitchers$name)
 #also move Greg Holland, who has no projections because he is not yet on a team, but is owned.
 
-  #first check for matching
+#first check for matching
 taken1 <- taken %>%
   left_join(hitters) %>%
   left_join(pitchers, by = "name") %>%
@@ -429,6 +429,9 @@ stat6 <- df["ops_z"]
 corner_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 corner_infielders2 <- corner_infielders1 %>%
   arrange(desc(z_tot))
+
+#remove ineligible CI's (Pujols and Hanley Ramirez)
+corner_infielders2 <- corner_infielders2[-c(6,9),]
 corner_infielders2 <- corner_infielders2[1:8,]
 
 #combine all selected players
@@ -459,6 +462,10 @@ designated_hitters1 <- designated_hitters %>%
   arrange(desc(z_tot))
 designated_hitters1 <- designated_hitters1[1:(9 + 12),]  #adds 1 DH and 1 bench hitter per team
 
+#keep remaning hitters in player pool:
+saved_hitters <- designated_hitters %>%
+  anti_join(designated_hitters1) %>%
+  arrange(desc(z_tot))
 ##### #####
 #Run numbers across all "selected" hitters
 hitters1 <- bind_rows(hitters_no_dh, designated_hitters1)  #bind "designated hitters"/utility players/bench to rest of hitters
@@ -553,7 +560,7 @@ pitchers <- pitchers %>%
 starters <- pitchers %>%
   filter(gs > 0) %>%  #must be projected to start a game
   filter(ip >= 80)  #only want "regulars"; make cut off 100 projected innings pitched
-  #moved this to 80 bc league is so deep and so many need to be added
+#moved this to 80 bc league is so deep and so many need to be added
 starters$pos <- "sp"  #designate position
 #relievers
 relievers <- pitchers %>%
@@ -580,8 +587,11 @@ stat6 <- 0
 starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters <- starters %>%
   arrange(desc(z_tot))
+
+#remove untenable pitchers
+starters1 <- starters[-c(11,43,47),]  #wilmer font (reliever), ubaldo jimenez (no team), yonny chirinos (c'mon)
 #subset by number of starters in the league
-starters1 <- starters[1:(30 + 16),]  #include 1 bench pitcher per team
+starters1 <- starters1[1:(30 + 16),]  #include 1 bench pitcher per team
 
 #####
 #Now run the same process with the starting pitchers in the actual playing pool
@@ -606,6 +616,9 @@ starters1$z_pos_mean <- 0
 starters2 <- starters1[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
                            names(stat1), names(stat2), names(stat3), names(stat4), names(stat5), names(stat6))]
 
+saved_starters <- starters %>%
+  anti_join(starters2, by = "name") %>%
+  arrange(desc(z_tot))
 #RELIEVERS
 relievers <- z_score_relievers(relievers)
 
@@ -625,8 +638,14 @@ relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 relievers <- relievers %>%
   #arrange(desc(z_tot))
   arrange(desc(saves_z), desc(z_tot))
-#arrange(desc(as.numeric(saves_z)), desc(z_tot))
-relievers1 <- relievers[1:13,]
+
+#select relievers manually
+relievers1 <- relievers[c(1:3,7,17,9,15,16,47,68,64,12,6),]
+relievers1 <- relievers1 %>%
+  arrange(desc(z_tot))
+
+# #arrange(desc(as.numeric(saves_z)), desc(z_tot))
+# relievers1 <- relievers[1:13,]
 
 #####
 #Now run the same process with the rlief pitchers in the actual playing pool
@@ -674,10 +693,20 @@ ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
 #subtract z_saves from starters and z_wins from relievers, ~.7
 
 #available dollars - milb dollars - last 5 players @$3 each.
-dollars <- 1103 - 85 - 15
+dollars <- 1103 - 85 - 18
 
-ap <- head(ap, -5)  #remove last 5 ROWS (that's where it tails off)
+ap <- head(ap, -6)  #remove last 5 ROWS (that's where it tails off)
 ap$z_rank <- rank(ap$z_pos)  #rank var
+ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
+
+# #Need to go back to two linear models
+#   #Nope, not working
+# model1 <- lm(z_pos ~ z_rank, ap[17:104,])
+# model2 <- lm(z_pos ~ z_rank, ap[1:16,])
+# 
+# #price = intercept + $3
+# ap$price <- (model1$coefficients[1] + 6.59) + model1$coefficients[2] * ap$z_rank
+# ap$price1 <- (model2$coefficients[1] + 6.3326) + model2$coefficients[2] * ap$z_rank
 
 #z_pos shift var
 ap$z_shift <- ap$z_pos - min(ap$z_pos)
@@ -737,18 +766,30 @@ ap$z_shift <- ap$z_pos - min(ap$z_pos)
 #try the above with the lowest value set closer to 3
 ap$z_shift3 <- ap$z_shift + 6
 
-I <- 1.243
-ap$p7 <- I ^ ap$z_shift3 - .5
-sum(ap$p7)
+I <- 1.2435
+ap$auction_price <- I ^ ap$z_shift3 - .5
+sum(ap$auction_price)
 #ggplot(ap, aes(z_pos, p7)) + geom_point()
 #this gives me a usable model using method = 'loess'
 ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point() +
   geom_smooth(method = 'loess', span = .1)
 
-ggplot(ap, aes(z_pos, p7)) + geom_point()
-ggplot(ap, aes(z_rank, z_pos)) + geom_point() + geom_line(aes(y=ap$p7))
+ggplot(ap, aes(rank(z_pos), z_pos)) + geom_point()
+ggplot(ap, aes(z_pos, auction_price)) + geom_point()
+ggplot(ap, aes(z_rank, z_pos)) + geom_point() + geom_line(aes(y=ap$auction_price))
 
 #reduce price of relievers to account for less innings pitched in terms of whip, era, and hra_rate
+  #don't do this; enough people bid on relievers that these prices seem normal
+
+#add removed players back into df
+ap_last <- all_players[106:110,]
+ap_last$auction_price <- 3
+
+ap <- ap %>%
+  full_join(ap_last) %>%
+  arrange(desc(auction_price))
+
+#select variables to keep for spread sheet
 
 #####
 #now divide these into position groups

@@ -11,10 +11,10 @@
 #remove "old" df's as you go along
 
 #Set working directory
-setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
+#setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
 #setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
 #setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
-#setwd("C:/Users/Ben/Desktop/R projects")  #new toshiba working directory
+setwd("C:/Users/Ben/Desktop/R projects/")  #new toshiba working directory
 
 #libraries
 library(readxl)
@@ -26,13 +26,13 @@ library(zoo)  #for na.locf fn
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
-n_teams <- 16
-starting_catchers <- 1
+n_teams <- 15
+starting_catchers <- 2
 starting_first_basemen <- 1
 starting_second_basemen <- 1
 starting_third_basemen <- 1
 starting_shortstops <- 1
-starting_outfielders <- 4
+starting_outfielders <- 5
 starting_middle_infielders <- 1
 starting_corner_infielders <- 1
 starting_designated_hitters <- 1
@@ -218,7 +218,7 @@ hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
+hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 3, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
 hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
@@ -258,7 +258,7 @@ hitters <- hitters %>%
 
 #keep "regulars", those players who are going to start more days than not
 hitters_reg <- hitters %>%
-  filter(pa >= 300) %>%  #will not want players with less than half a season of at bats, so filter for this
+  filter(pa >= 200) %>%  #filter for depth of league
   arrange(name)
 
 #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
@@ -289,8 +289,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 #run for catchers
 catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
@@ -305,8 +305,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 first_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 first_basemen2 <- first_basemen1 %>%
@@ -319,8 +319,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 second_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 second_basemen2 <- second_basemen1 %>%
@@ -333,8 +333,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 third_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 third_basemen2 <- third_basemen1 %>%
@@ -347,8 +347,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 shortstops1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 shortstops2 <- shortstops1 %>%
@@ -361,8 +361,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 outfielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 outfielders2 <- outfielders1 %>%
@@ -383,8 +383,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 middle_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 middle_infielders2 <- middle_infielders1 %>%
@@ -403,8 +403,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 corner_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 corner_infielders2 <- corner_infielders1 %>%
@@ -429,8 +429,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 designated_hitters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 
@@ -451,8 +451,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 hitters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 hitters2 <- hitters1 %>%
@@ -482,8 +482,8 @@ stat1 <- df["hr_z"]
 stat2 <- df["runs_z"]
 stat3 <- df["rbi_z"]
 stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+stat5 <- df["sb_z"]
+stat6 <- 0
 
 #select the columns
 hitters3 <- hitters_zpos2[, c("name", "team", "pos", "z_pos", "z_pos_mean", "z_tot", 
@@ -530,7 +530,7 @@ pitchers <- pitchers %>%
 #starters
 starters <- pitchers %>%
   filter(gs > 0) %>%  #must be projected to start a game
-  filter(ip >= 100)  #only want "regulars"; make cut off 100 projected innings pitched
+  filter(ip >= 80)  #only want "regulars"; make cut off 100 projected innings pitched. Just adjust for league depth
 starters$pos <- "sp"  #designate position
 #relievers
 relievers <- pitchers %>%
@@ -551,12 +551,16 @@ stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_rate_z"]
+stat5 <- 0
 stat6 <- 0
 
 starters["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
 starters <- starters %>%
   arrange(desc(z_tot))
+
+# # #remove starters manually if necessary
+# starters <- starters[-c(45,111),]  #Wilmer Font, Ubaldo Jimenez
+
 #subset by number of starters in the league
 starters1 <- starters[1:(n_starting_pitchers + n_bench / 2),]  #include 1 bench pitcher per team
 
@@ -569,7 +573,7 @@ stat1 <- df["wins_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_rate_z"]
+stat5 <- 0
 stat6 <- 0
 
 starters1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -593,7 +597,7 @@ stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_rate_z"]
+stat5 <- 0
 stat6 <- 0
 
 relievers["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
@@ -616,7 +620,7 @@ stat1 <- df["saves_z"]
 stat2 <- df["era_z"]
 stat3 <- df["whip_z"]
 stat4 <- df["k_z"]
-stat5 <- df["hra_rate_z"]
+stat5 <- 0
 stat6 <- 0
 
 relievers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)

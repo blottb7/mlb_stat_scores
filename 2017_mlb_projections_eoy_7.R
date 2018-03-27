@@ -675,6 +675,14 @@ rm(pitchers, relievers, starters)
 #collect and read in steamer600 data for bench spots
 #7 bench sports per team * 15 = 105
 
+#select just the columns I want for writing to file
+ap1 <- ap %>%
+  select(name, team, pos, z_pos, z_tot) %>%
+  mutate(z_pos = round(z_pos, 2), z_tot = round(z_tot, 2))
+
+#write to file
+write.csv(ap1, "2018_nfbc_rankings.csv")
+
 #read in data
 sth <- read_excel("2018_steamer600_projections.xlsx")
 stp <- read_excel("2018_steamer600_projections.xlsx", sheet = 2)
@@ -705,4 +713,3 @@ stp1 <- stp %>%
   anti_join(pitchers, by = "name")
 
 
-stp1 <- z_score_pitchers(stp1)

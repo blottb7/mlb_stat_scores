@@ -672,5 +672,21 @@ rm(pitchers, relievers, starters)
 sth <- read_excel("2018_steamer600_projections.xlsx")
 stp <- read_excel("2018_steamer600_projections.xlsx", sheet = 2)
 
+#name vars in new df's
+#name hitters
+names(sth) <- name_vector
+#name pitchers
+names(stp) <- c("name", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+
 #remove drafted players
   #combine relievers and starters that have been taken
+pitchers <- starters1 %>%
+  full_join(relievers1)
+
+#availabe hitters
+sth1 <- sth %>%
+  anti_join(hitters_zpos2, by = "name")
+#available pitchers
+stp1 <- stp %>%
+  anti_join(pitchers, by = "name")

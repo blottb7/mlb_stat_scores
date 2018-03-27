@@ -666,3 +666,11 @@ rm(stat1, stat2, stat3, stat4, stat5, stat6, df)
 rm(pitchers, relievers, starters)
 
 #collect and read in steamer600 data for bench spots
+#7 bench sports per team * 15 = 105
+
+#read in data
+sth <- read_excel("2018_steamer600_projections.xlsx")
+stp <- read_excel("2018_steamer600_projections.xlsx", sheet = 2)
+
+#remove drafted players
+  #combine relievers and starters that have been taken

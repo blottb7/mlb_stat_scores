@@ -193,6 +193,13 @@ third_basemen$pos <- "5"
 shortstops$pos <- "6"
 outfielders$pos <- "7"
 
+#combine all hitters and save fot later
+hitters_saved <- catchers %>%
+  full_join(first_basemen) %>%
+  full_join(second_basemen) %>%
+  full_join(third_basemen) %>%
+  full_join(shortstops) %>%
+  full_join(outfielders)
 #combine all positions into a df
 hitters <- catchers %>%
   full_join(first_basemen) %>%
@@ -687,6 +694,15 @@ pitchers <- starters1 %>%
 #availabe hitters
 sth1 <- sth %>%
   anti_join(hitters_zpos2, by = "name")
+
+# sth2 <- sth1 %>%
+#   right_join(hitters_saved)
+# 
+# #sth2 <- sth1
+# #  left_join(hitters_saved, by = "name")
 #available pitchers
 stp1 <- stp %>%
   anti_join(pitchers, by = "name")
+
+
+stp1 <- z_score_pitchers(stp1)

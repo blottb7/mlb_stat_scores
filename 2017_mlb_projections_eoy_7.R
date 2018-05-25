@@ -670,20 +670,20 @@ find_name <- function(name) {
 #weight functions for entire player pool pricing
 all_players1 <- all_players
 
-#all_players1$z_unscaled <- all_players1$z_pos - min(all_players1$z_pos)  #this is not how to unscale
-#NEED TO UNSCALE Z_POS
-
-B <- 1.25375
-all_players1$price <- B ^ all_players1$z_unscaled + 2
-sum(all_players1$price)
-ggplot(all_players1, aes(rank(price), price)) + geom_point()
-
-#transform prices
-ggplot(all_players1, aes(z_pos)) + geom_histogram()
-ggplot(starters2, aes(z_pos)) + geom_histogram()
-library(grt)
-all_players1$z_new <- unscale(all_players1$z_pos)
-all_players1$z_new <- unscale(all_players1$z_tot)
+# #all_players1$z_unscaled <- all_players1$z_pos - min(all_players1$z_pos)  #this is not how to unscale
+# #NEED TO UNSCALE Z_POS
+# 
+# B <- 1.25375
+# all_players1$price <- B ^ all_players1$z_unscaled + 2
+# sum(all_players1$price)
+# ggplot(all_players1, aes(rank(price), price)) + geom_point()
+# 
+# #transform prices
+# ggplot(all_players1, aes(z_pos)) + geom_histogram()
+# ggplot(starters2, aes(z_pos)) + geom_histogram()
+# library(grt)
+# all_players1$z_new <- unscale(all_players1$z_pos)
+# all_players1$z_new <- unscale(all_players1$z_tot)
 
 #find hypothetical standard deviation of price
 B <- 1.009838

@@ -181,15 +181,15 @@ z_score_pitchers <- function(df) {
 
 #rename position player vars
 #name_vector for 2018 df; does not include column: "adp". Include "adp" if and when necessary.
-#use this for pre-season rankings
-name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
-                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-                 "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
-
-#use this for in-season rankings, when adp is no longer a column
+#use this when ADP included
 # name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
 #                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-#                  "waste3", "offense", "defense", "war", "playerid")
+#                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
+
+#use this when ADP not included
+name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+                 "waste3", "offense", "defense", "war", "playerid")
 
 #assign the name vector to each position df
 names(catchers) <- name_vector
@@ -224,50 +224,50 @@ hitters <- catchers %>%
         full_join(outfielders) %>%
         filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
-#set positions for hitters in my 16 team league
-hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Eric Thames", 7, hitters$pos)  #FG has him marked only has "3"
-hitters$pos <- ifelse(hitters$name == "Matt Olson", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Ramirez", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Trey Mancini", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Brandon Moss", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Joey Gallo", 3, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Javier Baez", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Ian Happ", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Ryan McMahon", 3, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Adam Frazier", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Brad Miller", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Brandon Drury", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Chad Pinder", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Chris Owings", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Colin Moran", 3, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Derek Dietrich", 5, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "J.P. Crawford", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Johan Camargo", 5, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Martinez", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Jose Pirela", 4, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Luis Valbuena", 3, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Steve Pearce", 7, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Travis Shaw", 5, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Austin Barnes", 2, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Dixon Machado", 4, hitters$pos)
-
-#in-season position updates
-hitters$pos <- ifelse(hitters$name == "Christian Villanueva", 6, hitters$pos)
-hitters$pos <- ifelse(hitters$name == "Anthony Rizzo", 4, hitters$pos)
+# #set positions for hitters in my 16 team league
+# hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Eric Thames", 7, hitters$pos)  #FG has him marked only has "3"
+# hitters$pos <- ifelse(hitters$name == "Matt Olson", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jose Ramirez", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Trey Mancini", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Brandon Moss", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Joey Gallo", 3, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Javier Baez", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Ian Happ", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
+# # hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Ryan McMahon", 3, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Adam Frazier", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Brad Miller", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Brandon Drury", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Chad Pinder", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Chris Owings", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Colin Moran", 3, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Derek Dietrich", 5, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "J.P. Crawford", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Johan Camargo", 5, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jose Martinez", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Jose Pirela", 4, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Luis Valbuena", 3, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Steve Pearce", 7, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Travis Shaw", 5, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Austin Barnes", 2, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Dixon Machado", 4, hitters$pos)
+# 
+# #in-season position updates
+# hitters$pos <- ifelse(hitters$name == "Christian Villanueva", 6, hitters$pos)
+# hitters$pos <- ifelse(hitters$name == "Anthony Rizzo", 4, hitters$pos)
 
 #hitters standard 12 team
 #remove rows where the name AND position are duplicated

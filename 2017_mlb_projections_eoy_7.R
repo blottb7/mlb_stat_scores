@@ -252,26 +252,26 @@ z_score_pitchers <- function(df) {
 #                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
 #                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
 
-#use this when ADP not included
-name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
-                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-                 "waste3", "offense", "defense", "war", "playerid")
-
-#assign the name vector to each position df
-names(catchers) <- name_vector
-names(first_basemen) <- name_vector
-names(second_basemen) <- name_vector
-names(shortstops) <- name_vector
-names(third_basemen) <- name_vector
-names(outfielders) <- name_vector
-
-#the playerid reads in different classes depending on the position, so coerse the class to the same
-catchers$playerid <- as.character(catchers$playerid)
-first_basemen$playerid <- as.character(first_basemen$playerid)
-second_basemen$playerid <- as.character(second_basemen$playerid)
-third_basemen$playerid <- as.character(third_basemen$playerid)
-shortstops$playerid <- as.character(shortstops$playerid)
-outfielders$playerid <- as.character(outfielders$playerid)
+# #use this when ADP not included
+# name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+#                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+#                  "waste3", "offense", "defense", "war", "playerid")
+# 
+# #assign the name vector to each position df
+# names(catchers) <- name_vector
+# names(first_basemen) <- name_vector
+# names(second_basemen) <- name_vector
+# names(shortstops) <- name_vector
+# names(third_basemen) <- name_vector
+# names(outfielders) <- name_vector
+# 
+# #the playerid reads in different classes depending on the position, so coerse the class to the same
+# catchers$playerid <- as.character(catchers$playerid)
+# first_basemen$playerid <- as.character(first_basemen$playerid)
+# second_basemen$playerid <- as.character(second_basemen$playerid)
+# third_basemen$playerid <- as.character(third_basemen$playerid)
+# shortstops$playerid <- as.character(shortstops$playerid)
+# outfielders$playerid <- as.character(outfielders$playerid)
 
 #create a position var and assign it to each df
 catchers$pos <- "2"

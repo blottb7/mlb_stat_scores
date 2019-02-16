@@ -50,12 +50,12 @@ nfbc <- nfbc %>%
 #FANGRAPHS
         #Hitter names
 #Use this when ADP included
-# hitter_names <- c("player", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+# hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
 #                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
 #                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
 
 #Use this when ADP not included
-hitter_names <- c("player", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
                  "waste3", "offense", "defense", "war", "playerid")
 
@@ -63,19 +63,30 @@ names(hitters) <- hitter_names
 
         #Pitcher names
 #Use this when ADP included
-# names(pitchers) <- c("player", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+# names(pitchers) <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
 #                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #Use this when ADP not included
-pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
 names(pitchers) <- pitcher_names
 
 #Clean fangraphs data
+hitters <- hitters %>%
+        select(-waste1, -waste2, -waste3,  #remove spacer cols
+               -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid)  #remove unneeded obs
 
+pitchers <- pitchers %>%
+        select(-war, -ra9_war, -player_id)  #remove uneeded obs
+
+#remove obs that will be doubled when joining with nfbc
+hitters <- hitters %>%
+        select(-team)
+pitchers <- pitchers %>%
+        select(-team)
 #get nfbc adp rankings
-
+#join adp rankings with nfbc eligibility
 #Join nfbc data with fangraphs data
 nfbc1 <- nfbc %>%
         left_join(hitters, by = "player") %>%

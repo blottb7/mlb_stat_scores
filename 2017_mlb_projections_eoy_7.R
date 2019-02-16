@@ -1,21 +1,3 @@
-#Code for generalized yearlong category data
-
-#TO DO
-#Z_TOT function: add all possible stats; will need to build in zero's when an individual stat not selected
-#z_stat: allow user define. start ~line 215
-#user selected stats
-#add bench players? how to weight them?
-#what to do when two similar positions (i.e. SS and 2B) have too many players assigned to them
-#best gamma parameter for SB and SB_net
-#I'm going to need two sets of pitcher dfs... one for leagues that require sp and rp, and one that does not have designations, but has inning requirements
-#remove "old" df's as you go along
-
-#Set working directory
-#setwd("~/Desktop/R_projects/baseball/eiflb")  #apple
-#setwd("C:/Users/Ben/Desktop/FF/baseball")  #asus
-#setwd("C:/Users/Ben/Desktop/Daily Fantasy/baseball/eifbl")  #working directory for toshiba laptop
-#setwd("C:/Users/Ben/Desktop/R projects")  #new toshiba working directory
-
 #set for 2019
 setwd("C:/Users/Ben/Desktop/baseball")
 
@@ -28,6 +10,7 @@ library(forecast)
 library(zoo)  #for na.locf fn
 
 #read in data
+        #fangraphs projections
 catchers <- read_excel("projections.xlsx", sheet = 2)
 first_basemen <- read_excel("projections.xlsx", sheet = 3)
 second_basemen <- read_excel("projections.xlsx", sheet = 4)
@@ -35,6 +18,34 @@ third_basemen <- read_excel("projections.xlsx", sheet = 5)
 shortstops <- read_excel("projections.xlsx", sheet = 6)
 outfielders <- read_excel("projections.xlsx", sheet = 7)
 pitchers <- read_excel("projections.xlsx", sheet = 8)
+        #read in nfbc position eligibility
+nfbc <- read_excel("projections.xlsx", sheet = 10)
+
+#select nfbc cols
+nfbc <- nfbc %>%
+        select(1:4)
+
+#CLEAN DATA
+#name cols
+nfbc_names <- c("player", "injury", "pos", "team")
+names(nfbc) <- nfbc_names
+#separate position by comma
+nfbc <- nfbc %>%
+        separate(pos, into = c("pos", "pos1", "pos2", "pos3"), sep = ",")
+#separate and concatenate player names
+                #clean incorrectly used double commas
+nfbc$player <- ifelse(nfbc$player == "Guerrero, Jr., Vladimir", "Guerrero Jr., Vladimir", nfbc$player)
+nfbc$player <- ifelse(nfbc$player == "Tatis, Jr., Fernando", "Tatis Jr., Fernando", nfbc$player)
+#separate player names by comma
+nfbc <- nfbc %>%
+        separate(player, into = c("last_name", "first_name"), sep = ",")
+#paste player names together in the right order
+nfbc$player <- trimws(paste(nfbc$first_name, nfbc$last_name))
+#select columns to keep
+nfbc <- nfbc %>%
+        select(player, injury, pos, pos1, pos2, pos3, team)
+
+#get nfbc adp rankings
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league

@@ -11,13 +11,14 @@ library(zoo)  #for na.locf fn
 
 #read in data
         #fangraphs projections
-catchers <- read_excel("projections.xlsx", sheet = 2)
-first_basemen <- read_excel("projections.xlsx", sheet = 3)
-second_basemen <- read_excel("projections.xlsx", sheet = 4)
-third_basemen <- read_excel("projections.xlsx", sheet = 5)
-shortstops <- read_excel("projections.xlsx", sheet = 6)
-outfielders <- read_excel("projections.xlsx", sheet = 7)
+# catchers <- read_excel("projections.xlsx", sheet = 2)
+# first_basemen <- read_excel("projections.xlsx", sheet = 3)
+# second_basemen <- read_excel("projections.xlsx", sheet = 4)
+# third_basemen <- read_excel("projections.xlsx", sheet = 5)
+# shortstops <- read_excel("projections.xlsx", sheet = 6)
+# outfielders <- read_excel("projections.xlsx", sheet = 7)
 pitchers <- read_excel("projections.xlsx", sheet = 8)
+hitters <- read_excel("projections.xlsx", sheet = 9)
         #read in nfbc position eligibility
 nfbc <- read_excel("projections.xlsx", sheet = 10)
 
@@ -26,6 +27,7 @@ nfbc <- nfbc %>%
         select(1:4)
 
 #CLEAN DATA
+#NFBC
 #name cols
 nfbc_names <- c("player", "injury", "pos", "team")
 names(nfbc) <- nfbc_names
@@ -45,7 +47,39 @@ nfbc$player <- trimws(paste(nfbc$first_name, nfbc$last_name))
 nfbc <- nfbc %>%
         select(player, injury, pos, pos1, pos2, pos3, team)
 
+#FANGRAPHS
+        #Hitter names
+#Use this when ADP included
+# hitter_names <- c("player", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+#                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+#                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
+
+#Use this when ADP not included
+hitter_names <- c("player", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
+                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+                 "waste3", "offense", "defense", "war", "playerid")
+
+names(hitters) <- hitter_names
+
+        #Pitcher names
+#Use this when ADP included
+# names(pitchers) <- c("player", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+#                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+
+#Use this when ADP not included
+pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games", "saves", "ip", "hits", "er", "hra", "so", "bb",
+                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+
+names(pitchers) <- pitcher_names
+
+#Clean fangraphs data
+
 #get nfbc adp rankings
+
+#Join nfbc data with fangraphs data
+nfbc1 <- nfbc %>%
+        left_join(hitters, by = "player") %>%
+        left_join(pitchers, by = "player")
 
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league

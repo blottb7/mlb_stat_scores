@@ -88,12 +88,22 @@ pitchers <- pitchers %>%
 #get nfbc adp rankings
 #join adp rankings with nfbc eligibility
 #Join nfbc data with fangraphs data
-nfbc1 <- nfbc %>%
+nfbc <- nfbc %>%
         left_join(hitters, by = "player") %>%
         left_join(pitchers, by = "player")
 
+#separate nfbc into hitters and pitchers
+hitters1 <- nfbc %>%
+        filter(pos != "P")
+pitchers1 <- nfbc %>%
+        filter(pos == "P")
+
 #user settings
 #number of teams, and number of starters at each position for a given fantasy league
+
+#add total pitcher if and when necessary
+#decide if I need min_pa and min_ip_sp
+
 n_teams <- 15
 starting_catchers <- 2
 starting_first_basemen <- 1
@@ -109,8 +119,8 @@ starting_pitchers <- 6.5
 relief_pitchers <- 2.5
 #bench players
 bench_players <- 7
-#costs
-min_cost <- 3
+# #costs
+# min_cost <- 3
 #plate appearances
 min_pa <- 100  #the minimum number of remaining plate appearances
 min_ip_sp <- 50  #the minimum number of remaining innings pitched for starters

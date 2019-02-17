@@ -141,16 +141,11 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 
 # #pitchers
 n_starting_pitchers <- n_teams * starting_pitchers
-# n_relief_pitchers <- n_teams * relief_pitchers
-# #bench
-# n_bench <- n_teams * bench_players
 
-#FUNCTIONS
-
-#create general form of function for creating z-score for position players
+#Z-Score FUNCTION for hitters
 z_score_hitter <- function(df) {
         
-        #nfbc stats besides sans sb
+        #nfbc stats
         df$hr_z <- round(as.numeric(scale(df$hr)), 3)
         df$runs_z <- round(as.numeric(scale(df$runs)), 3)
         df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
@@ -163,6 +158,14 @@ z_score_hitter <- function(df) {
         df
 }
 
+#Rescale function for hitters
+rescale_hitters <- function(df) {
+        
+        df$hr_score <- df$
+}
+
+#more vars
+mean_pa <- mean(hitters$pa)
 #subset hitters into position groups
 catchers <- hitters %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")

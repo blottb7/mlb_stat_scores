@@ -85,6 +85,7 @@ hitters <- hitters %>%
         select(-team)
 pitchers <- pitchers %>%
         select(-team)
+
 #get nfbc adp rankings
 #join adp rankings with nfbc eligibility
 #Join nfbc data with fangraphs data
@@ -93,17 +94,18 @@ nfbc <- nfbc %>%
         left_join(pitchers, by = "player")
 
 #separate nfbc into hitters and pitchers
-hitters1 <- nfbc %>%
+hitters <- nfbc %>%
         filter(pos != "P")
-pitchers1 <- nfbc %>%
+pitchers <- nfbc %>%
         filter(pos == "P")
 
-#user settings
-#number of teams, and number of starters at each position for a given fantasy league
+#remove hitters and pitchers with 0 or 1 plate and appearance and innings pitched, respectively
+hitters <- hitters %>%
+        filter(pa > 1 | !is.na(pa))
+pitchers <- pitchers %>%
+        filter(ip > 1 | !is.na(pa))
 
-#add total pitcher if and when necessary
-#decide if I need min_pa and min_ip_sp
-
+#numbers of starting players
 n_teams <- 15
 starting_catchers <- 2
 starting_first_basemen <- 1
@@ -115,15 +117,20 @@ starting_middle_infielders <- 1
 starting_corner_infielders <- 1
 starting_designated_hitters <- 1
 #pitchers
-starting_pitchers <- 6.5
-relief_pitchers <- 2.5
-#bench players
-bench_players <- 7
-# #costs
-# min_cost <- 3
+
+#add total pitcher if and when necessary
+
+# starting_pitchers <- 6.5
+# relief_pitchers <- 2.5
+# #bench players
+# bench_players <- 7
+
 #plate appearances
-min_pa <- 100  #the minimum number of remaining plate appearances
-min_ip_sp <- 50  #the minimum number of remaining innings pitched for starters
+
+#decide if I need min_pa and min_ip_sp
+
+# min_pa <- 100  #the minimum number of remaining plate appearances
+# min_ip_sp <- 50  #the minimum number of remaining innings pitched for starters
 
 #staring players per position for a fantasy league
 n_catchers <- n_teams * starting_catchers
@@ -135,53 +142,49 @@ n_outfielders <- n_teams * starting_outfielders
 n_middle_infielders <- n_teams * starting_middle_infielders
 n_corner_infielders <- n_teams * starting_corner_infielders
 n_designated_hitters <- n_teams * starting_designated_hitters
-#pitchers
-n_starting_pitchers <- n_teams * starting_pitchers
-n_relief_pitchers <- n_teams * relief_pitchers
-#bench
-n_bench <- n_teams * bench_players
+
+# #pitchers
+# n_starting_pitchers <- n_teams * starting_pitchers
+# n_relief_pitchers <- n_teams * relief_pitchers
+# #bench
+# n_bench <- n_teams * bench_players
 
 #FUNCTIONS
 #z_score calculation for each selected stat
-z_score <- function(stat){
-        scale(stat)
-}
+# z_score <- function(stat){
+#         scale(stat)
+# }
 
 #create general form of function for creating z-score for position players
 z_score_hitter <- function(df) {
-        #all hitter stats besides sb and sb_net
-        df$hit_z <- round(as.numeric(z_score(df$hit)), 3)
-        df$double_z <- round(as.numeric(z_score(df$double)), 3)
-        df$triple_z <- round(as.numeric(z_score(df$triple)), 3)
-        df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
-        df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
-        df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
-        df$bb_z <- round(as.numeric(z_score(df$bb)), 3)
-        df$so_z <- round(as.numeric(z_score(df$so)), 3)
-        df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
-        df$obp_z <- round(as.numeric(z_score(df$obp)), 3)
-        df$slg_z <- round(as.numeric(z_score(df$slg)), 3)
-        df$ops_z <- round(as.numeric(z_score(df$ops)), 3)
-        df$woba_z <- round(as.numeric(z_score(df$woba)), 3)
-        df$tb_z <- round(as.numeric(z_score(df$tb)), 3)
-        df$rbi_r_z <- round(as.numeric(z_score(df$rbi_r)), 3)
-        df$xbh_z <- round(as.numeric(z_score(df$xbh)), 3)
         
+        #nfbc stats besides sans sb
+        # df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
+        # df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
+        # df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
+        # df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
+        df$hr_z <- round(as.numeric(scale(df$hr)), 3)
+        df$runs_z <- round(as.numeric(scale(df$runs)), 3)
+        df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
+        df$avg_z <- round(as.numeric(scale(df$avg)), 3)
+        df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
+        
+        #return df
         df
 }
-
-#function for user selected hitter stats
-z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
-        z_tot <- (stat1 + stat2 + stat3 + stat4 + stat5 + stat6)
-}
+# hitters1 <- z_score_hitter(hitters)
+# #function for user selected hitter stats
+# z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
+#         z_tot <- (stat1 + stat2 + stat3 + stat4 + stat5 + stat6)
+# }
 
 z_score_starters <- function(df) {
         
         #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
         df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
         df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
-        df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
-        df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
+        #df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
+        #df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
         df$k_z <- round(as.numeric(z_score(df$so)), 3)
         df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
         df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
@@ -235,51 +238,21 @@ z_score_pitchers <- function(df) {
         df
 }
 
-#2018
-# #read in data
-# catchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 2)
-# first_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 3)
-# second_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 4)
-# third_basemen <- read_excel("2018_fangraphs_projections.xlsx", sheet = 5)
-# shortstops <- read_excel("2018_fangraphs_projections.xlsx", sheet = 6)
-# outfielders <- read_excel("2018_fangraphs_projections.xlsx", sheet = 7)
-# pitchers <- read_excel("2018_fangraphs_projections.xlsx", sheet = 8)
-
-#rename position player vars
-#name_vector for 2018 df; does not include column: "adp". Include "adp" if and when necessary.
-#use this when ADP included
-# name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
-#                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-#                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
-
-# #use this when ADP not included
-# name_vector <- c("name", "team", "games", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb", "so",
-#                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-#                  "waste3", "offense", "defense", "war", "playerid")
-# 
-# #assign the name vector to each position df
-# names(catchers) <- name_vector
-# names(first_basemen) <- name_vector
-# names(second_basemen) <- name_vector
-# names(shortstops) <- name_vector
-# names(third_basemen) <- name_vector
-# names(outfielders) <- name_vector
-# 
-# #the playerid reads in different classes depending on the position, so coerse the class to the same
-# catchers$playerid <- as.character(catchers$playerid)
-# first_basemen$playerid <- as.character(first_basemen$playerid)
-# second_basemen$playerid <- as.character(second_basemen$playerid)
-# third_basemen$playerid <- as.character(third_basemen$playerid)
-# shortstops$playerid <- as.character(shortstops$playerid)
-# outfielders$playerid <- as.character(outfielders$playerid)
-
-#create a position var and assign it to each df
-catchers$pos <- "2"
-first_basemen$pos <- "3"
-second_basemen$pos <- "4"
-third_basemen$pos <- "5"
-shortstops$pos <- "6"
-outfielders$pos <- "7"
+#subset hitters into position groups
+catchers <- hitters %>%
+        filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
+first_basemen <- hitters %>%
+        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
+second_basemen <- hitters %>%
+        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
+third_basemen <- hitters %>%
+        filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+shortstops <- hitters %>%
+        filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+outfielders<- hitters %>%
+        filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
+utility <- hitters %>%
+        filter(pos == "UT" | pos1 == "UT" | pos2 == "UT" | pos3 == "UT")
 
 #combine all positions into a df
 hitters <- catchers %>%
@@ -290,64 +263,20 @@ hitters <- catchers %>%
         full_join(outfielders) %>%
         filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
-# #set positions for hitters in my 16 team league
-# hitters$pos <- ifelse(hitters$name == "Ian Desmond", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Rhys Hoskins", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Cody Bellinger", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Eric Thames", 7, hitters$pos)  #FG has him marked only has "3"
-# hitters$pos <- ifelse(hitters$name == "Matt Olson", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jose Ramirez", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Trey Mancini", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Brandon Moss", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Joey Gallo", 3, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Javier Baez", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Ian Happ", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jean Segura", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Wilmer Flores", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jedd Gyorko", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jose Peraza", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Matt Carpenter", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Josh Harrison", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Eduardo Nunez", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Starlin Castro", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jonathan Villar", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Tim Beckham", 4, hitters$pos)
-# # hitters$pos <- ifelse(hitters$name == "Ben Zobrist", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Ryan McMahon", 3, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Adam Frazier", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Brad Miller", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Brandon Drury", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Chad Pinder", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Chris Owings", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Colin Moran", 3, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Derek Dietrich", 5, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "J.P. Crawford", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Johan Camargo", 5, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jose Martinez", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Jose Pirela", 4, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Luis Valbuena", 3, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Steve Pearce", 7, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Travis Shaw", 5, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Austin Barnes", 2, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Dixon Machado", 4, hitters$pos)
-# 
-# #in-season position updates
-# hitters$pos <- ifelse(hitters$name == "Christian Villanueva", 6, hitters$pos)
-# hitters$pos <- ifelse(hitters$name == "Anthony Rizzo", 4, hitters$pos)
 
 #hitters standard 12 team
 #remove rows where the name AND position are duplicated
 hitters <- unique(hitters)
 
-hitters <- hitters %>%
-        #build stat projections for all missing stats, i.e. sb_net
-        mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
-               rbi_r = rbi + runs, #rbis plus runs
-               xbh = double + triple + hr,  #extra base hits
-               sb_net = sb - cs) %>%  #stolen bases - caught stealing
-        select(-waste1, -waste2, -waste3,  #remove spacer cols
-               -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
-        arrange(name)
+# hitters <- hitters %>%
+#         #build stat projections for all missing stats, i.e. sb_net
+#         mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
+#                rbi_r = rbi + runs, #rbis plus runs
+#                xbh = double + triple + hr,  #extra base hits
+#                sb_net = sb - cs) %>%  #stolen bases - caught stealing
+#         select(-waste1, -waste2, -waste3,  #remove spacer cols
+#                -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
+#         arrange(name)
 
 #keep "regulars", those players who are going to start more days than not
 hitters_reg <- hitters %>%

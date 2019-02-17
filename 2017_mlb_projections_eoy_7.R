@@ -302,12 +302,12 @@ utility <- hitters %>%
 #So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
         #Put another way, 5 sb are equal to about 16 home runs, which is off
                 #Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
-catchers1 <- z_score_hitter(catchers) %>% arrange(desc(z_total))
-first_basemen1 <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
-second_basemen1 <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
-third_basemen1 <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
-shortstops1 <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
-outfielders1 <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
+catchers <- z_score_hitter(catchers) %>% arrange(desc(z_total))
+first_basemen <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
+second_basemen <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
+third_basemen <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
+shortstops <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
+outfielders <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
 
 #select only the z_scores I want for the chosen league
 #run for each position

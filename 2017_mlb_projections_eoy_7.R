@@ -166,6 +166,9 @@ rescale_hitters <- function(df) {
 }
 
 #WEIGHT HITTER RATIO STATS
+
+#GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
+
 #more vars
 mean_pa <- mean(hitters$pa)
 #subset hitters into position groups

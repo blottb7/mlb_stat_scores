@@ -158,12 +158,14 @@ z_score_hitter <- function(df) {
         df
 }
 
+#SCALE HITTER STATS
 #Rescale function for hitters
 rescale_hitters <- function(df) {
         
         df$hr_score <- df$
 }
 
+#WEIGHT HITTER RATIO STATS
 #more vars
 mean_pa <- mean(hitters$pa)
 #subset hitters into position groups

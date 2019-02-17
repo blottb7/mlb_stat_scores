@@ -6,8 +6,9 @@ library(readxl)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
-library(forecast)
+library(forecast)  #for BoxCox
 library(zoo)  #for na.locf fn
+library(scales)  #for rescale()
 
 #read in data
         #fangraphs projections
@@ -80,14 +81,21 @@ hitters <- hitters %>%
 pitchers <- pitchers %>%
         select(-war, -ra9_war, -player_id)  #remove uneeded obs
 
-#remove obs that will be doubled when joining with nfbc
+#remove obs that will be duplicated when joining with nfbc
 hitters <- hitters %>%
         select(-team)
 pitchers <- pitchers %>%
         select(-team)
 
+#remove hitters and pitchers with 0 or 1 plate and appearance and innings pitched, respectively
+hitters <- hitters %>%
+        filter(pa > 1)
+pitchers <- pitchers %>%
+        filter(ip > 1)
+
 #get nfbc adp rankings
 #join adp rankings with nfbc eligibility
+
 #Join nfbc data with fangraphs data
 nfbc <- nfbc %>%
         left_join(hitters, by = "player") %>%
@@ -95,15 +103,9 @@ nfbc <- nfbc %>%
 
 #separate nfbc into hitters and pitchers
 hitters <- nfbc %>%
-        filter(pos != "P")
+        filter(pos != "P" & !is.na(pa))
 pitchers <- nfbc %>%
-        filter(pos == "P")
-
-#remove hitters and pitchers with 0 or 1 plate and appearance and innings pitched, respectively
-hitters <- hitters %>%
-        filter(pa > 1 | !is.na(pa))
-pitchers <- pitchers %>%
-        filter(ip > 1 | !is.na(pa))
+        filter(pos == "P" & !is.na(ip))
 
 #numbers of starting players
 n_teams <- 15
@@ -159,19 +161,18 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 z_score_hitter <- function(df) {
         
         #nfbc stats besides sans sb
-        # df$hr_z <- round(as.numeric(z_score(df$hr)), 3)
-        # df$runs_z <- round(as.numeric(z_score(df$runs)), 3)
-        # df$rbi_z <- round(as.numeric(z_score(df$rbi)), 3)
-        # df$avg_z <- round(as.numeric(z_score(df$avg)), 3)
         df$hr_z <- round(as.numeric(scale(df$hr)), 3)
         df$runs_z <- round(as.numeric(scale(df$runs)), 3)
         df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
         df$avg_z <- round(as.numeric(scale(df$avg)), 3)
         df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
         
+        df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z
+        
         #return df
         df
 }
+
 # hitters1 <- z_score_hitter(hitters)
 # #function for user selected hitter stats
 # z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
@@ -254,19 +255,19 @@ outfielders<- hitters %>%
 utility <- hitters %>%
         filter(pos == "UT" | pos1 == "UT" | pos2 == "UT" | pos3 == "UT")
 
-#combine all positions into a df
-hitters <- catchers %>%
-        full_join(first_basemen) %>%
-        full_join(second_basemen) %>%
-        full_join(third_basemen) %>%
-        full_join(shortstops) %>%
-        full_join(outfielders) %>%
-        filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
+# #combine all positions into a df
+# hitters <- catchers %>%
+#         full_join(first_basemen) %>%
+#         full_join(second_basemen) %>%
+#         full_join(third_basemen) %>%
+#         full_join(shortstops) %>%
+#         full_join(outfielders) %>%
+#         filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
 
 
 #hitters standard 12 team
 #remove rows where the name AND position are duplicated
-hitters <- unique(hitters)
+# hitters <- unique(hitters)
 
 # hitters <- hitters %>%
 #         #build stat projections for all missing stats, i.e. sb_net
@@ -278,31 +279,35 @@ hitters <- unique(hitters)
 #                -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
 #         arrange(name)
 
-#keep "regulars", those players who are going to start more days than not
-hitters_reg <- hitters %>%
-        filter(pa >= min_pa) %>%  #will not want players with less than half a season of at bats, so filter for this
-        arrange(name)
+# #keep "regulars", those players who are going to start more days than not
+# hitters_reg <- hitters %>%
+#         filter(pa >= min_pa) %>%  #will not want players with less than half a season of at bats, so filter for this
+#         arrange(name)
 
-#do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
-#box-cox transformation of sb and sb_net; a normal distribution is more useful
-hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
-hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
+# #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
+# #box-cox transformation of sb and sb_net; a normal distribution is more useful
+# hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
+# hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
 
-#separate hitters by position
-catchers1 <- hitters_reg %>% filter(pos == "2")
-first_basemen1 <- hitters_reg %>% filter(pos == "3")
-second_basemen1 <- hitters_reg %>% filter(pos == "4")
-third_basemen1 <- hitters_reg %>% filter(pos == "5")
-shortstops1 <- hitters_reg %>% filter(pos == "6")
-outfielders1 <- hitters_reg %>% filter(pos == "7")
+# #separate hitters by position
+# catchers1 <- hitters_reg %>% filter(pos == "2")
+# first_basemen1 <- hitters_reg %>% filter(pos == "3")
+# second_basemen1 <- hitters_reg %>% filter(pos == "4")
+# third_basemen1 <- hitters_reg %>% filter(pos == "5")
+# shortstops1 <- hitters_reg %>% filter(pos == "6")
+# outfielders1 <- hitters_reg %>% filter(pos == "7")
 
 #run z-score pos on each position df
-catchers1 <- z_score_hitter(catchers1)
-first_basemen1 <- z_score_hitter(first_basemen1)
-second_basemen1 <- z_score_hitter(second_basemen1)
-third_basemen1 <- z_score_hitter(third_basemen1)
-shortstops1 <- z_score_hitter(shortstops1)
-outfielders1 <- z_score_hitter(outfielders1)
+
+#So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
+        #Put another way, 5 sb are equal to about 16 home runs, which is off
+                #Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
+catchers1 <- z_score_hitter(catchers) %>% arrange(desc(z_total))
+first_basemen1 <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
+second_basemen1 <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
+third_basemen1 <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
+shortstops1 <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
+outfielders1 <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
 
 #select only the z_scores I want for the chosen league
 #run for each position

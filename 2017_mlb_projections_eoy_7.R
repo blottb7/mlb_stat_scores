@@ -122,7 +122,7 @@ starting_designated_hitters <- 1
 
 #add total pitcher if and when necessary
 
-# starting_pitchers <- 6.5
+starting_pitchers <- 9
 # relief_pitchers <- 2.5
 # #bench players
 # bench_players <- 7
@@ -146,16 +146,12 @@ n_corner_infielders <- n_teams * starting_corner_infielders
 n_designated_hitters <- n_teams * starting_designated_hitters
 
 # #pitchers
-# n_starting_pitchers <- n_teams * starting_pitchers
+n_starting_pitchers <- n_teams * starting_pitchers
 # n_relief_pitchers <- n_teams * relief_pitchers
 # #bench
 # n_bench <- n_teams * bench_players
 
 #FUNCTIONS
-#z_score calculation for each selected stat
-# z_score <- function(stat){
-#         scale(stat)
-# }
 
 #create general form of function for creating z-score for position players
 z_score_hitter <- function(df) {
@@ -172,12 +168,6 @@ z_score_hitter <- function(df) {
         #return df
         df
 }
-
-# hitters1 <- z_score_hitter(hitters)
-# #function for user selected hitter stats
-# z_total <- function(stat1, stat2, stat3, stat4, stat5, stat6) {
-#         z_tot <- (stat1 + stat2 + stat3 + stat4 + stat5 + stat6)
-# }
 
 # z_score_starters <- function(df) {
 #         
@@ -218,26 +208,6 @@ z_score_hitter <- function(df) {
 #         df
 # }
 # 
-# #METHOD 2: starters and relievers in same group
-# z_score_pitchers <- function(df) {
-#         
-#         #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
-#         df$wins_z <- round(as.numeric(z_score(df$wins)), 3)
-#         df$saves_z <- round(as.numeric(z_score(df$saves)), 3)
-#         df$era_z <- round(as.numeric(z_score(df$era) * -1), 3)
-#         df$ip_z <- round(as.numeric(z_score(df$ip)), 3)
-#         df$hra_z <- round(as.numeric(z_score(df$hra) * -1), 3)
-#         df$k_z <- round(as.numeric(z_score(df$so)), 3)
-#         df$whip_z <- round(as.numeric(z_score(df$whip) * -1), 3)
-#         df$k_rate_z <- round(as.numeric(z_score(df$k_rate)), 3)
-#         df$bb_rate_z <- round(as.numeric(z_score(df$bb_rate) * -1), 3)
-#         df$fip_z <- round(as.numeric(z_score(df$fip) * -1), 3)
-#         df$kbb_rate_z <- round(as.numeric(z_score(df$kbb)), 3)
-#         df$avg_p_z <- round(as.numeric(z_score(df$avg_p) * -1), 3)
-#         df$hra_rate_z <- round(as.numeric(z_score(df$hra_rate) * -1), 3)
-#         #   
-#         df
-# }
 
 #subset hitters into position groups
 catchers <- hitters %>%
@@ -254,50 +224,6 @@ outfielders<- hitters %>%
         filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
 utility <- hitters %>%
         filter(pos == "UT" | pos1 == "UT" | pos2 == "UT" | pos3 == "UT")
-
-# #combine all positions into a df
-# hitters <- catchers %>%
-#         full_join(first_basemen) %>%
-#         full_join(second_basemen) %>%
-#         full_join(third_basemen) %>%
-#         full_join(shortstops) %>%
-#         full_join(outfielders) %>%
-#         filter(pa > 1)  #get this done out of the gate; removes players who have a "token" projection (not expected to play in MLB)
-
-
-#hitters standard 12 team
-#remove rows where the name AND position are duplicated
-# hitters <- unique(hitters)
-
-# hitters <- hitters %>%
-#         #build stat projections for all missing stats, i.e. sb_net
-#         mutate(tb = hit + double + 2 * triple + 3 * hr,  #total bases
-#                rbi_r = rbi + runs, #rbis plus runs
-#                xbh = double + triple + hr,  #extra base hits
-#                sb_net = sb - cs) %>%  #stolen bases - caught stealing
-#         select(-waste1, -waste2, -waste3,  #remove spacer cols
-#                -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%
-#         arrange(name)
-
-# #keep "regulars", those players who are going to start more days than not
-# hitters_reg <- hitters %>%
-#         filter(pa >= min_pa) %>%  #will not want players with less than half a season of at bats, so filter for this
-#         arrange(name)
-
-# #do SB related stats across entire population; don't want position-relative scores for low sb positions like catcher.
-# #box-cox transformation of sb and sb_net; a normal distribution is more useful
-# hitters_reg$sb_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb, .45))), 3)
-# hitters_reg$sb_net_z <- round(as.numeric(z_score(BoxCox(hitters_reg$sb_net, .45))), 3)
-
-# #separate hitters by position
-# catchers1 <- hitters_reg %>% filter(pos == "2")
-# first_basemen1 <- hitters_reg %>% filter(pos == "3")
-# second_basemen1 <- hitters_reg %>% filter(pos == "4")
-# third_basemen1 <- hitters_reg %>% filter(pos == "5")
-# shortstops1 <- hitters_reg %>% filter(pos == "6")
-# outfielders1 <- hitters_reg %>% filter(pos == "7")
-
-#run z-score pos on each position df
 
 #So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
         #Put another way, 5 sb are equal to about 16 home runs, which is off
@@ -370,7 +296,46 @@ all_hitters1 <- all_hitters %>%
         mutate(z_pos = round(z_total - z_pos_mean, 4)) %>%
         arrange(desc(z_pos))
 
+#METHOD 2: starters and relievers in same group
+z_score_pitchers <- function(df) {
 
+        #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
+        df$wins_z <- round(as.numeric(scale(df$wins)), 3)
+        df$saves_z <- round(as.numeric(scale(df$saves)), 3)
+        df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
+        #df$ip_z <- round(as.numeric(scale(df$ip)), 3)
+        #df$hra_z <- round(as.numeric(scale(df$hra) * -1), 3)
+        df$so_z <- round(as.numeric(scale(df$so.p)), 3)
+        df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
+        #df$k_rate_z <- round(as.numeric(scale(df$k_rate)), 3)
+        #df$bb_rate_z <- round(as.numeric(scale(df$bb_rate) * -1), 3)
+        #df$fip_z <- round(as.numeric(scale(df$fip) * -1), 3)
+        #df$kbb_rate_z <- round(as.numeric(scale(df$kbb)), 3)
+        #df$avg_p_z <- round(as.numeric(scale(df$avg_p) * -1), 3)
+        #df$hra_rate_z <- round(as.numeric(scale(df$hra_rate) * -1), 3)
+        
+        df$z_total <- df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
+        #
+        df
+}
+
+pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
+
+#pitchers rescale function
+rescale_pitchers <- function(df) {
+        
+        df$wins_pts <- rescale(df$wins_z)
+        df$saves_pts <- rescale(df$saves_z)
+        df$era_pts <- rescale(rescale(df$era_z) * df$ip / mean(df$ip))
+        df$so_pts <- rescale(df$so_z)
+        df$whip_pts <- rescale(rescale(df$whip_z) * df$ip / mean(df$ip))
+        
+        df$pts <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
+        
+        df
+}
+
+pitchers2 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts))
 # #run for each position
 # df <- catchers1  #set dataframe var
 # stat1 <- df["hr_z"]

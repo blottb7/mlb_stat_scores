@@ -299,21 +299,12 @@ all_hitters1 <- all_hitters %>%
 #METHOD 2: starters and relievers in same group
 z_score_pitchers <- function(df) {
 
-        #wins, era, saves, ip, hr (allowed), so, whip, k/9, bb/9, fip, k/bb, avg, hld (missing), qs (missing)
         df$wins_z <- round(as.numeric(scale(df$wins)), 3)
         df$saves_z <- round(as.numeric(scale(df$saves)), 3)
         df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
-        #df$ip_z <- round(as.numeric(scale(df$ip)), 3)
-        #df$hra_z <- round(as.numeric(scale(df$hra) * -1), 3)
         df$so_z <- round(as.numeric(scale(df$so.p)), 3)
         df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
-        #df$k_rate_z <- round(as.numeric(scale(df$k_rate)), 3)
-        #df$bb_rate_z <- round(as.numeric(scale(df$bb_rate) * -1), 3)
-        #df$fip_z <- round(as.numeric(scale(df$fip) * -1), 3)
-        #df$kbb_rate_z <- round(as.numeric(scale(df$kbb)), 3)
-        #df$avg_p_z <- round(as.numeric(scale(df$avg_p) * -1), 3)
-        #df$hra_rate_z <- round(as.numeric(scale(df$hra_rate) * -1), 3)
-        
+
         df$z_total <- df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
         #
         df
@@ -342,6 +333,37 @@ pitchers3 <- pitchers2[1:n_starting_pitchers,]
 pitchers4 <- z_score_pitchers(pitchers3) %>% arrange(desc(z_total))
 
 pitchers5 <- rescale_pitchers(pitchers4) %>% arrange(desc(pts))
+
+#combine pitchers and catchers
+all_players <- all_hitters1 %>%
+        bind_rows(pitchers5)
+
+#set NA's to zero for stat categories
+all_players$
+
+#function for all nfbc stat categories
+
+z_score_all <- function(df) {
+        
+        df$hr_z <- round(as.numeric(scale(df$hr)), 3)
+        df$runs_z <- round(as.numeric(scale(df$runs)), 3)
+        df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
+        df$avg_z <- round(as.numeric(scale(df$avg)), 3)
+        df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
+        
+        df$wins_z <- round(as.numeric(scale(df$wins)), 3)
+        df$saves_z <- round(as.numeric(scale(df$saves)), 3)
+        df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
+        df$so_z <- round(as.numeric(scale(df$so.p)), 3)
+        df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
+        
+        df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z + df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
+        
+        df
+}
+
+all_players1 <- z_score_all(all_players) %>% arrange(desc(z_total))
+
 # #run for each position
 # df <- catchers1  #set dataframe var
 # stat1 <- df["hr_z"]

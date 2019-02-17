@@ -302,141 +302,168 @@ utility <- hitters %>%
 #So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
         #Put another way, 5 sb are equal to about 16 home runs, which is off
                 #Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
-catchers <- z_score_hitter(catchers) %>% arrange(desc(z_total))
-first_basemen <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
-second_basemen <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
-third_basemen <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
-shortstops <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
-outfielders <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
+catchers1 <- z_score_hitter(catchers) %>% arrange(desc(z_total))
+first_basemen1 <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
+second_basemen1 <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
+third_basemen1 <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
+shortstops1 <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
+outfielders1 <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
 
-#select only the z_scores I want for the chosen league
-#run for each position
-df <- catchers1  #set dataframe var
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-#run for catchers
-catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
-catchers2 <- catchers1 %>%
-        arrange(desc(z_tot))  #arrange by descending z_tot
-catchers2 <- catchers2[1:n_catchers,]  #keep only the amount of catchers warranted for the league
-
-#repeat this process for each position
-#first basemen
-df <- first_basemen1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-first_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-first_basemen2 <- first_basemen1 %>%
-        arrange(desc(z_tot))
-first_basemen2 <- first_basemen2[1:n_first_basemen,]
-
-#second basemen
-df <- second_basemen1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-second_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-second_basemen2 <- second_basemen1 %>%
-        arrange(desc(z_tot))
-second_basemen2 <- second_basemen2[1:n_second_basemen,]
-
-#third basemen
-df <- third_basemen1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-third_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-third_basemen2 <- third_basemen1 %>%
-        arrange(desc(z_tot))
-third_basemen2 <- third_basemen2[1:n_third_basemen,]
-
-#shortstops
-df <- shortstops1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-shortstops1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-shortstops2 <- shortstops1 %>%
-        arrange(desc(z_tot))
-shortstops2 <- shortstops2[1:n_shortstops,]
-
-#outfielders
-df <- outfielders1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-outfielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-outfielders2 <- outfielders1 %>%
-        arrange(desc(z_tot))
-outfielders2 <- outfielders2[1:n_outfielders,]
+#select the top from each position
+catchers2 <- catchers[1:n_catchers,]
+first_basemen2 <- first_basemen1[1:n_first_basemen,]
+second_basemen2 <- second_basemen1[1:n_second_basemen,]
+third_basemen2 <- third_basemen1[1:n_third_basemen,]
+shortstops2 <- shortstops1[1:n_shortstops,]
+outfielders2 <- outfielders1[1:n_outfielders,]
 
 #create middle infielders df
 middle_infielders <- second_basemen1 %>%
         bind_rows(shortstops1) %>%  #combine ALL QUALIFIED (300+ PA) SS and 2B-men
-        anti_join(second_basemen2, by = "name") %>%  #remove the 2B already selected
-        anti_join(shortstops2, by = "name")  #remove the SS already selected
+        anti_join(second_basemen2, by = "player") %>%  #remove the 2B already selected
+        anti_join(shortstops2, by = "player")  #remove the SS already selected
 #run z-score on middle infielders after removing already used players
-middle_infielders1 <- z_score_hitter(middle_infielders)
+middle_infielders1 <- z_score_hitter(middle_infielders) %>% arrange(desc(z_total))
 
-#run selection process on middle infielders
-df <- middle_infielders1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
-
-middle_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-middle_infielders2 <- middle_infielders1 %>%
-        arrange(desc(z_tot))
-middle_infielders2 <- middle_infielders2[1:n_middle_infielders,]
-
-#run same process on corner infielders as middle infielders
+# #run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
         bind_rows(third_basemen1) %>%
-        anti_join(first_basemen2, by = "name") %>%
-        anti_join(third_basemen2, by = "name")
+        anti_join(first_basemen2, by = "player") %>%
+        anti_join(third_basemen2, by = "player")
 corner_infielders1 <- z_score_hitter(corner_infielders)
 
-df <- corner_infielders1
-stat1 <- df["hr_z"]
-stat2 <- df["runs_z"]
-stat3 <- df["rbi_z"]
-stat4 <- df["avg_z"]
-stat5 <- df["sb_net_z"]
-stat6 <- df["ops_z"]
+middle_infielders2 <- middle_infielders1[1:n_middle_infielders,]
+corner_infielders2 <- corner_infielders1[1:n_corner_infielders,]
+# 
 
-corner_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
-corner_infielders2 <- corner_infielders1 %>%
-        arrange(desc(z_tot))
-corner_infielders2 <- corner_infielders2[1:n_corner_infielders,]
+# #select only the z_scores I want for the chosen league
+# #run for each position
+# df <- catchers1  #set dataframe var
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# #run for catchers
+# catchers1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)  #create z_tot
+# catchers2 <- catchers1 %>%
+#         arrange(desc(z_tot))  #arrange by descending z_tot
+# catchers2 <- catchers2[1:n_catchers,]  #keep only the amount of catchers warranted for the league
+# 
+# #repeat this process for each position
+# #first basemen
+# df <- first_basemen1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# first_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# first_basemen2 <- first_basemen1 %>%
+#         arrange(desc(z_tot))
+# first_basemen2 <- first_basemen2[1:n_first_basemen,]
+# 
+# #second basemen
+# df <- second_basemen1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# second_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# second_basemen2 <- second_basemen1 %>%
+#         arrange(desc(z_tot))
+# second_basemen2 <- second_basemen2[1:n_second_basemen,]
+# 
+# #third basemen
+# df <- third_basemen1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# third_basemen1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# third_basemen2 <- third_basemen1 %>%
+#         arrange(desc(z_tot))
+# third_basemen2 <- third_basemen2[1:n_third_basemen,]
+# 
+# #shortstops
+# df <- shortstops1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# shortstops1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# shortstops2 <- shortstops1 %>%
+#         arrange(desc(z_tot))
+# shortstops2 <- shortstops2[1:n_shortstops,]
+# 
+# #outfielders
+# df <- outfielders1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# outfielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# outfielders2 <- outfielders1 %>%
+#         arrange(desc(z_tot))
+# outfielders2 <- outfielders2[1:n_outfielders,]
+# 
+# #create middle infielders df
+# middle_infielders <- second_basemen1 %>%
+#         bind_rows(shortstops1) %>%  #combine ALL QUALIFIED (300+ PA) SS and 2B-men
+#         anti_join(second_basemen2, by = "name") %>%  #remove the 2B already selected
+#         anti_join(shortstops2, by = "name")  #remove the SS already selected
+# #run z-score on middle infielders after removing already used players
+# middle_infielders1 <- z_score_hitter(middle_infielders)
+# 
+# #run selection process on middle infielders
+# df <- middle_infielders1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# middle_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# middle_infielders2 <- middle_infielders1 %>%
+#         arrange(desc(z_tot))
+# middle_infielders2 <- middle_infielders2[1:n_middle_infielders,]
+# 
+# #run same process on corner infielders as middle infielders
+# corner_infielders <- first_basemen1 %>%
+#         bind_rows(third_basemen1) %>%
+#         anti_join(first_basemen2, by = "name") %>%
+#         anti_join(third_basemen2, by = "name")
+# corner_infielders1 <- z_score_hitter(corner_infielders)
+# 
+# df <- corner_infielders1
+# stat1 <- df["hr_z"]
+# stat2 <- df["runs_z"]
+# stat3 <- df["rbi_z"]
+# stat4 <- df["avg_z"]
+# stat5 <- df["sb_net_z"]
+# stat6 <- df["ops_z"]
+# 
+# corner_infielders1["z_tot"] <- z_total(stat1, stat2, stat3, stat4, stat5, stat6)
+# corner_infielders2 <- corner_infielders1 %>%
+#         arrange(desc(z_tot))
+# corner_infielders2 <- corner_infielders2[1:n_corner_infielders,]
 
 #combine all selected players
 hitters_no_dh <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,

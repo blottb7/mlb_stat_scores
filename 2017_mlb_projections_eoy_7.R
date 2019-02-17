@@ -143,7 +143,7 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 n_starting_pitchers <- n_teams * starting_pitchers
 
 #Z-Score FUNCTION for hitters
-z_score_hitter <- function(df) {
+z_score_hitters <- function(df) {
         
         #nfbc stats
         df$hr_z <- round(as.numeric(scale(df$hr)), 3)
@@ -162,9 +162,18 @@ z_score_hitter <- function(df) {
 #Rescale function for hitters
 rescale_hitters <- function(df) {
         
-        df$hr_score <- df$
+        df$hr_pts <- rescale(df$hr_z)
+        df$runs_pts <- rescale(df$runs_z)
+        df$rbi_pts <- rescale(df$rbi_z)
+        df$avg_pts <- rescale(df$avg_z, to = c(0, 2/3))
+        df$sb_pts <- rescale(df$sb_z)
+        
+        df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
+        
+        df
 }
 
+hitters1 <- rescale_hitters(z_score_hitters(hitters)) %>% arrange(desc(pts_total))
 #WEIGHT HITTER RATIO STATS
 
 #GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
@@ -190,12 +199,17 @@ utility <- hitters %>%
 #So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
         #Put another way, 5 sb are equal to about 16 home runs, which is off
                 #Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
-catchers1 <- z_score_hitter(catchers) %>% arrange(desc(z_total))
-first_basemen1 <- z_score_hitter(first_basemen) %>% arrange(desc(z_total))
-second_basemen1 <- z_score_hitter(second_basemen) %>% arrange(desc(z_total))
-third_basemen1 <- z_score_hitter(third_basemen) %>% arrange(desc(z_total))
-shortstops1 <- z_score_hitter(shortstops) %>% arrange(desc(z_total))
-outfielders1 <- z_score_hitter(outfielders) %>% arrange(desc(z_total))
+catchers1 <- z_score_hitters(catchers) %>% arrange(desc(z_total))
+first_basemen1 <- z_score_hitters(first_basemen) %>% arrange(desc(z_total))
+second_basemen1 <- z_score_hitters(second_basemen) %>% arrange(desc(z_total))
+third_basemen1 <- z_score_hitters(third_basemen) %>% arrange(desc(z_total))
+shortstops1 <- z_score_hitters(shortstops) %>% arrange(desc(z_total))
+outfielders1 <- z_score_hitters(outfielders) %>% arrange(desc(z_total))
+
+#play around with rescaling
+catchers1 <- rescale_hitters(catchers1) %>% arrange(desc(pts_total))
+
+#weight batting average
 
 #select the top from each position
 catchers2 <- catchers1[1:n_catchers,]
@@ -211,14 +225,14 @@ middle_infielders <- second_basemen1 %>%
         anti_join(second_basemen2, by = "player") %>%  #remove the 2B already selected
         anti_join(shortstops2, by = "player")  #remove the SS already selected
 #run z-score on middle infielders after removing already used players
-middle_infielders1 <- z_score_hitter(middle_infielders) %>% arrange(desc(z_total))
+middle_infielders1 <- z_score_hitters(middle_infielders) %>% arrange(desc(z_total))
 
 # #run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
         bind_rows(third_basemen1) %>%
         anti_join(first_basemen2, by = "player") %>%
         anti_join(third_basemen2, by = "player")
-corner_infielders1 <- z_score_hitter(corner_infielders)
+corner_infielders1 <- z_score_hitters(corner_infielders)
 
 middle_infielders2 <- middle_infielders1[1:n_middle_infielders,]
 corner_infielders2 <- corner_infielders1[1:n_corner_infielders,]
@@ -231,7 +245,7 @@ position_players <- bind_rows(catchers2, first_basemen2, second_basemen2, third_
 hitters1 <- hitters %>%
         anti_join(position_players, by = "player")
 
-hitters1 <- z_score_hitter(hitters1) %>% arrange(desc(z_total))
+hitters1 <- z_score_hitters(hitters1) %>% arrange(desc(z_total))
 
 utility_players <- hitters1[1:n_designated_hitters,]
 
@@ -239,7 +253,7 @@ utility_players <- hitters1[1:n_designated_hitters,]
 all_hitters <- position_players %>%
         bind_rows(utility_players)
 
-all_hitters <- z_score_hitter(all_hitters) %>% arrange(desc(z_total))
+all_hitters <- z_score_hitters(all_hitters) %>% arrange(desc(z_total))
 
 #remove unwanted dfs
 rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1, first_basemen2, middle_infielders1, middle_infielders2,

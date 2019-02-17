@@ -336,6 +336,12 @@ rescale_pitchers <- function(df) {
 }
 
 pitchers2 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts))
+
+pitchers3 <- pitchers2[1:n_starting_pitchers,]
+
+pitchers4 <- z_score_pitchers(pitchers3) %>% arrange(desc(z_total))
+
+pitchers5 <- rescale_pitchers(pitchers4) %>% arrange(desc(pts))
 # #run for each position
 # df <- catchers1  #set dataframe var
 # stat1 <- df["hr_z"]

@@ -343,16 +343,34 @@ position_players <- bind_rows(catchers2, first_basemen2, second_basemen2, third_
 hitters1 <- hitters %>%
         anti_join(position_players, by = "player")
 
-hitters2 <- z_score_hitter(hitters1) %>% arrange(desc(z_total))
+hitters1 <- z_score_hitter(hitters1) %>% arrange(desc(z_total))
 
-utility_players <- hitters2[1:n_designated_hitters,]
+utility_players <- hitters1[1:n_designated_hitters,]
 
 #combine utility players with position players
 all_hitters <- position_players %>%
         bind_rows(utility_players)
 
-all_hitters1 <- z_score_hitter(all_hitters) %>% arrange(desc(z_total))
-# #select only the z_scores I want for the chosen league
+all_hitters <- z_score_hitter(all_hitters) %>% arrange(desc(z_total))
+
+#remove unwanted dfs
+rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1, first_basemen2, middle_infielders1, middle_infielders2,
+   outfielders1, outfielders2, second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1, third_basemen2, position_players, utility_players)
+
+#position relative z_score
+#generate a mean z_score for each position across all players at the position in the "league"
+z_pos_means <- all_hitters %>%
+        group_by(pos) %>%
+        summarize(z_pos_mean = round(mean(z_total), 2)) %>%
+        arrange(desc(z_pos_mean))
+
+#join the hitters with the mean z_score/position: z_pos
+all_hitters1 <- all_hitters %>%
+        left_join(z_pos_means, by = "pos") %>%
+        mutate(z_pos = round(z_total - z_pos_mean, 4)) %>%
+        arrange(desc(z_pos))
+
+
 # #run for each position
 # df <- catchers1  #set dataframe var
 # stat1 <- df["hr_z"]

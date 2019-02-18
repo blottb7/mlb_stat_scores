@@ -260,10 +260,11 @@ corner_infielders <- first_basemen1 %>%
         bind_rows(third_basemen1) %>%
         anti_join(first_basemen2, by = "player") %>%
         anti_join(third_basemen2, by = "player")
+#run functions
 corner_infielders1 <- z_score_hitters(corner_infielders)
 corner_infielders1 <- rescale_hitters(corner_infielders1) %>% arrange(desc(pts_total))
 corner_infielders1 <- weight_stats(corner_infielders1, hitters) %>% arrange(desc(pts_total))
-
+#subset middle and corner infielders
 middle_infielders2 <- middle_infielders1[1:n_middle_infielders,]
 corner_infielders2 <- corner_infielders1[1:n_corner_infielders,]
 #

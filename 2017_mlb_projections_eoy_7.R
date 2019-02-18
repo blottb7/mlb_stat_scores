@@ -142,6 +142,7 @@ n_designated_hitters <- n_teams * starting_designated_hitters
 # #pitchers
 n_starting_pitchers <- n_teams * starting_pitchers
 
+#FUNCTIONS
 #Z-Score FUNCTION for hitters
 z_score_hitters <- function(df) {
         
@@ -169,6 +170,22 @@ rescale_hitters <- function(df) {
         df$sb_pts <- round(rescale(df$sb_z), 3)
         
         df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
+        
+        df
+}
+
+#WEIGHT HITTER RATIO STATS
+#function for position weighting
+weight_stats <- function(df, df_pop) {  #take in two args, the sample we are interested in (df), and the population (df_pop)
+        
+        #weight a stat for the position group by the entire population of eligible hitters
+        df$hr_pts_weighted <- round(df$hr_pts * mean(df$hr) / mean(df_pop$hr), 3)
+        df$runs_pts_weighted <- round(df$runs_pts * mean(df$runs) / mean(df_pop$runs), 3)
+        df$rbi_pts_weighted <- round(df$rbi_pts * mean(df$rbi) / mean(df_pop$rbi), 3)
+        df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) / mean(df_pop$ab), 3)
+        df$sb_pts_weighted <- round(df$sb_pts * mean(df$sb) / mean(df_pop$sb), 3)
+        
+        df$weighted_pts_total <- round(df$hr_pts_weighted + df$runs_pts_weighted + df$rbi_pts_weighted + df$avg_pts_weighted + df$sb_pts_weighted, 3)
         
         df
 }
@@ -204,32 +221,21 @@ third_basemen1 <- z_score_hitters(third_basemen) %>% arrange(desc(z_total))
 shortstops1 <- z_score_hitters(shortstops) %>% arrange(desc(z_total))
 outfielders1 <- z_score_hitters(outfielders) %>% arrange(desc(z_total))
 
-# #play around with rescaling
-# catchers1 <- rescale_hitters(catchers1) %>% arrange(desc(pts_total))
-
-#WEIGHT HITTER RATIO STATS
-#function for position weighting
-weight_stats <- function(df, df_pop) {  #take in two args, the sample we are interested in (df), and the population (df_pop)
-        
-        #weight a stat for the position group by the entire population of eligible hitters
-        df$hr_pts_weighted <- round(df$hr_pts * mean(df$hr) / mean(df_pop$hr), 3)
-        df$runs_pts_weighted <- round(df$runs_pts * mean(df$runs) / mean(df_pop$runs), 3)
-        df$rbi_pts_weighted <- round(df$rbi_pts * mean(df$rbi) / mean(df_pop$rbi), 3)
-        df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) / mean(df_pop$ab), 3)
-        df$sb_pts_weighted <- round(df$sb_pts * mean(df$sb) / mean(df_pop$sb), 3)
-        
-        df$weighted_pts_total <- round(df$hr_pts_weighted + df$runs_pts_weighted + df$rbi_pts_weighted + df$avg_pts_weighted + df$sb_pts_weighted, 3)
-        
-        df
-}
+#rescale position group hitter stats
+catchers1 <- rescale_hitters(catchers1) %>% arrange(desc(pts_total))
+first_basemen1 <- rescale_hitters(first_basemen1) %>% arrange(desc(pts_total))
+second_basemen1 <- rescale_hitters(second_basemen1) %>% arrange(desc(pts_total))
+third_basemen1 <- rescale_hitters(third_basemen1) %>% arrange(desc(pts_total))
+shortstops1 <- rescale_hitters(shortstops1) %>% arrange(desc(pts_total))
+outfielders1 <- rescale_hitters(outfielders1) %>% arrange(desc(pts_total))
 
 #weight all stats
 catchers1 <- weight_stats(catchers1, hitters) %>% arrange(desc(weighted_pts_total))
-first_basemen1 <- weight_stats(first_basemen1, hitters)# %>% arrange(desc(weighted_pts_total))
+first_basemen1 <- weight_stats(first_basemen1, hitters) %>% arrange(desc(weighted_pts_total))
 second_basemen1 <- weight_stats(second_basemen1, hitters) %>% arrange(desc(weighted_pts_total))
 third_basemen1 <- weight_stats(third_basemen1, hitters) %>% arrange(desc(weighted_pts_total))
 shortstops1 <- weight_stats(shortstops1, hitters) %>% arrange(desc(weighted_pts_total))
-outfielders1 <- weight_stats(outfielders, hitters) %>% arrange(desc(weighted_pts_total))
+outfielders1 <- weight_stats(outfielders1, hitters) %>% arrange(desc(weighted_pts_total))
 
 #select the top from each position
 catchers2 <- catchers1[1:n_catchers,]
@@ -246,6 +252,8 @@ middle_infielders <- second_basemen1 %>%
         anti_join(shortstops2, by = "player")  #remove the SS already selected
 #run z-score on middle infielders after removing already used players
 middle_infielders1 <- z_score_hitters(middle_infielders) %>% arrange(desc(z_total))
+middle_infielders1 <- rescale_hitters(middle_infielders1) %>% arrange(desc(pts_total))
+middle_infielders1 <- weight_stats(middle_infielders1, hitters) %>% arrange(desc(pts_total))
 
 # #run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
@@ -253,6 +261,8 @@ corner_infielders <- first_basemen1 %>%
         anti_join(first_basemen2, by = "player") %>%
         anti_join(third_basemen2, by = "player")
 corner_infielders1 <- z_score_hitters(corner_infielders)
+corner_infielders1 <- rescale_hitters(corner_infielders1) %>% arrange(desc(pts_total))
+corner_infielders1 <- weight_stats(corner_infielders1, hitters) %>% arrange(desc(pts_total))
 
 middle_infielders2 <- middle_infielders1[1:n_middle_infielders,]
 corner_infielders2 <- corner_infielders1[1:n_corner_infielders,]

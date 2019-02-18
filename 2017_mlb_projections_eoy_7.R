@@ -162,24 +162,22 @@ z_score_hitters <- function(df) {
 #Rescale function for hitters
 rescale_hitters <- function(df) {
         
-        df$hr_pts <- rescale(df$hr_z)
-        df$runs_pts <- rescale(df$runs_z)
-        df$rbi_pts <- rescale(df$rbi_z)
-        df$avg_pts <- rescale(df$avg_z, to = c(0, 2/3))
-        df$sb_pts <- rescale(df$sb_z)
+        df$hr_pts <- round(rescale(df$hr_z), 3)
+        df$runs_pts <- round(rescale(df$runs_z), 3)
+        df$rbi_pts <- round(rescale(df$rbi_z), 3)
+        df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
+        df$sb_pts <- round(rescale(df$sb_z), 3)
         
         df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
         
         df
 }
 
-hitters1 <- rescale_hitters(z_score_hitters(hitters)) %>% arrange(desc(pts_total))
-#WEIGHT HITTER RATIO STATS
-
 #GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
+# hitters1 <- rescale_hitters(z_score_hitters(hitters)) %>% arrange(desc(pts_total))
+# ggplot(data = hitters1, aes(x = hr_z, y = hr_pts)) + geom_point()
+        #yes; looks great
 
-#more vars
-mean_pa <- mean(hitters$pa)
 #subset hitters into position groups
 catchers <- hitters %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
@@ -206,10 +204,32 @@ third_basemen1 <- z_score_hitters(third_basemen) %>% arrange(desc(z_total))
 shortstops1 <- z_score_hitters(shortstops) %>% arrange(desc(z_total))
 outfielders1 <- z_score_hitters(outfielders) %>% arrange(desc(z_total))
 
-#play around with rescaling
-catchers1 <- rescale_hitters(catchers1) %>% arrange(desc(pts_total))
+# #play around with rescaling
+# catchers1 <- rescale_hitters(catchers1) %>% arrange(desc(pts_total))
 
-#weight batting average
+#WEIGHT HITTER RATIO STATS
+#function for position weighting
+weight_stats <- function(df, df_pop) {  #take in two args, the sample we are interested in (df), and the population (df_pop)
+        
+        #weight a stat for the position group by the entire population of eligible hitters
+        df$hr_pts_weighted <- round(df$hr_pts * mean(df$hr) / mean(df_pop$hr), 3)
+        df$runs_pts_weighted <- round(df$runs_pts * mean(df$runs) / mean(df_pop$runs), 3)
+        df$rbi_pts_weighted <- round(df$rbi_pts * mean(df$rbi) / mean(df_pop$rbi), 3)
+        df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) / mean(df_pop$ab), 3)
+        df$sb_pts_weighted <- round(df$sb_pts * mean(df$sb) / mean(df_pop$sb), 3)
+        
+        df$weighted_pts_total <- round(df$hr_pts_weighted + df$runs_pts_weighted + df$rbi_pts_weighted + df$avg_pts_weighted + df$sb_pts_weighted, 3)
+        
+        df
+}
+
+#weight all stats
+catchers1 <- weight_stats(catchers1, hitters) %>% arrange(desc(weighted_pts_total))
+first_basemen1 <- weight_stats(first_basemen1, hitters)# %>% arrange(desc(weighted_pts_total))
+second_basemen1 <- weight_stats(second_basemen1, hitters) %>% arrange(desc(weighted_pts_total))
+third_basemen1 <- weight_stats(third_basemen1, hitters) %>% arrange(desc(weighted_pts_total))
+shortstops1 <- weight_stats(shortstops1, hitters) %>% arrange(desc(weighted_pts_total))
+outfielders1 <- weight_stats(outfielders, hitters) %>% arrange(desc(weighted_pts_total))
 
 #select the top from each position
 catchers2 <- catchers1[1:n_catchers,]

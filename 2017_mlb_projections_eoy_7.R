@@ -273,12 +273,15 @@ position_players <- bind_rows(catchers2, first_basemen2, second_basemen2, third_
                            middle_infielders2, corner_infielders2)
 
 #anti_join remaining hitters to selected hitters for use with DH/util and bench players
-hitters1 <- hitters %>%
+#get utlility/designated players
+hitters_remaining <- hitters %>%
         anti_join(position_players, by = "player")
 
-hitters1 <- z_score_hitters(hitters1) %>% arrange(desc(z_total))
+hitters_remaining <- z_score_hitters(hitters_remaining) %>% arrange(desc(z_total))
+hitters_remaining <- rescale_hitters(hitters_remaining) %>% arrange(desc(pts_total))
+hitters_remaining <- weight_stats(hitters_remaining, hitters) %>% arrange(desc(pts_total))
 
-utility_players <- hitters1[1:n_designated_hitters,]
+utility_players <- hitters_remaining[1:n_designated_hitters,]
 
 #combine utility players with position players
 all_hitters <- position_players %>%

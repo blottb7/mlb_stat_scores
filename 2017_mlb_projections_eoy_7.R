@@ -288,6 +288,7 @@ all_hitters <- position_players %>%
         bind_rows(utility_players)
 
 all_hitters <- z_score_hitters(all_hitters) %>% arrange(desc(z_total))
+all_hitters <- rescale_hitters(all_hitters) %>% arrange(desc(pts_total))
 
 #remove unwanted dfs
 rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1, first_basemen2, middle_infielders1, middle_infielders2,

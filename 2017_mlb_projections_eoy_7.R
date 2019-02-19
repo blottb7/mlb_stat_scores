@@ -116,7 +116,7 @@ starting_designated_hitters <- 1
 
 #add total pitcher if and when necessary
 
-starting_pitchers <- 9
+pitchers_starting <- 9
 # relief_pitchers <- 2.5
 # #bench players
 # bench_players <- 7
@@ -140,7 +140,7 @@ n_corner_infielders <- n_teams * starting_corner_infielders
 n_designated_hitters <- n_teams * starting_designated_hitters
 
 # #pitchers
-n_starting_pitchers <- n_teams * starting_pitchers
+n_pitchers <- n_teams * pitchers_starting
 
 #FUNCTIONS
 #Z-Score FUNCTION for hitters
@@ -294,18 +294,18 @@ all_hitters <- rescale_hitters(all_hitters) %>% arrange(desc(pts_total))
 rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1, first_basemen2, middle_infielders1, middle_infielders2,
    outfielders1, outfielders2, second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1, third_basemen2, position_players, utility_players)
 
-#position relative z_score
-#generate a mean z_score for each position across all players at the position in the "league"
-z_pos_means <- all_hitters %>%
-        group_by(pos) %>%
-        summarize(z_pos_mean = round(mean(z_total), 2)) %>%
-        arrange(desc(z_pos_mean))
-
-#join the hitters with the mean z_score/position: z_pos
-all_hitters1 <- all_hitters %>%
-        left_join(z_pos_means, by = "pos") %>%
-        mutate(z_pos = round(z_total - z_pos_mean, 4)) %>%
-        arrange(desc(z_pos))
+# #position relative z_score
+# #generate a mean z_score for each position across all players at the position in the "league"
+# z_pos_means <- all_hitters %>%
+#         group_by(pos) %>%
+#         summarize(z_pos_mean = round(mean(z_total), 2)) %>%
+#         arrange(desc(z_pos_mean))
+# 
+# #join the hitters with the mean z_score/position: z_pos
+# all_hitters1 <- all_hitters %>%
+#         left_join(z_pos_means, by = "pos") %>%
+#         mutate(z_pos = round(z_total - z_pos_mean, 4)) %>%
+#         arrange(desc(z_pos))
 
 #METHOD 2: starters and relievers in same group
 z_score_pitchers <- function(df) {
@@ -321,25 +321,58 @@ z_score_pitchers <- function(df) {
         df
 }
 
-pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
-
-#pitchers rescale function
+#rescale function for pitchers
 rescale_pitchers <- function(df) {
         
-        df$wins_pts <- rescale(df$wins_z)
-        df$saves_pts <- rescale(df$saves_z)
-        df$era_pts <- rescale(rescale(df$era_z) * df$ip / mean(df$ip))
-        df$so_pts <- rescale(df$so_z)
-        df$whip_pts <- rescale(rescale(df$whip_z) * df$ip / mean(df$ip))
+        df$wins_pts <- round(rescale(df$wins_z), 3)
+        df$saves_pts <- round(rescale(df$saves_z), 3)
+        df$era_pts <- round(rescale(df$era_z, to = c(0, 2/3)), 3)
+        df$so_pts <- round(rescale(df$so_z, 3))
+        df$whip_pts <- round(rescale(df$whip_z), 3)
         
-        df$pts <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
+        df$pts_total <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
         
         df
 }
 
-pitchers2 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts))
+pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
 
-pitchers3 <- pitchers2[1:n_starting_pitchers,]
+#function for pitcher weighting
+weight_pitcher_stats <- function(df) { 
+        
+        #weight a stat for the position group by the entire population of eligible hitters
+        # df$wins_pts_weighted <- round(df$wins_pts * mean(df$wins) / mean(df$wins), 3)
+        # df$saves_pts_weighted <- round(df$saves_pts * mean(df$saves) / mean(df$saves), 3)
+        df$wins_pts_weighted <- df$wins_pts
+        df$saves_pts_weighted <- df$saves_pts
+        df$era_pts_weighted <- round(df$era_pts * df$ip / mean(df$ip), 3)
+        # df$so_pts_weighted <- round(df$so_pts * mean(df$so) / mean(df$so), 3)
+        df$so_pts_weighted <- df$so_pts
+        df$whip_pts_weighted <- round(df$whip_pts * df$ip / mean(df$ip), 3)
+        
+        df$weighted_pts_total <- round(df$wins_pts_weighted + df$saves_pts_weighted + df$era_pts_weighted + df$so_pts_weighted + df$whip_pts_weighted, 3)
+        
+        df
+}
+
+# #pitchers rescale function
+# rescale_pitchers <- function(df) {
+#         
+#         df$wins_pts <- rescale(df$wins_z)
+#         df$saves_pts <- rescale(df$saves_z)
+#         df$era_pts <- rescale(rescale(df$era_z) * df$ip / mean(df$ip))
+#         df$so_pts <- rescale(df$so_z)
+#         df$whip_pts <- rescale(rescale(df$whip_z) * df$ip / mean(df$ip))
+#         
+#         df$pts <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
+#         
+#         df
+# }
+
+pitchers2 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
+pitchers3 <- weight_pitcher_stats(pitchers2) %>% arrange(desc(weighted_pts_total))
+
+pitchers3 <- pitchers3[1:n_pitchers,]
 
 pitchers4 <- z_score_pitchers(pitchers3) %>% arrange(desc(z_total))
 

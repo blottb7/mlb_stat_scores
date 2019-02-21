@@ -426,11 +426,37 @@ z_pos_means3 <- z_pos_means1 %>%
 # df1 <- z_pos_means3 %>%
 #         select(pos, z_pos_mean, n, total_weight)
 position <- z_pos_means3[,c(1,5:7)]
+position1 <- z_pos_means3[,c(2,5:7)] %>%
+        filter(!is.na(pos1))
+position2 <- z_pos_means3[,c(3,5:7)] %>%
+        filter(!is.na(pos2))
+position3 <- z_pos_means3[,c(4:7)] %>%
+        filter(!is.na(pos3))
 #now group by again
-position.next <- position %>%
+position <- position %>%
         group_by(pos) %>%
         summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+position1 <- position1 %>%
+        group_by(pos1) %>%
+        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+position2 <- position2 %>%
+        group_by(pos2) %>%
+        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+position3 <- position3 %>%
+        group_by(pos3) %>%
+        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+#bind these groups together
+        #There is a faster way, but for now just change column name to "pos"
+colnames(position1)[1] <- "pos"
+colnames(position2)[1] <- "pos"
+colnames(position3)[1] <- "pos"
+        #bind
+position4 <- position %>%
+        bind_rows(position1) %>%
+        bind_rows(position2) %>%
+        bind_rows(position3)
 
+# position5 <- z_pos_means3 %>% bind_rows(.id = "pos")
 #clean the above and do it for the next 3 columns
 ##### ##### #####
 

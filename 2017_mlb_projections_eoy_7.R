@@ -398,40 +398,31 @@ all_players <- all_players %>%
 #Start filtering out duplicates
 #assign a "main position" to players with multiple positions based on position strength, in order to add another for one who is in two or three times.
 #generate a mean z_score for each position across all players at the position in the "league"
-# z_pos_means <- all_players %>%
-#         group_by(pos) %>%
-#         summarize(z_pos_mean = round(mean(z_total), 2)) %>%
-#         arrange(desc(z_pos_mean))
 
 #There are up to 4 positions possible, so need to group by all of them
-z_pos_means1 <- all_players %>%
+z_pos_means <- all_players %>%
         group_by(pos, pos1, pos2, pos3) %>%
         summarize(z_pos_mean = round(mean(z_total), 2)) %>%
         arrange(desc(z_pos_mean))
 
-z_pos_means2 <- all_players %>%
+z_pos_means1 <- all_players %>%
         group_by(pos, pos1, pos2, pos3) %>%
         tally()
 
-z_pos_means3 <- z_pos_means1 %>%
-        left_join(z_pos_means2) %>%
+z_pos_means <- z_pos_means %>%
+        left_join(z_pos_means1) %>%
         mutate(total_weight = n * z_pos_mean)
 
-# z_pos_means4 <- z_pos_means3 %>%
-#         spread(key = pos, value = total_weight)
-# z_pos_means5 <- z_pos_means3 %>%
-#         gather(key = "3B", value = total_weight)
 
 #separate by columns
-# df1 <- z_pos_means3 %>%
-#         select(pos, z_pos_mean, n, total_weight)
-position <- z_pos_means3[,c(1,5:7)]
-position1 <- z_pos_means3[,c(2,5:7)] %>%
+position <- z_pos_means[,c(1,5:7)]
+position1 <- z_pos_means[,c(2,5:7)] %>%
         filter(!is.na(pos1))
-position2 <- z_pos_means3[,c(3,5:7)] %>%
+position2 <- z_pos_means[,c(3,5:7)] %>%
         filter(!is.na(pos2))
-position3 <- z_pos_means3[,c(4:7)] %>%
+position3 <- z_pos_means[,c(4:7)] %>%
         filter(!is.na(pos3))
+
 #now group by again
 position <- position %>%
         group_by(pos) %>%
@@ -451,12 +442,16 @@ colnames(position1)[1] <- "pos"
 colnames(position2)[1] <- "pos"
 colnames(position3)[1] <- "pos"
         #bind
-position4 <- position %>%
+position <- position %>%
         bind_rows(position1) %>%
         bind_rows(position2) %>%
         bind_rows(position3)
-
-# position5 <- z_pos_means3 %>% bind_rows(.id = "pos")
+#remove binded dfs
+rm(position1, position2, position3)
+#run same process on the combined position groupings
+position_new <- position %>%
+        group_by(pos) %>%
+        summarize(total_weight = sum(total_weight_new), total_n = sum(total_n), mean_pos_strength = round(total_weight / total_n, 3))
 #clean the above and do it for the next 3 columns
 ##### ##### #####
 

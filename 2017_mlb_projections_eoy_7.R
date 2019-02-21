@@ -417,6 +417,21 @@ z_pos_means3 <- z_pos_means1 %>%
         left_join(z_pos_means2) %>%
         mutate(total_weight = n * z_pos_mean)
 
+# z_pos_means4 <- z_pos_means3 %>%
+#         spread(key = pos, value = total_weight)
+# z_pos_means5 <- z_pos_means3 %>%
+#         gather(key = "3B", value = total_weight)
+
+#separate by columns
+# df1 <- z_pos_means3 %>%
+#         select(pos, z_pos_mean, n, total_weight)
+position <- z_pos_means3[,c(1,5:7)]
+#now group by again
+position.next <- position %>%
+        group_by(pos) %>%
+        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+
+#clean the above and do it for the next 3 columns
 ##### ##### #####
 
 #set NA's to zero for stat categories

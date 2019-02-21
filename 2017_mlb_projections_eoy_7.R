@@ -398,11 +398,24 @@ all_players <- all_players %>%
 #Start filtering out duplicates
 #assign a "main position" to players with multiple positions based on position strength, in order to add another for one who is in two or three times.
 #generate a mean z_score for each position across all players at the position in the "league"
-z_pos_means <- all_players %>%
-        group_by(pos) %>%
+# z_pos_means <- all_players %>%
+#         group_by(pos) %>%
+#         summarize(z_pos_mean = round(mean(z_total), 2)) %>%
+#         arrange(desc(z_pos_mean))
+
+#There are up to 4 positions possible, so need to group by all of them
+z_pos_means1 <- all_players %>%
+        group_by(pos, pos1, pos2, pos3) %>%
         summarize(z_pos_mean = round(mean(z_total), 2)) %>%
         arrange(desc(z_pos_mean))
 
+z_pos_means2 <- all_players %>%
+        group_by(pos, pos1, pos2, pos3) %>%
+        tally()
+
+z_pos_means3 <- z_pos_means1 %>%
+        left_join(z_pos_means2) %>%
+        mutate(total_weight = n * z_pos_mean)
 
 ##### ##### #####
 

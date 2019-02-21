@@ -191,9 +191,21 @@ weight_hitter_stats <- function(df, df_pop) {  #take in two args, the sample we 
         df
 }
 
-# weight_hitter_rate_stats <- function(df) {
-#         df$avg_pts_weighted <- round(df$avg_pts_weighted * df$ba / mean(df$ab), 3)
-# }
+weight_hitter_rate_stats <- function(df) {
+        
+        df$hr_pts <- round(rescale(df$hr_z), 3)
+        df$runs_pts <- round(rescale(df$runs_z), 3)
+        df$rbi_pts <- round(rescale(df$rbi_z), 3)
+        #df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
+        df$avg_pts <- round(rescale(df$avg_pts * df$ab / mean(df$ab), to = c(0, 2/3)), 3)
+        df$sb_pts <- round(rescale(df$sb_z), 3)
+        
+        df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
+        
+        df
+        
+        #df$avg_pts_weighted <- round(df$avg_pts_weighted * df$ba / mean(df$ab), 3)
+}
 
 #GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
 # hitters1 <- rescale_hitters(z_score_hitters(hitters)) %>% arrange(desc(pts_total))
@@ -294,6 +306,10 @@ all_hitters <- position_players %>%
 
 all_hitters <- z_score_hitters(all_hitters) %>% arrange(desc(z_total))
 all_hitters <- rescale_hitters(all_hitters) %>% arrange(desc(pts_total))
+# all_hitters1 <- all_hitters
+all_hitters <- weight_hitter_rate_stats(all_hitters) %>% arrange(desc(pts_total))
+
+# all_hitters1$avg_pts_weighted <- round(rescale(df$avg_pts * df$ab / mean(df$ab), to = c(0, 2/3)), 3)
 
 #remove unwanted dfs
 rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1, first_basemen2, middle_infielders1, middle_infielders2,
@@ -359,6 +375,22 @@ weight_pitcher_stats <- function(df) {
         df
 }
 
+weight_pitcher_rate_stats <- function() {
+        
+        df$wins_pts <- df$wins_pts
+        df$saves_pts <- df$saves_pts
+        #df$era_pts <- round(df$era_pts * df$ip / mean(df$ip), 3)
+        df$era_pts <- round(rescale(df$era_pts * df$ip / mean(df$ip), to = c(0, 2/3)), 3)
+        df$so_pts <- df$so_pts
+        #df$whip_pts <- round(df$whip_pts * df$ip / mean(df$ip), 3)
+        df$whip_pts <- round(rescale(df$whip_pts * df$ip / mean(df$ip), to = c(0, 1)), 3)
+        
+        df$pts_total <- round(df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts, 3)
+        
+        df
+        
+}
+
 # #pitchers rescale function
 # rescale_pitchers <- function(df) {
 #         
@@ -375,7 +407,8 @@ weight_pitcher_stats <- function(df) {
 
 pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
 pitchers1 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
-pitchers1 <- weight_pitcher_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
+#pitchers1 <- weight_pitcher_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
+pitchers1 <- weight_pitcher_rate_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
 pitchers1 <- pitchers1[1:n_pitchers,]
 
 #run numbers on only pitchers who will be drafted
@@ -459,6 +492,7 @@ rm(position)
 
 #NEXT, go back and weight whip and era, Edwin Diaz is way too high. Also, ERA
         #check on batting average to make sure that is weighted properly
+#THEN, start position assigning based on position strength
 ##### ##### #####
 
 # #set NA's to zero for stat categories

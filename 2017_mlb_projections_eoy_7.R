@@ -11,10 +11,10 @@ library(zoo)  #for na.locf fn
 library(scales)  #for rescale()
 
 #read in data
-        #fangraphs projections
+#fangraphs projections
 pitchers <- read_excel("projections.xlsx", sheet = 8)
 hitters <- read_excel("projections.xlsx", sheet = 9)
-        #read in nfbc position eligibility
+#read in nfbc position eligibility
 nfbc <- read_excel("projections.xlsx", sheet = 10)
 
 #select nfbc cols
@@ -30,7 +30,7 @@ names(nfbc) <- nfbc_names
 nfbc <- nfbc %>%
         separate(pos, into = c("pos", "pos1", "pos2", "pos3"), sep = ",")
 #separate and concatenate player names
-                #clean incorrectly used double commas
+#clean incorrectly used double commas
 nfbc$player <- ifelse(nfbc$player == "Guerrero, Jr., Vladimir", "Guerrero Jr., Vladimir", nfbc$player)
 nfbc$player <- ifelse(nfbc$player == "Tatis, Jr., Fernando", "Tatis Jr., Fernando", nfbc$player)
 #separate player names by comma
@@ -43,37 +43,39 @@ nfbc <- nfbc %>%
         select(player, injury, pos, pos1, pos2, pos3, team)
 
 #FANGRAPHS
-        #Hitter names
+#Hitter names
 #Use this when ADP included
-# hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
-#                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-#                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
+hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
+                  "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+                  "waste3", "offense", "defense", "war", "waste4", "adp", "playerid")
 
 #Use this when ADP not included
-hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
-                 "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
-                 "waste3", "offense", "defense", "war", "playerid")
-
+# hitter_names <- c("player", "team", "games.h", "pa", "ab", "hit", "double", "triple", "hr", "runs", "rbi", "bb.h", "so.h",
+#                   "hbp", "sb", "cs", "waste1", "avg", "obp", "slg", "ops", "woba", "waste2", "wrc_plus", "bsr", "fld",
+#                   "waste3", "offense", "defense", "war", "playerid")
+# 
 names(hitters) <- hitter_names
 
-        #Pitcher names
+#Pitcher names
 #Use this when ADP included
-# names(pitchers) <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
-#                      "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
+pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
+                   "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "adp", "player_id")
 
 #Use this when ADP not included
-pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
-                     "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
+# pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "saves", "ip", "hits", "er", "hra", "so.p", "bb.p",
+#                    "whip", "k_rate", "bb_rate", "fip", "war", "ra9_war", "player_id")
 
 names(pitchers) <- pitcher_names
 
 #Clean fangraphs data
 hitters <- hitters %>%
         select(-waste1, -waste2, -waste3,  #remove spacer cols
-               -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid)  #remove unneeded obs
+               -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%  #remove unneeded obs
+        select(-waste4, -adp)  #sometimes need to remove adp
 
 pitchers <- pitchers %>%
-        select(-war, -ra9_war, -player_id)  #remove uneeded obs
+        select(-war, -ra9_war, -player_id) %>%  #remove uneeded obs
+        select(-adp)  #sometimes need to remove adp
 
 #remove obs that will be duplicated when joining with nfbc
 hitters <- hitters %>%
@@ -210,57 +212,58 @@ weight_hitter_rate_stats <- function(df) {
 #GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
 # hitters1 <- rescale_hitters(z_score_hitters(hitters)) %>% arrange(desc(pts_total))
 # ggplot(data = hitters1, aes(x = hr_z, y = hr_pts)) + geom_point()
-        #yes; looks great
+#yes; looks great
 
 #Assign main position to multi-position players
-        #Initialize
+#Initialize
 hitters$main_pos <- hitters$pos
 hitters$main_pos1 <- hitters$pos1
 hitters$main_pos2 <- hitters$pos2
 hitters$main_pos3 <- hitters$pos3
 
-        #Individual players
-                #first position
-hitters$main_pos <- ifelse(hitters$player == "Isiah Kiner-Falefa", "C", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Adam Frazier", "2B", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Brian Anderson", "OF", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Jurickson Profar", "1B", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Asdrubal Cabrera", "2B", hitters$main_pos)
-hitters$main_pos <- ifelse(hitters$player == "Marwin Gonzalez", "1B", hitters$main_pos)
-# hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
-# hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+#Individual players
+#first position
 
-                #second position
-hitters$main_pos1 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos1)
-hitters$main_pos1 <- ifelse(hitters$player == "Marwin Gonzalez", NA, hitters$main_pos1)
-
-                #third position
-hitters$main_pos2 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos2)
-hitters$main_pos2 <- ifelse(hitters$player == "Marwin Gonzalez", NA, hitters$main_pos2)
-
-                #fourth position
-hitters$main_pos3 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos3)
-hitters$main_pos3 <- ifelse(hitters$player == "Marwin Gonzalez", NA, hitters$main_pos3)
+# # hitters$main_pos <- ifelse(hitters$player == "Isiah Kiner-Falefa", "C", hitters$main_pos)
+# # hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+# # hitters$main_pos <- ifelse(hitters$player == "Adam Frazier", "2B", hitters$main_pos)
+# # hitters$main_pos <- ifelse(hitters$player == "Brian Anderson", "OF", hitters$main_pos)
+# # hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
+# # hitters$main_pos <- ifelse(hitters$player == "Jurickson Profar", "1B", hitters$main_pos)
+# hitters$main_pos <- ifelse(hitters$player == "Asdrubal Cabrera", "2B", hitters$main_pos)
+# hitters$main_pos <- ifelse(hitters$player == "Lourdes Gurriel Jr.", "2B", hitters$main_pos)
+# # # hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+# # # hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+# # 
+# #                 #second position
+# # hitters$main_pos1 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos1)
+# # hitters$main_pos1 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos1)
+# # hitters$main_pos1 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos1)
+# # hitters$main_pos1 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos1)
+# # hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos1)
+# # hitters$main_pos1 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos1)
+# hitters$main_pos1 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos1)
+# hitters$main_pos1 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos1)
+# # 
+# #                 #third position
+# # hitters$main_pos2 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos2)
+# # hitters$main_pos2 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos2)
+# # hitters$main_pos2 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos2)
+# # hitters$main_pos2 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos2)
+# # hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos2)
+# # hitters$main_pos2 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos2)
+# hitters$main_pos2 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos2)
+# hitters$main_pos2 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos2)
+# # 
+# #                 #fourth position
+# # hitters$main_pos3 <- ifelse(hitters$player == "Isiah Kiner-Falefa", NA, hitters$main_pos3)
+# # hitters$main_pos3 <- ifelse(hitters$player == "John Hicks", NA, hitters$main_pos3)
+# # hitters$main_pos3 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos3)
+# # hitters$main_pos3 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos3)
+# # hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos3)
+# # hitters$main_pos3 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos3)
+# hitters$main_pos3 <- ifelse(hitters$player == "Asdrubal Cabrera", NA, hitters$main_pos3)
+# hitters$main_pos3 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos3)
 
 
 #subset hitters into position groups
@@ -296,8 +299,8 @@ utility <- hitters %>%
 
 
 #So, doing this by position gives equal z-weighting to sb's, which catchers don't really have, as to home runs.
-        #Put another way, 5 sb are equal to about 16 home runs, which is off
-                #Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
+#Put another way, 5 sb are equal to about 16 home runs, which is off
+#Maybe try the rescale function, then weighting the sb_z by mean of entire population of hitters, regardless of position
 catchers1 <- z_score_hitters(catchers) %>% arrange(desc(z_total))
 first_basemen1 <- z_score_hitters(first_basemen) %>% arrange(desc(z_total))
 second_basemen1 <- z_score_hitters(second_basemen) %>% arrange(desc(z_total))
@@ -354,7 +357,7 @@ corner_infielders2 <- corner_infielders1[1:n_corner_infielders,]
 #
 #combine all selected players
 position_players <- bind_rows(catchers2, first_basemen2, second_basemen2, third_basemen2, shortstops2, outfielders2,
-                           middle_infielders2, corner_infielders2)
+                              middle_infielders2, corner_infielders2)
 
 #anti_join remaining hitters to selected hitters for use with DH/util and bench players
 #get utlility/designated players
@@ -398,13 +401,13 @@ rm(catchers, corner_infielders, first_basemen, middle_infielders, outfielders, s
 
 #METHOD 2: starters and relievers in same group
 z_score_pitchers <- function(df) {
-
+        
         df$wins_z <- round(as.numeric(scale(df$wins)), 3)
         df$saves_z <- round(as.numeric(scale(df$saves)), 3)
         df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
         df$so_z <- round(as.numeric(scale(df$so.p)), 3)
         df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
-
+        
         df$z_total <- df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
         #
         df
@@ -489,8 +492,10 @@ all_players <- all_hitters %>%
         bind_rows(all_pitchers) %>%
         arrange(desc(pts_total))
 
+#UGH! Fangraphs has different number of download columns sometimes, so need a few of these
 # all_players <- all_players[,-c(55:60)]
-all_players <- all_players[,-c(59:64)]
+# all_players <- all_players[,-c(59:64)]
+all_players <- all_players[]
 
 #Generate 100 point scale
 all_players <- all_players %>%
@@ -540,11 +545,11 @@ position3 <- position3 %>%
         group_by(pos3) %>%
         summarize(total_weight_new = sum(total_weight), total_n = sum(n))
 #bind these groups together
-        #There is a faster way, but for now just change column name to "pos"
+#There is a faster way, but for now just change column name to "pos"
 colnames(position1)[1] <- "pos"
 colnames(position2)[1] <- "pos"
 colnames(position3)[1] <- "pos"
-        #bind
+#bind
 position <- position %>%
         bind_rows(position1) %>%
         bind_rows(position2) %>%
@@ -560,7 +565,7 @@ position_strength <- position %>%
 rm(position)
 
 #NEXT! start position assigning based on position strength
-
+which(duplicated(all_players$player))
 ##### ##### #####
 
 # #set NA's to zero for stat categories

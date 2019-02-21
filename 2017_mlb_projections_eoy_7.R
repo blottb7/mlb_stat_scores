@@ -212,6 +212,22 @@ weight_hitter_rate_stats <- function(df) {
 # ggplot(data = hitters1, aes(x = hr_z, y = hr_pts)) + geom_point()
         #yes; looks great
 
+#Assign main position to multi-position players
+        #Initialize
+hitters$main_pos <- hitters$pos
+        #Individual players
+hitters$main_pos <- ifelse(hitters$player == "Isiah Kiner-Falefa", "C", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Adam Frazier", "2B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Brian Anderson", "3B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Jurickson Profar", "1B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Asdrubal Cabrera", "2B", hitters$main_pos)
+# hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+# hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+# hitters$main_pos <- ifelse(hitters$player == "John Hicks", "C", hitters$main_pos)
+
+
 #subset hitters into position groups
 catchers <- hitters %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
@@ -358,24 +374,24 @@ rescale_pitchers <- function(df) {
 }
 
 #function for pitcher weighting
-weight_pitcher_stats <- function(df) { 
-        
-        #weight a stat for the position group by the entire population of eligible hitters
-        # df$wins_pts_weighted <- round(df$wins_pts * mean(df$wins) / mean(df$wins), 3)
-        # df$saves_pts_weighted <- round(df$saves_pts * mean(df$saves) / mean(df$saves), 3)
-        df$wins_pts_weighted <- df$wins_pts
-        df$saves_pts_weighted <- df$saves_pts
-        df$era_pts_weighted <- round(df$era_pts * df$ip / mean(df$ip), 3)
-        # df$so_pts_weighted <- round(df$so_pts * mean(df$so) / mean(df$so), 3)
-        df$so_pts_weighted <- df$so_pts
-        df$whip_pts_weighted <- round(df$whip_pts * df$ip / mean(df$ip), 3)
-        
-        df$weighted_pts_total <- round(df$wins_pts_weighted + df$saves_pts_weighted + df$era_pts_weighted + df$so_pts_weighted + df$whip_pts_weighted, 3)
-        
-        df
-}
+# weight_pitcher_stats <- function(df) { 
+#         
+#         #weight a stat for the position group by the entire population of eligible hitters
+#         # df$wins_pts_weighted <- round(df$wins_pts * mean(df$wins) / mean(df$wins), 3)
+#         # df$saves_pts_weighted <- round(df$saves_pts * mean(df$saves) / mean(df$saves), 3)
+#         df$wins_pts_weighted <- df$wins_pts
+#         df$saves_pts_weighted <- df$saves_pts
+#         df$era_pts_weighted <- round(df$era_pts * df$ip / mean(df$ip), 3)
+#         # df$so_pts_weighted <- round(df$so_pts * mean(df$so) / mean(df$so), 3)
+#         df$so_pts_weighted <- df$so_pts
+#         df$whip_pts_weighted <- round(df$whip_pts * df$ip / mean(df$ip), 3)
+#         
+#         df$weighted_pts_total <- round(df$wins_pts_weighted + df$saves_pts_weighted + df$era_pts_weighted + df$so_pts_weighted + df$whip_pts_weighted, 3)
+#         
+#         df
+# }
 
-weight_pitcher_rate_stats <- function() {
+weight_pitcher_rate_stats <- function(df) {
         
         df$wins_pts <- df$wins_pts
         df$saves_pts <- df$saves_pts
@@ -408,12 +424,13 @@ weight_pitcher_rate_stats <- function() {
 pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
 pitchers1 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
 #pitchers1 <- weight_pitcher_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
-pitchers1 <- weight_pitcher_rate_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
+pitchers1 <- weight_pitcher_rate_stats(pitchers1) %>% arrange(desc(pts_total))
 pitchers1 <- pitchers1[1:n_pitchers,]
 
 #run numbers on only pitchers who will be drafted
 all_pitchers <- z_score_pitchers(pitchers1) %>% arrange(desc(z_total))
 all_pitchers <- rescale_pitchers(all_pitchers) %>% arrange(desc(pts_total))
+all_pitchers <- weight_pitcher_rate_stats(all_pitchers) %>% arrange(desc(pts_total))
 
 rm(pitchers1)
 #combine pitchers and catchers
@@ -421,7 +438,7 @@ all_players <- all_hitters %>%
         bind_rows(all_pitchers) %>%
         arrange(desc(pts_total))
 
-all_players <- all_players[,-c(55:60,71:75)]
+all_players <- all_players[,-c(55:60)]
 
 #Generate 100 point scale
 all_players <- all_players %>%
@@ -490,9 +507,8 @@ position_strength <- position %>%
 
 rm(position)
 
-#NEXT, go back and weight whip and era, Edwin Diaz is way too high. Also, ERA
-        #check on batting average to make sure that is weighted properly
-#THEN, start position assigning based on position strength
+#NEXT! start position assigning based on position strength
+
 ##### ##### #####
 
 # #set NA's to zero for stat categories

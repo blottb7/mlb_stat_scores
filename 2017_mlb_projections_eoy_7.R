@@ -333,7 +333,7 @@ rescale_pitchers <- function(df) {
         df$wins_pts <- round(rescale(df$wins_z), 3)
         df$saves_pts <- round(rescale(df$saves_z), 3)
         df$era_pts <- round(rescale(df$era_z, to = c(0, 2/3)), 3)
-        df$so_pts <- round(rescale(df$so_z, 3))
+        df$so_pts <- round(rescale(df$so_z), 3)
         df$whip_pts <- round(rescale(df$whip_z), 3)
         
         df$pts_total <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
@@ -374,19 +374,37 @@ weight_pitcher_stats <- function(df) {
 # }
 
 pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
-
 pitchers1 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
 pitchers1 <- weight_pitcher_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
-
 pitchers1 <- pitchers1[1:n_pitchers,]
 
-pitchers4 <- z_score_pitchers(pitchers3) %>% arrange(desc(z_total))
+#run numbers on only pitchers who will be drafted
+all_pitchers <- z_score_pitchers(pitchers1) %>% arrange(desc(z_total))
+all_pitchers <- rescale_pitchers(all_pitchers) %>% arrange(desc(pts_total))
 
-pitchers5 <- rescale_pitchers(pitchers4) %>% arrange(desc(pts))
-
+rm(pitchers1)
 #combine pitchers and catchers
-all_players <- all_hitters1 %>%
-        bind_rows(pitchers5)
+all_players <- all_hitters %>%
+        bind_rows(all_pitchers) %>%
+        arrange(desc(pts_total))
+
+all_players <- all_players[,-c(55:60,71:75)]
+
+#Generate 100 point scale
+all_players <- all_players %>%
+        mutate(rank100 = round(rescale(pts_total, to = c(0, 100)), 0))
+#THIS IS ADEQUATE
+
+#Start filtering out duplicates
+#assign a "main position" to players with multiple positions based on position strength, in order to add another for one who is in two or three times.
+#generate a mean z_score for each position across all players at the position in the "league"
+z_pos_means <- all_players %>%
+        group_by(pos) %>%
+        summarize(z_pos_mean = round(mean(z_total), 2)) %>%
+        arrange(desc(z_pos_mean))
+
+
+##### ##### #####
 
 #set NA's to zero for stat categories
 all_players$

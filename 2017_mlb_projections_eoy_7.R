@@ -413,7 +413,7 @@ z_pos_means <- z_pos_means %>%
         left_join(z_pos_means1) %>%
         mutate(total_weight = n * z_pos_mean)
 
-
+rm(z_pos_means1)
 #separate by columns
 position <- z_pos_means[,c(1,5:7)]
 position1 <- z_pos_means[,c(2,5:7)] %>%
@@ -423,6 +423,7 @@ position2 <- z_pos_means[,c(3,5:7)] %>%
 position3 <- z_pos_means[,c(4:7)] %>%
         filter(!is.na(pos3))
 
+rm(z_pos_means)
 #now group by again
 position <- position %>%
         group_by(pos) %>%
@@ -449,37 +450,42 @@ position <- position %>%
 #remove binded dfs
 rm(position1, position2, position3)
 #run same process on the combined position groupings
-position_new <- position %>%
+position_strength <- position %>%
         group_by(pos) %>%
-        summarize(total_weight = sum(total_weight_new), total_n = sum(total_n), mean_pos_strength = round(total_weight / total_n, 3))
-#clean the above and do it for the next 3 columns
+        summarize(total_weight = sum(total_weight_new), total_n = sum(total_n), mean_pos_strength = round(total_weight / total_n, 3)) %>%
+        arrange(desc(mean_pos_strength))
+
+rm(position)
+
+#NEXT, go back and weight whip and era, Edwin Diaz is way too high. Also, ERA
+        #check on batting average to make sure that is weighted properly
 ##### ##### #####
 
-#set NA's to zero for stat categories
-all_players$
-
-#function for all nfbc stat categories
-
-z_score_all <- function(df) {
-        
-        df$hr_z <- round(as.numeric(scale(df$hr)), 3)
-        df$runs_z <- round(as.numeric(scale(df$runs)), 3)
-        df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
-        df$avg_z <- round(as.numeric(scale(df$avg)), 3)
-        df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
-        
-        df$wins_z <- round(as.numeric(scale(df$wins)), 3)
-        df$saves_z <- round(as.numeric(scale(df$saves)), 3)
-        df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
-        df$so_z <- round(as.numeric(scale(df$so.p)), 3)
-        df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
-        
-        df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z + df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
-        
-        df
-}
-
-all_players1 <- z_score_all(all_players) %>% arrange(desc(z_total))
+# #set NA's to zero for stat categories
+# all_players$
+# 
+# #function for all nfbc stat categories
+# 
+# z_score_all <- function(df) {
+#         
+#         df$hr_z <- round(as.numeric(scale(df$hr)), 3)
+#         df$runs_z <- round(as.numeric(scale(df$runs)), 3)
+#         df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
+#         df$avg_z <- round(as.numeric(scale(df$avg)), 3)
+#         df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
+#         
+#         df$wins_z <- round(as.numeric(scale(df$wins)), 3)
+#         df$saves_z <- round(as.numeric(scale(df$saves)), 3)
+#         df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
+#         df$so_z <- round(as.numeric(scale(df$so.p)), 3)
+#         df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
+#         
+#         df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z + df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
+#         
+#         df
+# }
+# 
+# all_players1 <- z_score_all(all_players) %>% arrange(desc(z_total))
 
 
 find_name <- function(name) {

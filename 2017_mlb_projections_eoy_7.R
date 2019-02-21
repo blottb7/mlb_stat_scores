@@ -341,8 +341,6 @@ rescale_pitchers <- function(df) {
         df
 }
 
-pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
-
 #function for pitcher weighting
 weight_pitcher_stats <- function(df) { 
         
@@ -375,10 +373,12 @@ weight_pitcher_stats <- function(df) {
 #         df
 # }
 
-pitchers2 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
-pitchers3 <- weight_pitcher_stats(pitchers2) %>% arrange(desc(weighted_pts_total))
+pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
 
-pitchers3 <- pitchers3[1:n_pitchers,]
+pitchers1 <- rescale_pitchers(pitchers1) %>% arrange(desc(pts_total))
+pitchers1 <- weight_pitcher_stats(pitchers1) %>% arrange(desc(weighted_pts_total))
+
+pitchers1 <- pitchers1[1:n_pitchers,]
 
 pitchers4 <- z_score_pitchers(pitchers3) %>% arrange(desc(z_total))
 

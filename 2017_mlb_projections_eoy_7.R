@@ -546,8 +546,7 @@ all_players <- all_hitters %>%
 
 #UGH! Fangraphs has different number of download columns sometimes, so need a few of these
 # all_players <- all_players[,-c(55:60)]
-# all_players <- all_players[,-c(59:64)]
-all_players <- all_players[]
+all_players <- all_players[,-c(59:64)]
 
 #Generate 100 point scale
 all_players <- all_players %>%
@@ -626,3 +625,20 @@ which(duplicated(all_players$player))
 #separate into position groups
 catchers <- all_players %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
+first_basemen <- all_players %>%
+        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
+second_basemen <- all_players %>%
+        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
+third_basemen <- all_players %>%
+        filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+shortstops <- all_players %>%
+        filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+outfielders <- all_players %>%
+        filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
+middle_infielders <- all_players %>%
+        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+corner_infielders <- all_players %>%
+        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+pitchers_final <- all_players %>%
+        filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
+

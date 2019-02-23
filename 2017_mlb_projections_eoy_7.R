@@ -642,3 +642,36 @@ corner_infielders <- all_players %>%
 pitchers_final <- all_players %>%
         filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
 
+#read in and match adp
+adp <- read.delim2(file = "nfbc_adp.txt")
+
+names_adp <- c("adp_rank", "player", "team", "positions", "adp", "min_pick", "max_pick", "difference", "n_picks", "team1", "team_pick")
+
+names(adp) <- names_adp
+
+#clean df
+#set correct classes
+adp$player <- as.character(adp$player)
+adp$team <- as.character(adp$team)
+adp$adp <- as.numeric(as.character(adp$adp))
+
+#separate and concatenate player names
+#clean incorrectly used double commas
+adp$player <- ifelse(adp$player == "Guerrero, Jr., Vladimir", "Guerrero Jr., Vladimir", adp$player)
+adp$player <- ifelse(adp$player == "Tatis, Jr., Fernando", "Tatis Jr., Fernando", adp$player)
+#separate player names by comma
+adp <- adp %>%
+        separate(player, into = c("last_name", "first_name"), sep = ",")
+#paste player names together in the right order
+adp$player <- trimws(paste(adp$first_name, adp$last_name))
+
+#select columns to keep/discard
+adp <- adp %>%
+        select(adp_rank, player, team, adp, min_pick, max_pick, n_picks)
+
+adp1 <- adp %>%
+        left_join(nfbc)
+
+all_players1 <- all_players %>%
+        left_join(adp, by = "player")
+

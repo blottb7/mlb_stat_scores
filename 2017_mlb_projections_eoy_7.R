@@ -605,6 +605,9 @@ position_strength <- position %>%
 
 rm(position)
 
+#add a rank column
+all_players$raw_rank <- as.integer(rank(-all_players$pts_total))
+
 #NEXT! start position assigning based on position strength
 which(duplicated(all_players$player))
 
@@ -646,6 +649,17 @@ all_players <- all_players %>%
 pitchers_final <- all_players %>%
         filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
 
+hitters_final <- all_players %>%
+        anti_join(pitchers_final, by = "player")
+
+#remove hitters stats and generally clean
+pitchers_final1 <- pitchers_final %>%
+        select(-c("pos1":"pos3", "games.h":"woba", "main_pos":"sb_z", "hr_pts":"sb_pts", "hitter_rank"))
+pitchers_final2 <- pitchers_final1 %>%
+        select(raw_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
+               gs, games.p, saves, ip, so.p, whip)
+
+#
 catchers <- all_players %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
 first_basemen <- all_players %>%

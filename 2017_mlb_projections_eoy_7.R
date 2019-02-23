@@ -319,21 +319,6 @@ hitters$main_pos3 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main
 hitters$main_pos3 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos3)
 
 #subset hitters into position groups
-# catchers <- hitters %>%
-#         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
-# first_basemen <- hitters %>%
-#         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
-# second_basemen <- hitters %>%
-#         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
-# third_basemen <- hitters %>%
-#         filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-# shortstops <- hitters %>%
-#         filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-# outfielders<- hitters %>%
-#         filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
-# utility <- hitters %>%
-#         filter(pos == "UT" | pos1 == "UT" | pos2 == "UT" | pos3 == "UT")
-
 catchers <- hitters %>%
         filter(main_pos == "C" | main_pos1 == "C" | main_pos2 == "C" | main_pos3 == "C")
 first_basemen <- hitters %>%
@@ -438,6 +423,9 @@ rm(catchers1, catchers2, corner_infielders1, corner_infielders2, first_basemen1,
    outfielders1, outfielders2, second_basemen1, second_basemen2, shortstops1, shortstops2, third_basemen1, third_basemen2, position_players, utility_players)
 rm(catchers, corner_infielders, first_basemen, middle_infielders, outfielders, second_basemen, shortstops, third_basemen, utility, hitters_remaining)
 
+#add hitters rank to df
+all_hitters$hitter_rank <- as.integer(rank(-all_hitters$pts_total))
+
 # #position relative z_score
 # #generate a mean z_score for each position across all players at the position in the "league"
 # z_pos_means <- all_hitters %>%
@@ -539,6 +527,9 @@ all_pitchers <- rescale_pitchers(all_pitchers) %>% arrange(desc(pts_total))
 all_pitchers <- weight_pitcher_rate_stats(all_pitchers) %>% arrange(desc(pts_total))
 
 rm(pitchers1)
+#add pitcher rank
+all_pitchers$pitcher_rank <- as.integer(rank(-all_pitchers$pts_total))
+
 #combine pitchers and catchers
 all_players <- all_hitters %>%
         bind_rows(all_pitchers) %>%
@@ -551,9 +542,8 @@ all_players <- all_players[,-c(59:64)]
 #Generate 100 point scale
 all_players <- all_players %>%
         mutate(rank100 = round(rescale(pts_total, to = c(0, 100)), 0))
-#THIS IS ADEQUATE
 
-#Start filtering out duplicates
+#Duplicates
 #assign a "main position" to players with multiple positions based on position strength, in order to add another for one who is in two or three times.
 #generate a mean z_score for each position across all players at the position in the "league"
 
@@ -622,26 +612,6 @@ which(duplicated(all_players$player))
 #         which(all_players$player == player)
 # }
 
-#separate into position groups
-catchers <- all_players %>%
-        filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
-first_basemen <- all_players %>%
-        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
-second_basemen <- all_players %>%
-        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
-third_basemen <- all_players %>%
-        filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-shortstops <- all_players %>%
-        filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-outfielders <- all_players %>%
-        filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
-middle_infielders <- all_players %>%
-        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-corner_infielders <- all_players %>%
-        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-pitchers_final <- all_players %>%
-        filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
-
 #read in and match adp
 adp <- read.delim2(file = "nfbc_adp.txt")
 
@@ -667,11 +637,28 @@ adp$player <- trimws(paste(adp$first_name, adp$last_name))
 
 #select columns to keep/discard
 adp <- adp %>%
-        select(adp_rank, player, team, adp, min_pick, max_pick, n_picks)
+        select(adp_rank, player, adp, min_pick, max_pick, n_picks)
 
-adp1 <- adp %>%
-        left_join(nfbc)
-
-all_players1 <- all_players %>%
+all_players <- all_players %>%
         left_join(adp, by = "player")
 
+#separate into position groups
+pitchers_final <- all_players %>%
+        filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
+
+catchers <- all_players %>%
+        filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
+first_basemen <- all_players %>%
+        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
+second_basemen <- all_players %>%
+        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
+third_basemen <- all_players %>%
+        filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+shortstops <- all_players %>%
+        filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+outfielders <- all_players %>%
+        filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
+middle_infielders <- all_players %>%
+        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+corner_infielders <- all_players %>%
+        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")

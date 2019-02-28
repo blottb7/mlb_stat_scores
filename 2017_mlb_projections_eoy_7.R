@@ -555,7 +555,7 @@ position_strength <- position %>%
 rm(position)
 
 #add a rank column
-all_players$raw_rank <- as.integer(rank(-all_players$pts_total))
+all_players$overall_rank <- as.integer(rank(-all_players$pts_total))
 
 #NEXT! start position assigning based on position strength
 which(duplicated(all_players$player))
@@ -605,23 +605,48 @@ hitters_final <- all_players %>%
 pitchers_final1 <- pitchers_final %>%
         select(-c("pos1":"pos3", "games.h":"woba", "main_pos":"sb_z", "hr_pts":"sb_pts", "hitter_rank"))
 pitchers_final2 <- pitchers_final1 %>%
-        select(raw_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
-               gs, games.p, saves, ip, so.p, whip)
+        select(overall_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
+               gs, games.p, saves, ip, so.p, whip, rank100)
 
-#
-catchers <- all_players %>%
+#hitters stuff
+hitters_final1 <- hitters_final %>%
+        select(-c("wins":"fip", "main_pos1":"main_pos3", "wins_z":"pitcher_rank"))
+hitters_final2 <- hitters_final1 %>%
+        select(overall_rank, player, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
+               runs, rbi, sb, avg, pos, pos1, pos2, pos3, rank100)
+
+#position groups for exploration
+# catchers <- all_players %>%
+#         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
+# first_basemen <- all_players %>%
+#         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
+# second_basemen <- all_players %>%
+#         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
+# third_basemen <- all_players %>%
+#         filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+# shortstops <- all_players %>%
+#         filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+# outfielders <- all_players %>%
+#         filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
+# middle_infielders <- all_players %>%
+#         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+# corner_infielders <- all_players %>%
+#         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+
+#positoin groups
+catchers <- hitters_final2 %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
-first_basemen <- all_players %>%
+first_basemen <- hitters_final2 %>%
         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
-second_basemen <- all_players %>%
+second_basemen <- hitters_final2 %>%
         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
-third_basemen <- all_players %>%
+third_basemen <- hitters_final2 %>%
         filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-shortstops <- all_players %>%
+shortstops <- hitters_final2 %>%
         filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-outfielders <- all_players %>%
+outfielders <- hitters_final2 %>%
         filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
-middle_infielders <- all_players %>%
+middle_infielders <- hitters_final2 %>%
         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-corner_infielders <- all_players %>%
+corner_infielders <- hitters_final2 %>%
         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")

@@ -612,7 +612,7 @@ pitchers_final2 <- pitchers_final1 %>%
 hitters_final1 <- hitters_final %>%
         select(-c("wins":"fip", "main_pos1":"main_pos3", "wins_z":"pitcher_rank"))
 hitters_final2 <- hitters_final1 %>%
-        select(overall_rank, player, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
+        select(overall_rank, player, hitter_rank, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
                runs, rbi, sb, avg, pos, pos1, pos2, pos3, rank100)
 
 #position groups for exploration
@@ -650,3 +650,7 @@ middle_infielders <- hitters_final2 %>%
         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
 corner_infielders <- hitters_final2 %>%
         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+
+ggplot(data = all_players, aes(x = adp_rank, y = overall_rank, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = first_basemen, aes(x = adp_rank, y = overall_rank)) + geom_point() + geom_smooth(method = "lm", se = FALSE)

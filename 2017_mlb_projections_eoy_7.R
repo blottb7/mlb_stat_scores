@@ -76,7 +76,7 @@ hitters <- hitters %>%
 pitchers <- pitchers %>%
         select(-war, -ra9_war, -player_id) %>%  #remove uneeded obs
         select(-adp)  #sometimes need to remove adp
-
+        
 #remove obs that will be duplicated when joining with nfbc
 hitters <- hitters %>%
         select(-team)
@@ -88,6 +88,10 @@ hitters <- hitters %>%
         filter(pa > 1)
 pitchers <- pitchers %>%
         filter(ip > 1)
+
+#remove specific instances if necessary
+pitchers <- pitchers %>%
+        filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
 
 #get nfbc adp rankings
 #join adp rankings with nfbc eligibility
@@ -232,8 +236,12 @@ hitters$main_pos <- ifelse(hitters$player == "Cody Bellinger", "1B", hitters$mai
 hitters$main_pos <- ifelse(hitters$player == "Javier Baez", "2B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Gleyber Torres", "2B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Alex Bregman", "3B", hitters$main_pos)
-#adjusted in 600 ratings
+                #adjusted in 600 ratings
 hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Ian Happ", "3B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Aledmys Diaz", "SS", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Eduardo Nunez", "2B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Eric Thames", "1B", hitters$main_pos)
 
 #                 #second position
 hitters$main_pos1 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos1)
@@ -258,8 +266,12 @@ hitters$main_pos1 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos1 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos1)
-#adjusted in 600 ratings
-hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos1)
+        #adjusted in 600 ratings
+hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos1)
+hitters$main_pos1 <- ifelse(hitters$player == "Ian Happ", NA, hitters$main_pos1)
+hitters$main_pos1 <- ifelse(hitters$player == "Aledmys Diaz", NA, hitters$main_pos1)
+hitters$main_pos1 <- ifelse(hitters$player == "Eduardo Nunez", NA, hitters$main_pos1)
+hitters$main_pos1 <- ifelse(hitters$player == "Eric Thames", NA, hitters$main_pos1)
 
 #                 #third position
 hitters$main_pos2 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos2)
@@ -284,8 +296,12 @@ hitters$main_pos2 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos2 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos2)
-#adjusted in 600 ratings
-hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos2)
+        #adjusted in 600 ratings
+hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos2)
+hitters$main_pos2 <- ifelse(hitters$player == "Ian Happ", NA, hitters$main_pos2)
+hitters$main_pos2 <- ifelse(hitters$player == "Aledmys Diaz", NA, hitters$main_pos2)
+hitters$main_pos2 <- ifelse(hitters$player == "Eduardo Nunez", NA, hitters$main_pos2)
+hitters$main_pos2 <- ifelse(hitters$player == "Eric Thames", NA, hitters$main_pos2)
 
 #                 #fourth position
 hitters$main_pos3 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos3)
@@ -310,8 +326,12 @@ hitters$main_pos3 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos3 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos3)
-#adjusted in 600 ratings
-hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos3)
+        #adjusted in 600 ratings
+hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos3)
+hitters$main_pos3 <- ifelse(hitters$player == "Ian Happ", NA, hitters$main_pos3)
+hitters$main_pos3 <- ifelse(hitters$player == "Aledmys Diaz", NA, hitters$main_pos3)
+hitters$main_pos3 <- ifelse(hitters$player == "Eduardo Nunez", NA, hitters$main_pos3)
+hitters$main_pos3 <- ifelse(hitters$player == "Eric Thames", NA, hitters$main_pos3)
 
 #subset hitters into position groups
 catchers <- hitters %>%
@@ -641,7 +661,7 @@ hitters_final2 <- hitters_final1 %>%
 # corner_infielders <- all_players %>%
 #         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
 
-#positoin groups
+#position groups
 catchers <- hitters_final2 %>%
         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
 first_basemen <- hitters_final2 %>%

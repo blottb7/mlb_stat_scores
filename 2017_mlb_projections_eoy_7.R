@@ -680,3 +680,5 @@ ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geo
 #change all stats to reflect variance
 
 #Also, get an "official" position, so that catchers with multiple position eligibility don't weigh down other positions, for example.
+
+#Download 600/200/65 data for playing time agnostic rankings

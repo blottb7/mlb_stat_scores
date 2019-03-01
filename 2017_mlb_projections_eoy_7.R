@@ -12,10 +12,10 @@ library(scales)  #for rescale()
 
 #read in data
 #fangraphs projections
-pitchers <- read_excel("projections.xlsx", sheet = 8)
-hitters <- read_excel("projections.xlsx", sheet = 9)
+pitchers <- read_excel("projections.xlsx", sheet = 4)
+hitters <- read_excel("projections.xlsx", sheet = 3)
 #read in nfbc position eligibility
-nfbc <- read_excel("projections.xlsx", sheet = 10)
+nfbc <- read_excel("projections.xlsx", sheet = 2)
 
 #select nfbc cols
 nfbc <- nfbc %>%
@@ -232,6 +232,8 @@ hitters$main_pos <- ifelse(hitters$player == "Cody Bellinger", "1B", hitters$mai
 hitters$main_pos <- ifelse(hitters$player == "Javier Baez", "2B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Gleyber Torres", "2B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Alex Bregman", "3B", hitters$main_pos)
+#adjusted in 600 ratings
+hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
 
 #                 #second position
 hitters$main_pos1 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos1)
@@ -256,6 +258,8 @@ hitters$main_pos1 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos1 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos1)
+#adjusted in 600 ratings
+hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos1)
 
 #                 #third position
 hitters$main_pos2 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos2)
@@ -280,6 +284,8 @@ hitters$main_pos2 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos2 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos2)
+#adjusted in 600 ratings
+hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos2)
 
 #                 #fourth position
 hitters$main_pos3 <- ifelse(hitters$player == "Lourdes Gurriel Jr.", NA, hitters$main_pos3)
@@ -304,6 +310,8 @@ hitters$main_pos3 <- ifelse(hitters$player == "Cody Bellinger", NA, hitters$main
 hitters$main_pos3 <- ifelse(hitters$player == "Javier Baez", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos3)
+#adjusted in 600 ratings
+hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos3)
 
 #subset hitters into position groups
 catchers <- hitters %>%
@@ -664,7 +672,11 @@ second_basemen1 <- second_basemen %>%
         filter(player != "Isiah Kiner-Falefa")
 ggplot(data = second_basemen1, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
-ggplot(data = outfielders, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+ggplot(data = outfielders, aes(x = adp_rank, y = rank100)) + geom_point()# + geom_smooth(method = "lm", se = FALSE)
+ggplot(data = outfielders, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(se = FALSE)
+ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point()# + geom_smooth(method = "lm", se = FALSE)
+ggplot(data = outfielders, aes(x = adp_rank, y = sqrt(rank100))) + geom_point()# + geom_smooth(method = "lm", se = FALSE)
+ggplot(data = outfielders, aes(x = adp_rank, y = sqrt(rank100))) + geom_point()# + geom_smooth(method = "lm", se = FALSE)
 
 ggplot(data = pitchers_final2, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
@@ -675,6 +687,7 @@ ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100, color = pos)) + geo
 hitters_final3 <- hitters_final2 %>%
         filter(pos != "UT")
 ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(se = FALSE)
+ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
 #change ratio stat weights to a function of mean/sd
 #change all stats to reflect variance

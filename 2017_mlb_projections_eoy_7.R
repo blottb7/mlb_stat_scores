@@ -651,6 +651,32 @@ middle_infielders <- hitters_final2 %>%
 corner_infielders <- hitters_final2 %>%
         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
 
+#exploratory graphs
 ggplot(data = all_players, aes(x = adp_rank, y = overall_rank, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
-
 ggplot(data = first_basemen, aes(x = adp_rank, y = overall_rank)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = all_players, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+first_basemen1 <- first_basemen %>%
+        filter(player != "John Hicks")
+ggplot(data = first_basemen1, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+second_basemen1 <- second_basemen %>%
+        filter(player != "Isiah Kiner-Falefa")
+ggplot(data = second_basemen1, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = outfielders, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = pitchers_final2, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(se = FALSE)
+ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(se = FALSE)
+hitters_final3 <- hitters_final2 %>%
+        filter(pos != "UT")
+ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(se = FALSE)
+
+#change ratio stat weights to a function of mean/sd
+#change all stats to reflect variance
+
+#Also, get an "official" position, so that catchers with multiple position eligibility don't weigh down other positions, for example.

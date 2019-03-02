@@ -9,6 +9,7 @@ library(ggplot2)
 library(forecast)  #for BoxCox
 library(zoo)  #for na.locf fn
 library(scales)  #for rescale()
+library(broom)  #for augment()
 
 #read in data
 #fangraphs projections

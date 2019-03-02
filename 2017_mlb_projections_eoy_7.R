@@ -695,9 +695,11 @@ corner_infielders <- hitters_final2 %>%
 #use this equation for each position group and measure distance from regression line
 ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
-mod <- lm((rank100) ~ adp_rank, data = catchers)
+mod <- lm((rank100) ~ adp_rank, data = outfielders)
 summary(mod)
-output <- augment(mod)
+aug_mod <- augment(mod)
+ggplot(aug_mod, aes(x = x, y = y, color = ))
+predict(mod)
 
 # #exploratory graphs
 # ggplot(data = all_players, aes(x = adp_rank, y = overall_rank, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)

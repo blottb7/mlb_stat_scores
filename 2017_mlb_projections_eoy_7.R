@@ -1,5 +1,6 @@
 #set for 2019
-setwd("C:/Users/Ben/Desktop/baseball")
+#setwd("C:/Users/Ben/Desktop/baseball")
+setwd("C:/Users/Ben/Desktop/R projects")
 
 #libraries
 library(readxl)
@@ -20,7 +21,7 @@ nfbc <- read_excel("projections.xlsx", sheet = 2)
 
 #select nfbc cols
 nfbc <- nfbc %>%
-        select(1:4)
+  select(1:4)
 
 #CLEAN DATA
 #NFBC
@@ -29,19 +30,19 @@ nfbc_names <- c("player", "injury", "pos", "team")
 names(nfbc) <- nfbc_names
 #separate position by comma
 nfbc <- nfbc %>%
-        separate(pos, into = c("pos", "pos1", "pos2", "pos3"), sep = ",")
+  separate(pos, into = c("pos", "pos1", "pos2", "pos3"), sep = ",")
 #separate and concatenate player names
 #clean incorrectly used double commas
 nfbc$player <- ifelse(nfbc$player == "Guerrero, Jr., Vladimir", "Guerrero Jr., Vladimir", nfbc$player)
 nfbc$player <- ifelse(nfbc$player == "Tatis, Jr., Fernando", "Tatis Jr., Fernando", nfbc$player)
 #separate player names by comma
 nfbc <- nfbc %>%
-        separate(player, into = c("last_name", "first_name"), sep = ",")
+  separate(player, into = c("last_name", "first_name"), sep = ",")
 #paste player names together in the right order
 nfbc$player <- trimws(paste(nfbc$first_name, nfbc$last_name))
 #select columns to keep
 nfbc <- nfbc %>%
-        select(player, injury, pos, pos1, pos2, pos3, team)
+  select(player, injury, pos, pos1, pos2, pos3, team)
 
 #FANGRAPHS
 #Hitter names
@@ -70,43 +71,43 @@ names(pitchers) <- pitcher_names
 
 #Clean fangraphs data
 hitters <- hitters %>%
-        select(-waste1, -waste2, -waste3,  #remove spacer cols
-               -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%  #remove unneeded obs
-        select(-waste4, -adp)  #sometimes need to remove adp
+  select(-waste1, -waste2, -waste3,  #remove spacer cols
+         -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) %>%  #remove unneeded obs
+  select(-waste4, -adp)  #sometimes need to remove adp
 
 pitchers <- pitchers %>%
-        select(-war, -ra9_war, -player_id) %>%  #remove uneeded obs
-        select(-adp)  #sometimes need to remove adp
+  select(-war, -ra9_war, -player_id) %>%  #remove uneeded obs
+  select(-adp)  #sometimes need to remove adp
 
 #remove obs that will be duplicated when joining with nfbc
 hitters <- hitters %>%
-        select(-team)
+  select(-team)
 pitchers <- pitchers %>%
-        select(-team)
+  select(-team)
 
 #remove hitters and pitchers with 0 or 1 plate and appearance and innings pitched, respectively
 hitters <- hitters %>%
-        filter(pa > 1)
+  filter(pa > 1)
 pitchers <- pitchers %>%
-        filter(ip > 1)
+  filter(ip > 1)
 
 #remove specific instances if necessary
 pitchers <- pitchers %>%
-        filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
+  filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
 
 #get nfbc adp rankings
 #join adp rankings with nfbc eligibility
 
 #Join nfbc data with fangraphs data
 nfbc <- nfbc %>%
-        left_join(hitters, by = "player") %>%
-        left_join(pitchers, by = "player")
+  left_join(hitters, by = "player") %>%
+  left_join(pitchers, by = "player")
 
 #separate nfbc into hitters and pitchers
 hitters <- nfbc %>%
-        filter(pos != "P" & !is.na(pa))
+  filter(pos != "P" & !is.na(pa))
 pitchers <- nfbc %>%
-        filter(pos == "P" & !is.na(ip))
+  filter(pos == "P" & !is.na(ip))
 
 #numbers of starting players
 n_teams <- 15
@@ -139,66 +140,66 @@ n_pitchers <- n_teams * pitchers_starting
 #FUNCTIONS
 #Z-Score FUNCTION for hitters
 z_score_hitters <- function(df) {
-        
-        #nfbc stats
-        df$hr_z <- round(as.numeric(scale(df$hr)), 3)
-        df$runs_z <- round(as.numeric(scale(df$runs)), 3)
-        df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
-        df$avg_z <- round(as.numeric(scale(df$avg)), 3)
-        df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
-        
-        df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z
-        
-        #return df
-        df
+  
+  #nfbc stats
+  df$hr_z <- round(as.numeric(scale(df$hr)), 3)
+  df$runs_z <- round(as.numeric(scale(df$runs)), 3)
+  df$rbi_z <- round(as.numeric(scale(df$rbi)), 3)
+  df$avg_z <- round(as.numeric(scale(df$avg)), 3)
+  df$sb_z <- round(as.numeric(scale(BoxCox(df$sb, .45))), 3)
+  
+  df$z_total <- df$hr_z + df$runs_z + df$rbi_z + df$avg_z + df$sb_z
+  
+  #return df
+  df
 }
 
 #SCALE HITTER STATS
 #Rescale function for hitters
 rescale_hitters <- function(df) {
-        
-        df$hr_pts <- round(rescale(df$hr_z), 3)
-        df$runs_pts <- round(rescale(df$runs_z), 3)
-        df$rbi_pts <- round(rescale(df$rbi_z), 3)
-        df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
-        df$sb_pts <- round(rescale(df$sb_z), 3)
-        
-        df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
-        
-        df
+  
+  df$hr_pts <- round(rescale(df$hr_z), 3)
+  df$runs_pts <- round(rescale(df$runs_z), 3)
+  df$rbi_pts <- round(rescale(df$rbi_z), 3)
+  df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
+  df$sb_pts <- round(rescale(df$sb_z), 3)
+  
+  df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
+  
+  df
 }
 
 #WEIGHT HITTER RATIO STATS
 #function for position weighting
 weight_hitter_stats <- function(df, df_pop) {  #take in two args, the sample we are interested in (df), and the population (df_pop)
-        
-        #weight a stat for the position group by the entire population of eligible hitters
-        df$hr_pts_weighted <- round(df$hr_pts * mean(df$hr) / mean(df_pop$hr), 3)
-        df$runs_pts_weighted <- round(df$runs_pts * mean(df$runs) / mean(df_pop$runs), 3)
-        df$rbi_pts_weighted <- round(df$rbi_pts * mean(df$rbi) / mean(df_pop$rbi), 3)
-        #df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) / mean(df_pop$ab), 3)
-        df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) * df$ab / (mean(df_pop$ab) * mean(df$ab)), 3)
-        df$sb_pts_weighted <- round(df$sb_pts * mean(df$sb) / mean(df_pop$sb), 3)
-        
-        df$weighted_pts_total <- round(df$hr_pts_weighted + df$runs_pts_weighted + df$rbi_pts_weighted + df$avg_pts_weighted + df$sb_pts_weighted, 3)
-        
-        df
+  
+  #weight a stat for the position group by the entire population of eligible hitters
+  df$hr_pts_weighted <- round(df$hr_pts * mean(df$hr) / mean(df_pop$hr), 3)
+  df$runs_pts_weighted <- round(df$runs_pts * mean(df$runs) / mean(df_pop$runs), 3)
+  df$rbi_pts_weighted <- round(df$rbi_pts * mean(df$rbi) / mean(df_pop$rbi), 3)
+  #df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) / mean(df_pop$ab), 3)
+  df$avg_pts_weighted <- round(df$avg_pts * mean(df$ab) * df$ab / (mean(df_pop$ab) * mean(df$ab)), 3)
+  df$sb_pts_weighted <- round(df$sb_pts * mean(df$sb) / mean(df_pop$sb), 3)
+  
+  df$weighted_pts_total <- round(df$hr_pts_weighted + df$runs_pts_weighted + df$rbi_pts_weighted + df$avg_pts_weighted + df$sb_pts_weighted, 3)
+  
+  df
 }
 
 weight_hitter_rate_stats <- function(df) {
-        
-        df$hr_pts <- round(rescale(df$hr_z), 3)
-        df$runs_pts <- round(rescale(df$runs_z), 3)
-        df$rbi_pts <- round(rescale(df$rbi_z), 3)
-        #df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
-        df$avg_pts <- round(rescale(df$avg_pts * df$ab / mean(df$ab), to = c(0, 2/3)), 3)
-        df$sb_pts <- round(rescale(df$sb_z), 3)
-        
-        df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
-        
-        df
-        
-        #df$avg_pts_weighted <- round(df$avg_pts_weighted * df$ba / mean(df$ab), 3)
+  
+  df$hr_pts <- round(rescale(df$hr_z), 3)
+  df$runs_pts <- round(rescale(df$runs_z), 3)
+  df$rbi_pts <- round(rescale(df$rbi_z), 3)
+  #df$avg_pts <- round(rescale(df$avg_z, to = c(0, 2/3)), 3)
+  df$avg_pts <- round(rescale(df$avg_pts * df$ab / mean(df$ab), to = c(0, 2/3)), 3)
+  df$sb_pts <- round(rescale(df$sb_z), 3)
+  
+  df$pts_total <- df$hr_pts + df$runs_pts + df$rbi_pts + df$avg_pts + df$sb_pts
+  
+  df
+  
+  #df$avg_pts_weighted <- round(df$avg_pts_weighted * df$ba / mean(df$ab), 3)
 }
 
 #GRAPH stat, z_score stat, rescaled stat, and weighted stat to see the distributions.
@@ -348,19 +349,19 @@ hitters$main_pos3 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$ma
 
 #subset hitters into position groups
 catchers <- hitters %>%
-        filter(main_pos == "C" | main_pos1 == "C" | main_pos2 == "C" | main_pos3 == "C")
+  filter(main_pos == "C" | main_pos1 == "C" | main_pos2 == "C" | main_pos3 == "C")
 first_basemen <- hitters %>%
-        filter(main_pos == "1B" | main_pos1 == "1B" | main_pos2 == "1B" | main_pos3 == "1B")
+  filter(main_pos == "1B" | main_pos1 == "1B" | main_pos2 == "1B" | main_pos3 == "1B")
 second_basemen <- hitters %>%
-        filter(main_pos == "2B" | main_pos1 == "2B" | main_pos2 == "2B" | main_pos3 == "2B")
+  filter(main_pos == "2B" | main_pos1 == "2B" | main_pos2 == "2B" | main_pos3 == "2B")
 third_basemen <- hitters %>%
-        filter(main_pos == "3B" | main_pos1 == "3B" | main_pos2 == "3B" | main_pos3 == "3B")
+  filter(main_pos == "3B" | main_pos1 == "3B" | main_pos2 == "3B" | main_pos3 == "3B")
 shortstops <- hitters %>%
-        filter(main_pos == "SS" | main_pos1 == "SS" | main_pos2 == "SS" | main_pos3 == "SS")
+  filter(main_pos == "SS" | main_pos1 == "SS" | main_pos2 == "SS" | main_pos3 == "SS")
 outfielders<- hitters %>%
-        filter(main_pos == "OF" | main_pos1 == "OF" | main_pos2 == "OF" | main_pos3 == "OF")
+  filter(main_pos == "OF" | main_pos1 == "OF" | main_pos2 == "OF" | main_pos3 == "OF")
 utility <- hitters %>%
-        filter(main_pos == "UT" | main_pos1 == "UT" | main_pos2 == "UT" | main_pos3 == "UT")
+  filter(main_pos == "UT" | main_pos1 == "UT" | main_pos2 == "UT" | main_pos3 == "UT")
 
 #Run z_score on hitters
 catchers1 <- z_score_hitters(catchers) %>% arrange(desc(z_total))
@@ -396,9 +397,9 @@ outfielders2 <- outfielders1[1:n_outfielders,]
 
 #create middle infielders df
 middle_infielders <- second_basemen1 %>%
-        bind_rows(shortstops1) %>%  #combine ALL SS and 2B-men
-        anti_join(second_basemen2, by = "player") %>%  #remove the 2B already selected
-        anti_join(shortstops2, by = "player")  #remove the SS already selected
+  bind_rows(shortstops1) %>%  #combine ALL SS and 2B-men
+  anti_join(second_basemen2, by = "player") %>%  #remove the 2B already selected
+  anti_join(shortstops2, by = "player")  #remove the SS already selected
 #run z-score on middle infielders after removing already used players
 middle_infielders1 <- z_score_hitters(middle_infielders) %>% arrange(desc(z_total))
 middle_infielders1 <- rescale_hitters(middle_infielders1) %>% arrange(desc(pts_total))
@@ -406,9 +407,9 @@ middle_infielders1 <- weight_hitter_stats(middle_infielders1, hitters) %>% arran
 
 # #run same process on corner infielders as middle infielders
 corner_infielders <- first_basemen1 %>%
-        bind_rows(third_basemen1) %>%
-        anti_join(first_basemen2, by = "player") %>%
-        anti_join(third_basemen2, by = "player")
+  bind_rows(third_basemen1) %>%
+  anti_join(first_basemen2, by = "player") %>%
+  anti_join(third_basemen2, by = "player")
 #run functions
 corner_infielders1 <- z_score_hitters(corner_infielders)
 corner_infielders1 <- rescale_hitters(corner_infielders1) %>% arrange(desc(pts_total))
@@ -424,7 +425,7 @@ position_players <- bind_rows(catchers2, first_basemen2, second_basemen2, third_
 #anti_join remaining hitters to selected hitters for use with DH/util and bench players
 #get utlility/designated players
 hitters_remaining <- hitters %>%
-        anti_join(position_players, by = "player")
+  anti_join(position_players, by = "player")
 
 hitters_remaining <- z_score_hitters(hitters_remaining) %>% arrange(desc(z_total))
 hitters_remaining <- rescale_hitters(hitters_remaining) %>% arrange(desc(pts_total))
@@ -434,7 +435,7 @@ utility_players <- hitters_remaining[1:n_designated_hitters,]
 
 #combine utility players with position players
 all_hitters <- position_players %>%
-        bind_rows(utility_players)
+  bind_rows(utility_players)
 
 all_hitters <- z_score_hitters(all_hitters) %>% arrange(desc(z_total))
 all_hitters <- rescale_hitters(all_hitters) %>% arrange(desc(pts_total))
@@ -464,46 +465,46 @@ all_hitters$hitter_rank <- as.integer(rank(-all_hitters$pts_total))
 
 #METHOD 2: starters and relievers in same group
 z_score_pitchers <- function(df) {
-        
-        df$wins_z <- round(as.numeric(scale(df$wins)), 3)
-        df$saves_z <- round(as.numeric(scale(df$saves)), 3)
-        df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
-        df$so_z <- round(as.numeric(scale(df$so.p)), 3)
-        df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
-        
-        df$z_total <- df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
-        #
-        df
+  
+  df$wins_z <- round(as.numeric(scale(df$wins)), 3)
+  df$saves_z <- round(as.numeric(scale(df$saves)), 3)
+  df$era_z <- round(as.numeric(scale(df$era) * -1), 3)
+  df$so_z <- round(as.numeric(scale(df$so.p)), 3)
+  df$whip_z <- round(as.numeric(scale(df$whip) * -1), 3)
+  
+  df$z_total <- df$wins_z + df$saves_z + df$era_z + df$so_z + df$whip_z
+  #
+  df
 }
 
 #rescale function for pitchers
 rescale_pitchers <- function(df) {
-        
-        df$wins_pts <- round(rescale(df$wins_z), 3)
-        df$saves_pts <- round(rescale(df$saves_z), 3)
-        df$era_pts <- round(rescale(df$era_z, to = c(0, 2/3)), 3)
-        df$so_pts <- round(rescale(df$so_z), 3)
-        df$whip_pts <- round(rescale(df$whip_z), 3)
-        
-        df$pts_total <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
-        
-        df
+  
+  df$wins_pts <- round(rescale(df$wins_z), 3)
+  df$saves_pts <- round(rescale(df$saves_z), 3)
+  df$era_pts <- round(rescale(df$era_z, to = c(0, 2/3)), 3)
+  df$so_pts <- round(rescale(df$so_z), 3)
+  df$whip_pts <- round(rescale(df$whip_z), 3)
+  
+  df$pts_total <- df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts
+  
+  df
 }
 
 weight_pitcher_rate_stats <- function(df) {
-        
-        df$wins_pts <- df$wins_pts
-        df$saves_pts <- df$saves_pts
-        #df$era_pts <- round(df$era_pts * df$ip / mean(df$ip), 3)
-        df$era_pts <- round(rescale(df$era_pts * df$ip / mean(df$ip), to = c(0, 2/3)), 3)
-        df$so_pts <- df$so_pts
-        #df$whip_pts <- round(df$whip_pts * df$ip / mean(df$ip), 3)
-        df$whip_pts <- round(rescale(df$whip_pts * df$ip / mean(df$ip), to = c(0, 1)), 3)
-        
-        df$pts_total <- round(df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts, 3)
-        
-        df
-        
+  
+  df$wins_pts <- df$wins_pts
+  df$saves_pts <- df$saves_pts
+  #df$era_pts <- round(df$era_pts * df$ip / mean(df$ip), 3)
+  df$era_pts <- round(rescale(df$era_pts * df$ip / mean(df$ip), to = c(0, 2/3)), 3)
+  df$so_pts <- df$so_pts
+  #df$whip_pts <- round(df$whip_pts * df$ip / mean(df$ip), 3)
+  df$whip_pts <- round(rescale(df$whip_pts * df$ip / mean(df$ip), to = c(0, 1)), 3)
+  
+  df$pts_total <- round(df$wins_pts + df$saves_pts + df$era_pts + df$so_pts + df$whip_pts, 3)
+  
+  df
+  
 }
 
 pitchers1 <- z_score_pitchers(pitchers) %>% arrange(desc(z_total))
@@ -522,8 +523,8 @@ all_pitchers$pitcher_rank <- as.integer(rank(-all_pitchers$pts_total))
 
 #combine pitchers and catchers
 all_players <- all_hitters %>%
-        bind_rows(all_pitchers) %>%
-        arrange(desc(pts_total))
+  bind_rows(all_pitchers) %>%
+  arrange(desc(pts_total))
 
 #UGH! Fangraphs has different number of download columns sometimes, so need a few of these
 # all_players <- all_players[,-c(55:60)]
@@ -531,7 +532,7 @@ all_players <- all_players[,-c(59:64)]
 
 #Generate 100 point scale
 all_players <- all_players %>%
-        mutate(rank100 = round(rescale(pts_total, to = c(0, 100)), 0))
+  mutate(rank100 = round(rescale(pts_total, to = c(0, 100)), 0))
 
 #Duplicates
 #assign a "main position" to players with multiple positions based on position strength, in order to add another for one who is in two or three times.
@@ -539,42 +540,42 @@ all_players <- all_players %>%
 
 #There are up to 4 positions possible, so need to group by all of them
 z_pos_means <- all_players %>%
-        group_by(pos, pos1, pos2, pos3) %>%
-        summarize(z_pos_mean = round(mean(z_total), 2)) %>%
-        arrange(desc(z_pos_mean))
+  group_by(pos, pos1, pos2, pos3) %>%
+  summarize(z_pos_mean = round(mean(z_total), 2)) %>%
+  arrange(desc(z_pos_mean))
 
 z_pos_means1 <- all_players %>%
-        group_by(pos, pos1, pos2, pos3) %>%
-        tally()
+  group_by(pos, pos1, pos2, pos3) %>%
+  tally()
 
 z_pos_means <- z_pos_means %>%
-        left_join(z_pos_means1) %>%
-        mutate(total_weight = n * z_pos_mean)
+  left_join(z_pos_means1) %>%
+  mutate(total_weight = n * z_pos_mean)
 
 rm(z_pos_means1)
 #separate by columns
 position <- z_pos_means[,c(1,5:7)]
 position1 <- z_pos_means[,c(2,5:7)] %>%
-        filter(!is.na(pos1))
+  filter(!is.na(pos1))
 position2 <- z_pos_means[,c(3,5:7)] %>%
-        filter(!is.na(pos2))
+  filter(!is.na(pos2))
 position3 <- z_pos_means[,c(4:7)] %>%
-        filter(!is.na(pos3))
+  filter(!is.na(pos3))
 
 rm(z_pos_means)
 #now group by again
 position <- position %>%
-        group_by(pos) %>%
-        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+  group_by(pos) %>%
+  summarize(total_weight_new = sum(total_weight), total_n = sum(n))
 position1 <- position1 %>%
-        group_by(pos1) %>%
-        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+  group_by(pos1) %>%
+  summarize(total_weight_new = sum(total_weight), total_n = sum(n))
 position2 <- position2 %>%
-        group_by(pos2) %>%
-        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+  group_by(pos2) %>%
+  summarize(total_weight_new = sum(total_weight), total_n = sum(n))
 position3 <- position3 %>%
-        group_by(pos3) %>%
-        summarize(total_weight_new = sum(total_weight), total_n = sum(n))
+  group_by(pos3) %>%
+  summarize(total_weight_new = sum(total_weight), total_n = sum(n))
 #bind these groups together
 #There is a faster way, but for now just change column name to "pos"
 colnames(position1)[1] <- "pos"
@@ -582,16 +583,16 @@ colnames(position2)[1] <- "pos"
 colnames(position3)[1] <- "pos"
 #bind
 position <- position %>%
-        bind_rows(position1) %>%
-        bind_rows(position2) %>%
-        bind_rows(position3)
+  bind_rows(position1) %>%
+  bind_rows(position2) %>%
+  bind_rows(position3)
 #remove binded dfs
 rm(position1, position2, position3)
 #run same process on the combined position groupings
 position_strength <- position %>%
-        group_by(pos) %>%
-        summarize(total_weight = sum(total_weight_new), total_n = sum(total_n), mean_pos_strength = round(total_weight / total_n, 3)) %>%
-        arrange(desc(mean_pos_strength))
+  group_by(pos) %>%
+  summarize(total_weight = sum(total_weight_new), total_n = sum(total_n), mean_pos_strength = round(total_weight / total_n, 3)) %>%
+  arrange(desc(mean_pos_strength))
 
 rm(position)
 
@@ -624,37 +625,45 @@ adp$player <- ifelse(adp$player == "Guerrero, Jr., Vladimir", "Guerrero Jr., Vla
 adp$player <- ifelse(adp$player == "Tatis, Jr., Fernando", "Tatis Jr., Fernando", adp$player)
 #separate player names by comma
 adp <- adp %>%
-        separate(player, into = c("last_name", "first_name"), sep = ",")
+  separate(player, into = c("last_name", "first_name"), sep = ",")
 #paste player names together in the right order
 adp$player <- trimws(paste(adp$first_name, adp$last_name))
 
 #select columns to keep/discard
 adp <- adp %>%
-        select(adp_rank, player, adp, min_pick, max_pick, n_picks)
+  select(adp_rank, player, adp, min_pick, max_pick, n_picks)
 
 all_players <- all_players %>%
-        left_join(adp, by = "player")
+  left_join(adp, by = "player")
 
 #separate into position groups
 pitchers_final <- all_players %>%
-        filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
+  filter(pos == "P" | pos1 == "P" | pos2 == "P" | pos3 == "P")
 
 hitters_final <- all_players %>%
-        anti_join(pitchers_final, by = "player")
+  anti_join(pitchers_final, by = "player")
 
 #remove hitters stats and generally clean
 pitchers_final1 <- pitchers_final %>%
-        select(-c("pos1":"pos3", "games.h":"woba", "main_pos":"sb_z", "hr_pts":"sb_pts", "hitter_rank"))
+  select(-c(pos1:pos3, games.h:woba, main_pos:sb_z, hr_pts:sb_pts, hitter_rank))
+# pitchers_final1 <- pitchers_final %>%
+#   select(-c("pos1":"pos3", "games.h":"woba", "main_pos":"sb_z", "hr_pts":"sb_pts", "hitter_rank"))
 pitchers_final2 <- pitchers_final1 %>%
-        select(overall_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
-               gs, games.p, saves, ip, so.p, whip, rank100)
+  select(overall_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
+         gs, games.p, saves, ip, so.p, whip, rank100)
 
 #hitters stuff
 hitters_final1 <- hitters_final %>%
-        select(-c("wins":"fip", "main_pos1":"main_pos3", "wins_z":"pitcher_rank"))
+  select(-c(wins:fip, main_pos1:main_pos3, wins_z:pitcher_rank))
+# hitters_final1 <- hitters_final %>%
+#   select(-c("wins":"fip", "main_pos1":"main_pos3", "wins_z":"pitcher_rank"))
 hitters_final2 <- hitters_final1 %>%
-        select(overall_rank, player, hitter_rank, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
-               runs, rbi, sb, avg, pos, pos1, pos2, pos3, rank100)
+  select(overall_rank, player, hitter_rank, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
+         runs, rbi, sb, avg, pos, pos1, pos2, pos3, rank100)
+
+#remove unneeded dfs
+rm(pitchers_final1, hitters_final1)
+rm(pitchers_final, hitters_final)
 
 #position groups for exploration
 # catchers <- all_players %>%
@@ -676,21 +685,21 @@ hitters_final2 <- hitters_final1 %>%
 
 #position groups
 catchers <- hitters_final2 %>%
-        filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
+  filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
 first_basemen <- hitters_final2 %>%
-        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
+  filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
 second_basemen <- hitters_final2 %>%
-        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
+  filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
 third_basemen <- hitters_final2 %>%
-        filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+  filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
 shortstops <- hitters_final2 %>%
-        filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+  filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
 outfielders <- hitters_final2 %>%
-        filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
+  filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
 middle_infielders <- hitters_final2 %>%
-        filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
+  filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
 corner_infielders <- hitters_final2 %>%
-        filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+  filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
 
 #use this equation for each position group and measure distance from regression line
 ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
@@ -727,9 +736,10 @@ ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() +
 # # ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100)) + geom_point() + geom_smooth(se = FALSE)
 # ggplot(data = hitters_final2, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(se = FALSE)
 hitters_final3 <- hitters_final2 %>%
-        filter(pos != "UT")
+  filter(pos != "UT")
 ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(se = FALSE)
 ggplot(data = hitters_final3, aes(x = adp_rank, y = rank100, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 # 
 # # change ratio stat weights to a function of mean/sd
 # # change all stats to reflect variance
+ggplot(data = hitters_final2, aes(x = sb)) + geom_histogram()

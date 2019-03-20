@@ -652,6 +652,13 @@ adp$player <- trimws(paste(adp$first_name, adp$last_name))
 adp <- adp %>%
   select(adp_rank, player, adp, min_pick, max_pick, n_picks)
 
+# adp1 <- adp %>%
+#   anti_join(nfbc, by = "player")
+
+#correct player names
+adp$player <- ifelse(adp$player == "Ronald Acuna Jr.", "Ronald Acuna", adp$player)
+adp$player <- ifelse(adp$player == "Jose Leclerc", "Jose Leclerc", adp$player)
+
 all_players <- all_players %>%
   left_join(adp, by = "player")
 
@@ -703,13 +710,13 @@ corner_infielders <- hitters_final2 %>%
   filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
 
 #use this equation for each position group and measure distance from regression line
-ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
-
-mod <- lm((rank100) ~ adp_rank, data = outfielders)
-summary(mod)
-aug_mod <- augment(mod)
-ggplot(aug_mod, aes(x = x, y = y, color = ))
-predict(mod)
+# ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+# 
+# mod <- lm((rank100) ~ adp_rank, data = outfielders)
+# summary(mod)
+# aug_mod <- augment(mod)
+# ggplot(aug_mod, aes(x = x, y = y, color = ))
+# predict(mod)
 
 #try it for third basemen, a more manageable group than outfielders
 # third_basemen <- third_basemen[-c(24, 33),]

@@ -776,17 +776,31 @@ mod <- lm(rank100 ~ adp, data = catchers)
 catchers$discount <- round(catchers$rank100 - (mod$coefficients[1] + mod$coefficients[2] * catchers$adp), 2)
 catchers$fair_adp = round( (catchers$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
+mod <- lm(rank100 ~ adp, data = pitchers_final2)
+pitchers_final2$discount <- round(pitchers_final2$rank100 - (mod$coefficients[1] + mod$coefficients[2] * pitchers_final2$adp), 2)
+pitchers_final2$fair_adp = round( (pitchers_final2$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
-#write.csv(first_basemen, file = "first_basemen")
-write.xlsx(first_basemen, "first_basemen.xlsx")
-write.xlsx(third_basemen, "third_basemen.xlsx")
-write.xlsx(corner_infielders, "corner_infielders.xlsx")
+ggplot(data = pitchers_final2, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
-write.xlsx(second_basemen, "second_basemen.xlsx")
-write.xlsx(shortstops, "shortstops.xlsx")
+relievers <- pitchers_final2 %>%
+  filter(saves > 0)
 
-write.xlsx(outfielders, "outfielders.xlsx")
-write.xlsx(catchers, "catchers.xlsx")
+#combine dfs together
+  #just hitters for now
+hitters_final3 <- catchers %>%
+  bind_rows(first_basemen, second_basemen, third_basemen, shortstops, outfielders, middle_infielders, corner_infielders) %>%
+  arrange(desc(rank100), desc(discount))
+
+# #write.csv(first_basemen, file = "first_basemen")
+# write.xlsx(first_basemen, "first_basemen.xlsx")
+# write.xlsx(third_basemen, "third_basemen.xlsx")
+# write.xlsx(corner_infielders, "corner_infielders.xlsx")
+# 
+# write.xlsx(second_basemen, "second_basemen.xlsx")
+# write.xlsx(shortstops, "shortstops.xlsx")
+# 
+# write.xlsx(outfielders, "outfielders.xlsx")
+# write.xlsx(catchers, "catchers.xlsx")
 #
 # third_basemen1 <- third_basemen[-c(1:5),]
 # ggplot(data = third_basemen1, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)

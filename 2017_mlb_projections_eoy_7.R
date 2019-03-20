@@ -791,15 +791,65 @@ pitchers_final2$fair_adp = round( (pitchers_final2$rank100 - mod$coefficients[1]
 
 ggplot(data = pitchers_final2, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
-relievers <- pitchers_final2 %>%
-  filter(saves > 0)
-
 #combine dfs together
   #just hitters for now
 hitters_final3 <- catchers %>%
   bind_rows(first_basemen, second_basemen, third_basemen, shortstops, outfielders, middle_infielders, corner_infielders,
             utility_players) %>%
   arrange(desc(rank100), desc(discount))
+
+#set up relievers
+relievers <- pitchers %>%
+  filter(saves > 0) %>%
+  select(-c(games.h:woba))  #get rid of hitter stats
+
+#removed the doubled up "Will Smith"
+relievers <- relievers[-66,]
+
+#merge with adp
+relievers <- relievers %>%
+  left_join(adp, by = "player") %>%
+  arrange(adp)
+
+#add closer monkey adp
+cm_rank <- as.data.frame(as.integer(c(1,2,5,6,3,
+            12,8,13,4,9,
+            18,NA,14,16,17,
+            19,11,24,21,15,
+            20,NA,29,33,34,
+            28,22,30,NA,NA,
+            27,26,31,NA,NA,
+            NA,35,NA,NA,NA)))
+cm_rank[40:79,] <- NA
+names(cm_rank) <- "cm_rank"
+
+#join with relivers
+relievers <- relievers %>%
+  bind_cols(cm_rank)
+
+#names to add
+  #add Jose LeClerc
+# relievers$cm_rank <- ifelse(relievers$cm_rank == "Jose Leclerc", 10, relievers$cm_rank)
+relievers[75, 29] <- 10
+  #craig kimbrel
+relievers[80,1] <- "Craig Kimbrel"
+relievers[80, 29] <- 7
+  #Mark Melancon
+relievers$cm_rank <- ifelse(relievers$player == "Mark Melancon", 23, relievers$cm_rank)
+  #Hunter Strickland
+relievers[81,1] <- "Hunter Strickland"
+relievers[81,29] <- 25
+
+#arrange by cm_rank
+relievers <- relievers %>% arrange(cm_rank, desc(saves))
+
+#organize
+relievers <- relievers %>%
+  select(player,pos, team, cm_rank, adp_rank:max_pick, injury,wins:fip)
+
+
+#add nick pollack adp for relievers if available, or possibly pitcher list adp
+  #its available but from February and not worth the work
 
 # #write.csv(first_basemen, file = "first_basemen")
 # write.xlsx(first_basemen, "first_basemen.xlsx")

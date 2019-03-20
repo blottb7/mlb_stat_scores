@@ -80,6 +80,7 @@ pitchers$player <- ifelse(pitchers$player == "Zach Britton", "Zack Britton", pit
 pitchers$player <- ifelse(pitchers$player == "Joshua James", "Josh James", pitchers$player)
 pitchers$player <- ifelse(pitchers$player == "Michael Soroka", "Mike Soroka", pitchers$player)
 pitchers$player <- ifelse(pitchers$player == "Jakob Junis", "Jake Junis", pitchers$player)
+hitters$player <- ifelse(hitters$player == "D.J. Stewart", "DJ Stewart", hitters$player)
 
 #Clean fangraphs data
 hitters <- hitters %>%
@@ -108,20 +109,20 @@ pitchers <- pitchers %>%
   filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
 
 #Join nfbc data with fangraphs data
-nfbc1 <- nfbc %>%
+nfbc <- nfbc %>%
   left_join(hitters, by = "player") %>%
   left_join(pitchers, by = "player")
 
 #separate nfbc into hitters and pitchers
-hitters1 <- nfbc1 %>%
+hitters <- nfbc %>%
   filter(pos != "P" & !is.na(pa))
-pitchers1 <- nfbc1 %>%
+pitchers <- nfbc %>%
   filter(pos == "P" & !is.na(ip))
 
-hitters2 <- hitters %>%
-  anti_join(hitters1, by = "player")
-pitchers2 <- pitchers %>%
-  anti_join(pitchers1, by = "player")
+# hitters <- hitters %>%
+#   anti_join(hitters, by = "player")
+# pitchers <- pitchers %>%
+#   anti_join(pitchers1, by = "player")
 
 #numbers of starting players
 n_teams <- 15
@@ -254,6 +255,7 @@ hitters$main_pos <- ifelse(hitters$player == "Gleyber Torres", "2B", hitters$mai
 hitters$main_pos <- ifelse(hitters$player == "Alex Bregman", "3B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Adam Frazier", "2B", hitters$main_pos)
 hitters$main_pos <- ifelse(hitters$player == "Jurickson Profar", "1B", hitters$main_pos)
+hitters$main_pos <- ifelse(hitters$player == "Brian Anderson", "3B", hitters$main_pos)
 
 #                 #adjusted in 600 ratings
 # hitters$main_pos <- ifelse(hitters$player == "Hernan Perez", "2B", hitters$main_pos)
@@ -287,6 +289,7 @@ hitters$main_pos1 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main
 hitters$main_pos1 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos1)
 hitters$main_pos1 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos1)
+hitters$main_pos1 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos1)
 
 #         #adjusted in 600 ratings
 # hitters$main_pos1 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos1)
@@ -320,6 +323,7 @@ hitters$main_pos2 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main
 hitters$main_pos2 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos2)
 hitters$main_pos2 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos2)
+hitters$main_pos2 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos2)
 
 #         #adjusted in 600 ratings
 # hitters$main_pos2 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos2)
@@ -353,6 +357,7 @@ hitters$main_pos3 <- ifelse(hitters$player == "Gleyber Torres", NA, hitters$main
 hitters$main_pos3 <- ifelse(hitters$player == "Alex Bregman", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Adam Frazier", NA, hitters$main_pos3)
 hitters$main_pos3 <- ifelse(hitters$player == "Jurickson Profar", NA, hitters$main_pos3)
+hitters$main_pos3 <- ifelse(hitters$player == "Brian Anderson", NA, hitters$main_pos3)
 
 #         #adjusted in 600 ratings
 # hitters$main_pos3 <- ifelse(hitters$player == "Hernan Perez", NA, hitters$main_pos3)
@@ -679,39 +684,6 @@ hitters_final2 <- hitters_final1 %>%
 rm(pitchers_final1, hitters_final1)
 rm(pitchers_final, hitters_final)
 
-# #add draft value subjectivity ranks
-# #initialize
-# hitters_final2$my_rank <- NA
-# #ranks
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Mike Trout", 1, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Mookie Betts", 2, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Jose Ramirez", 3, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "J.D. Martinez", 4, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Giancarlo Stanton", 16, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Nolan Arenado", 5, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
-# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
-
-#position groups for exploration
-# catchers <- all_players %>%
-#         filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
-# first_basemen <- all_players %>%
-#         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B")
-# second_basemen <- all_players %>%
-#         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B")
-# third_basemen <- all_players %>%
-#         filter(pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-# shortstops <- all_players %>%
-#         filter(pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-# outfielders <- all_players %>%
-#         filter(pos == "OF" | pos1 == "OF" | pos2 == "OF" | pos3 == "OF")
-# middle_infielders <- all_players %>%
-#         filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
-# corner_infielders <- all_players %>%
-#         filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
-
 #position groups
 catchers <- hitters_final2 %>%
   filter(pos == "C" | pos1 == "C" | pos2 == "C" | pos3 == "C")
@@ -740,12 +712,12 @@ ggplot(aug_mod, aes(x = x, y = y, color = ))
 predict(mod)
 
 #try it for third basemen, a more manageable group than outfielders
-# third_basemen <- third_basemen[-c(24, 35),]
+# third_basemen <- third_basemen[-c(24, 33),]
 ggplot(data = third_basemen, aes(x = adp, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 ggplot(data = third_basemen, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
-mod <- lm(rank100 ~ adp, data = third_basemen)
-summary(mod)
+# mod <- lm(rank100 ~ adp, data = third_basemen)
+# summary(mod)
 
 #I want two things:
 #1) Vertical distance from point to regression line; this tells discount/premium at current ADP
@@ -756,8 +728,10 @@ summary(mod)
 #discount = rank100 - (70.16 - .084 * adp)
 # third_basemen1 <- third_basemen
 # third_basemen1$discount <- third_basemen1$rank100 - (70.16 - .084 * third_basemen1$adp)
-third_basemen <- third_basemen[-35,]
-third_basemen$discount <- third_basemen$rank100 - (70.16 - .084 * third_basemen$adp)
+third_basemen <- third_basemen[-33,]
+mod <- lm(rank100 ~ adp, data = third_basemen)
+summary(mod)
+third_basemen$discount <- round(third_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * third_basemen$adp), 2)
 
 #2)
 #at what adp does this player have fair value; that is, zero discount and zero premium
@@ -767,15 +741,20 @@ third_basemen$discount <- third_basemen$rank100 - (70.16 - .084 * third_basemen$
 # -.084 * adp = rank100 - 70.16
 # adp = -(rank100 - 70.16) / .084
 
-third_basemen$fair_adp = round(- (third_basemen$rank100 - 70.16) / .084, 0)
+third_basemen$fair_adp = round( (third_basemen$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
 #do this for other positions
-first_basemen <- first_basemen[-34,]
+first_basemen <- first_basemen[-35,]
 mod <- lm(rank100 ~ adp, data = first_basemen)
-first_basemen$discount <- first_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * first_basemen$adp)
+first_basemen$discount <- round(first_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * first_basemen$adp), 2)
 first_basemen$fair_adp = round( (first_basemen$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
-second_basemen <- second_basemen[-28,]
+corner_infielders <- corner_infielders[-c(63:64),]
+mod <- lm(rank100 ~ adp, data = corner_infielders)
+corner_infielders$discount <- round(corner_infielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * corner_infielders$adp), 2)
+corner_infielders$fair_adp = round( (corner_infielders$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+second_basemen <- second_basemen[-29,]
 mod <- lm(rank100 ~ adp, data = second_basemen)
 second_basemen$discount <- round(second_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * second_basemen$adp), 2)
 second_basemen$fair_adp = round( (second_basemen$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
@@ -783,6 +762,11 @@ second_basemen$fair_adp = round( (second_basemen$rank100 - mod$coefficients[1]) 
 mod <- lm(rank100 ~ adp, data = shortstops)
 shortstops$discount <- round(shortstops$rank100 - (mod$coefficients[1] + mod$coefficients[2] * shortstops$adp), 2)
 shortstops$fair_adp = round( (shortstops$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+middle_infielders <- middle_infielders[-52,]
+mod <- lm(rank100 ~ adp, data = middle_infielders)
+middle_infielders$discount <- round(middle_infielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * middle_infielders$adp), 2)
+middle_infielders$fair_adp = round( (middle_infielders$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
 mod <- lm(rank100 ~ adp, data = outfielders)
 outfielders$discount <- round(outfielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * outfielders$adp), 2)
@@ -792,10 +776,6 @@ mod <- lm(rank100 ~ adp, data = catchers)
 catchers$discount <- round(catchers$rank100 - (mod$coefficients[1] + mod$coefficients[2] * catchers$adp), 2)
 catchers$fair_adp = round( (catchers$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
-corner_infielders <- corner_infielders[-c(64:65),]
-mod <- lm(rank100 ~ adp, data = corner_infielders)
-corner_infielders$discount <- round(corner_infielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * corner_infielders$adp), 2)
-corner_infielders$fair_adp = round( (corner_infielders$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
 
 #write.csv(first_basemen, file = "first_basemen")
 write.xlsx(first_basemen, "first_basemen.xlsx")

@@ -708,6 +708,8 @@ middle_infielders <- hitters_final2 %>%
   filter(pos == "2B" | pos1 == "2B" | pos2 == "2B" | pos3 == "2B" | pos == "SS" | pos1 == "SS" | pos2 == "SS" | pos3 == "SS")
 corner_infielders <- hitters_final2 %>%
   filter(pos == "1B" | pos1 == "1B" | pos2 == "1B" | pos3 == "1B" | pos == "3B" | pos1 == "3B" | pos2 == "3B" | pos3 == "3B")
+utility_players <- hitters_final2 %>%
+  filter(pos == "UT")
 
 #use this equation for each position group and measure distance from regression line
 # ggplot(data = outfielders, aes(x = adp_rank, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
@@ -795,7 +797,8 @@ relievers <- pitchers_final2 %>%
 #combine dfs together
   #just hitters for now
 hitters_final3 <- catchers %>%
-  bind_rows(first_basemen, second_basemen, third_basemen, shortstops, outfielders, middle_infielders, corner_infielders) %>%
+  bind_rows(first_basemen, second_basemen, third_basemen, shortstops, outfielders, middle_infielders, corner_infielders,
+            utility_players) %>%
   arrange(desc(rank100), desc(discount))
 
 # #write.csv(first_basemen, file = "first_basemen")

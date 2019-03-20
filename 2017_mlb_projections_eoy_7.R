@@ -1,6 +1,6 @@
 #set for 2019
 #setwd("C:/Users/Ben/Desktop/baseball")
-#setwd("C:/Users/Ben/Desktop/R projects")
+setwd("C:/Users/Ben/Desktop/R projects")
 #setwd("C:/Users/asb419/Documents")
 
 #libraries
@@ -71,6 +71,16 @@ pitcher_names <- c("player", "team", "wins", "losses", "era", "gs", "games.p", "
 
 names(pitchers) <- pitcher_names
 
+#change names if necessary
+hitters$player <- ifelse(hitters$player == "Ronald Acuna Jr.", "Ronald Acuna", hitters$player)
+hitters$player <- ifelse(hitters$player == "Enrique Hernandez", "Kike Hernandez", hitters$player)
+hitters$player <- ifelse(hitters$player == "Cedric Mullins II", "Cedric Mullins", hitters$player)
+hitters$player <- ifelse(hitters$player == "Michael A. Taylor", "Michael Taylor", hitters$player)
+pitchers$player <- ifelse(pitchers$player == "Zach Britton", "Zack Britton", pitchers$player)
+pitchers$player <- ifelse(pitchers$player == "Joshua James", "Josh James", pitchers$player)
+pitchers$player <- ifelse(pitchers$player == "Michael Soroka", "Mike Soroka", pitchers$player)
+pitchers$player <- ifelse(pitchers$player == "Jakob Junis", "Jake Junis", pitchers$player)
+
 #Clean fangraphs data
 hitters <- hitters %>%
   select(-waste1, -waste2, -waste3,  #remove spacer cols
@@ -97,19 +107,21 @@ pitchers <- pitchers %>%
 pitchers <- pitchers %>%
   filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
 
-#get nfbc adp rankings
-#join adp rankings with nfbc eligibility
-
 #Join nfbc data with fangraphs data
-nfbc <- nfbc %>%
+nfbc1 <- nfbc %>%
   left_join(hitters, by = "player") %>%
   left_join(pitchers, by = "player")
 
 #separate nfbc into hitters and pitchers
-hitters <- nfbc %>%
+hitters1 <- nfbc1 %>%
   filter(pos != "P" & !is.na(pa))
-pitchers <- nfbc %>%
+pitchers1 <- nfbc1 %>%
   filter(pos == "P" & !is.na(ip))
+
+hitters2 <- hitters %>%
+  anti_join(hitters1, by = "player")
+pitchers2 <- pitchers %>%
+  anti_join(pitchers1, by = "player")
 
 #numbers of starting players
 n_teams <- 15
@@ -736,8 +748,8 @@ mod <- lm(rank100 ~ adp, data = third_basemen)
 summary(mod)
 
 #I want two things:
-  #1) Vertical distance from point to regression line; this tells discount/premium at current ADP
-  #2) Horizontal distance from point to regression line; this tells the fair value ADP for this players "talent" rank
+#1) Vertical distance from point to regression line; this tells discount/premium at current ADP
+#2) Horizontal distance from point to regression line; this tells the fair value ADP for this players "talent" rank
 
 #1)
 #rank100 - (intercept + slope * adp). this gives me discount value

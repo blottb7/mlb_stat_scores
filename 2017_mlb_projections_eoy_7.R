@@ -1,6 +1,7 @@
 #set for 2019
 #setwd("C:/Users/Ben/Desktop/baseball")
-setwd("C:/Users/Ben/Desktop/R projects")
+#setwd("C:/Users/Ben/Desktop/R projects")
+#setwd("C:/Users/asb419/Documents")
 
 #libraries
 library(readxl)
@@ -11,6 +12,7 @@ library(forecast)  #for BoxCox
 library(zoo)  #for na.locf fn
 library(scales)  #for rescale()
 library(broom)  #for augment()
+library(xlsx)
 
 #read in data
 #fangraphs projections
@@ -649,7 +651,7 @@ pitchers_final1 <- pitchers_final %>%
 # pitchers_final1 <- pitchers_final %>%
 #   select(-c("pos1":"pos3", "games.h":"woba", "main_pos":"sb_z", "hr_pts":"sb_pts", "hitter_rank"))
 pitchers_final2 <- pitchers_final1 %>%
-  select(overall_rank, player, pos, team, adp_rank, adp, injury, wins, era, 
+  select(overall_rank, player, pos, team, adp_rank, adp, min_pick, max_pick, injury, wins, era, 
          gs, games.p, saves, ip, so.p, whip, rank100)
 
 #hitters stuff
@@ -658,12 +660,27 @@ hitters_final1 <- hitters_final %>%
 # hitters_final1 <- hitters_final %>%
 #   select(-c("wins":"fip", "main_pos1":"main_pos3", "wins_z":"pitcher_rank"))
 hitters_final2 <- hitters_final1 %>%
-  select(overall_rank, player, hitter_rank, main_pos, team, adp_rank, adp, injury, games.h, pa, hr,
+  select(overall_rank, player, hitter_rank, main_pos, team, adp_rank, adp, min_pick, max_pick, injury, games.h, pa, hr,
          runs, rbi, sb, avg, pos, pos1, pos2, pos3, rank100)
 
 #remove unneeded dfs
 rm(pitchers_final1, hitters_final1)
 rm(pitchers_final, hitters_final)
+
+# #add draft value subjectivity ranks
+# #initialize
+# hitters_final2$my_rank <- NA
+# #ranks
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Mike Trout", 1, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Mookie Betts", 2, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Jose Ramirez", 3, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "J.D. Martinez", 4, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Giancarlo Stanton", 16, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "Nolan Arenado", 5, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
+# hitters_final2$my_rank <- ifelse(hitters_final2$player == "",, hitters_final2$my_rank)
 
 #position groups for exploration
 # catchers <- all_players %>%
@@ -709,6 +726,78 @@ summary(mod)
 aug_mod <- augment(mod)
 ggplot(aug_mod, aes(x = x, y = y, color = ))
 predict(mod)
+
+#try it for third basemen, a more manageable group than outfielders
+# third_basemen <- third_basemen[-c(24, 35),]
+ggplot(data = third_basemen, aes(x = adp, y = log(rank100))) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+ggplot(data = third_basemen, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+mod <- lm(rank100 ~ adp, data = third_basemen)
+summary(mod)
+
+#I want two things:
+  #1) Vertical distance from point to regression line; this tells discount/premium at current ADP
+  #2) Horizontal distance from point to regression line; this tells the fair value ADP for this players "talent" rank
+
+#1)
+#rank100 - (intercept + slope * adp). this gives me discount value
+#discount = rank100 - (70.16 - .084 * adp)
+# third_basemen1 <- third_basemen
+# third_basemen1$discount <- third_basemen1$rank100 - (70.16 - .084 * third_basemen1$adp)
+third_basemen <- third_basemen[-35,]
+third_basemen$discount <- third_basemen$rank100 - (70.16 - .084 * third_basemen$adp)
+
+#2)
+#at what adp does this player have fair value; that is, zero discount and zero premium
+#discount = 0 = rank100 - (70.16 - .084 * adp)
+# -rank100 = -(70.16 - .084 * adp)
+# rank100 = 70.16 - .084 * adp
+# -.084 * adp = rank100 - 70.16
+# adp = -(rank100 - 70.16) / .084
+
+third_basemen$fair_adp = round(- (third_basemen$rank100 - 70.16) / .084, 0)
+
+#do this for other positions
+first_basemen <- first_basemen[-34,]
+mod <- lm(rank100 ~ adp, data = first_basemen)
+first_basemen$discount <- first_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * first_basemen$adp)
+first_basemen$fair_adp = round( (first_basemen$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+second_basemen <- second_basemen[-28,]
+mod <- lm(rank100 ~ adp, data = second_basemen)
+second_basemen$discount <- round(second_basemen$rank100 - (mod$coefficients[1] + mod$coefficients[2] * second_basemen$adp), 2)
+second_basemen$fair_adp = round( (second_basemen$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+mod <- lm(rank100 ~ adp, data = shortstops)
+shortstops$discount <- round(shortstops$rank100 - (mod$coefficients[1] + mod$coefficients[2] * shortstops$adp), 2)
+shortstops$fair_adp = round( (shortstops$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+mod <- lm(rank100 ~ adp, data = outfielders)
+outfielders$discount <- round(outfielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * outfielders$adp), 2)
+outfielders$fair_adp = round( (outfielders$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+mod <- lm(rank100 ~ adp, data = catchers)
+catchers$discount <- round(catchers$rank100 - (mod$coefficients[1] + mod$coefficients[2] * catchers$adp), 2)
+catchers$fair_adp = round( (catchers$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+corner_infielders <- corner_infielders[-c(64:65),]
+mod <- lm(rank100 ~ adp, data = corner_infielders)
+corner_infielders$discount <- round(corner_infielders$rank100 - (mod$coefficients[1] + mod$coefficients[2] * corner_infielders$adp), 2)
+corner_infielders$fair_adp = round( (corner_infielders$rank100 - mod$coefficients[1]) / mod$coefficients[2], 0)
+
+#write.csv(first_basemen, file = "first_basemen")
+write.xlsx(first_basemen, "first_basemen.xlsx")
+write.xlsx(third_basemen, "third_basemen.xlsx")
+write.xlsx(corner_infielders, "corner_infielders.xlsx")
+
+write.xlsx(second_basemen, "second_basemen.xlsx")
+write.xlsx(shortstops, "shortstops.xlsx")
+
+write.xlsx(outfielders, "outfielders.xlsx")
+write.xlsx(catchers, "catchers.xlsx")
+#
+# third_basemen1 <- third_basemen[-c(1:5),]
+# ggplot(data = third_basemen1, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
 # #exploratory graphs
 # ggplot(data = all_players, aes(x = adp_rank, y = overall_rank, color = pos)) + geom_point() + geom_smooth(method = "lm", se = FALSE)

@@ -791,6 +791,16 @@ pitchers_final2$fair_adp = round( (pitchers_final2$rank100 - mod$coefficients[1]
 
 ggplot(data = pitchers_final2, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)
 
+#reset main position based on data frame
+first_basemen$main_pos <- "1B"
+second_basemen$main_pos <- "2B"
+third_basemen$main_pos <- "3B"
+shortstops$main_pos <- "SS"
+outfielders$main_pos <- "OF"
+catchers$main_pos <- "C"
+middle_infielders$main_pos <- "MI"
+corner_infielders$main_pos <- "CI"
+
 #combine dfs together
   #just hitters for now
 hitters_final3 <- catchers %>%
@@ -851,16 +861,20 @@ relievers <- relievers %>%
 #add nick pollack adp for relievers if available, or possibly pitcher list adp
   #its available but from February and not worth the work
 
-# #write.csv(first_basemen, file = "first_basemen")
-# write.xlsx(first_basemen, "first_basemen.xlsx")
-# write.xlsx(third_basemen, "third_basemen.xlsx")
-# write.xlsx(corner_infielders, "corner_infielders.xlsx")
-# 
-# write.xlsx(second_basemen, "second_basemen.xlsx")
-# write.xlsx(shortstops, "shortstops.xlsx")
-# 
-# write.xlsx(outfielders, "outfielders.xlsx")
-# write.xlsx(catchers, "catchers.xlsx")
+#write files
+write.csv(first_basemen, "nfbc2019_first_basemen.csv")
+write.csv(third_basemen, "nfbc2019_third_basemen.csv")
+write.csv(corner_infielders, "nfbc2019_corner_infielders.csv")
+
+write.csv(second_basemen, "nfbc2019_second_basemen.csv")
+write.csv(shortstops, "nfbc2019_shortstops.csv")
+write.csv(middle_infielders, "nfbc2019_middle_infielders.csv")
+
+write.csv(outfielders, "nfbc2019_outfielders.csv")
+write.csv(catchers, "nfbc2019_catchers.csv")
+
+write.csv(pitchers_final2, "nfbc2019_pitchers.csv")
+write.csv(relievers, "nfbc2019_relievers.csv")
 #
 # third_basemen1 <- third_basemen[-c(1:5),]
 # ggplot(data = third_basemen1, aes(x = adp, y = rank100)) + geom_point() + geom_smooth(method = "lm", se = FALSE)

@@ -86,11 +86,11 @@ hitters$player <- ifelse(hitters$player == "D.J. Stewart", "DJ Stewart", hitters
 hitters <- hitters %>%
         select(-waste1, -waste2, -waste3,  #remove spacer cols
                -wrc_plus, -bsr, -fld, -offense, -defense, -war, -playerid) #%>%  #remove unneeded obs
-        select(-waste4, -adp)  #sometimes need to remove adp
+select(-waste4, -adp)  #sometimes need to remove adp
 
 pitchers <- pitchers %>%
         select(-war, -ra9_war, -player_id) #%>%  #remove uneeded obs
-        select(-adp)  #sometimes need to remove adp
+select(-adp)  #sometimes need to remove adp
 
 #remove obs that will be duplicated when joining with nfbc
 hitters <- hitters %>%
@@ -105,8 +105,8 @@ pitchers <- pitchers %>%
         filter(ip > 1)
 
 #remove specific instances if necessary
-pitchers <- pitchers %>%
-        filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
+# pitchers <- pitchers %>%
+#         filter(player != "Shohei Ohtani")  #do not want him in 600 ratings because his UCL is toast
 
 #Join nfbc data with fangraphs data
 nfbc <- nfbc %>%
